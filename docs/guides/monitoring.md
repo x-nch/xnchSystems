@@ -1,5 +1,11 @@
 # Monitoring
 
+---
+tags:
+  - #guide
+  - #runtime
+---
+
 Set up observability for xnch + Nexi.
 
 ## Metrics

@@ -5,6 +5,14 @@ merged: 2026-04-18
 
 # xnch — Control Plane System Design
 
+---
+tags:
+  - #architecture
+  - #xnch
+  - #policy
+  - #component
+---
+
 ## 1. System Definition
 
 xnch is a stateful policy enforcement authority — the single chokepoint through which all action requests, memory mutations, and execution commands must pass before they affect the system or the world.

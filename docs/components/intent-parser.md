@@ -1,5 +1,12 @@
 # Intent Parser
 
+---
+tags:
+  - #component
+  - #nexi
+  - #decision
+---
+
 Converts raw user input into normalized Intent objects.
 
 ## Overview

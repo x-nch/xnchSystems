@@ -1,16 +1,27 @@
 # Architecture
 
-Understanding the system architecture and design.
+---
+tags:
+  - #architecture
+  - #reference
+---
 
-## Overview
+System architecture, design principles, and component relationships.
 
-- [System Architecture](architecture/overview.md) - High-level system design
-- [Data Flow](architecture/data-flow.md) - 10-step execution flow
-- [Layered Architecture](architecture/layers.md) - Component layers diagram
+## Maps
 
-## Deep Dives
+- [[_system-map.md]] — System entry point
+- [[_decision-map.md]] — Decision hub
+- [[_memory-map.md]] — Memory hub
 
-- [Nexi Engine Architecture](architecture/nexi-engine.md) - Decision engine details
-- [Memory Layer Architecture](architecture/memory-layer.md) - Storage components
-- [Audit Layer Architecture](architecture/audit-layer.md) - Logging and replay
-- [Learning System Architecture](architecture/learning-loop.md) - Learning components
+## Core
+
+- [[system-loop.md]]
+- [[nexi.md]]
+- [[memory-system.md]]
+
+## Operational
+
+- [[execution-flow.md]]
+- [[runtime.md]]
+- [[decision-model.md]]

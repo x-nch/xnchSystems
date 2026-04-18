@@ -1,5 +1,12 @@
 # Plan Schema
 
+---
+tags:
+  - #reference
+  - #contracts
+  - #decision
+---
+
 Candidate plan structure.
 
 ## Definition

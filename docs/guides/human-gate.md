@@ -1,5 +1,11 @@
 # Human Approval Gate
 
+---
+tags:
+  - #guide
+  - #policy
+---
+
 Require human approval before execution.
 
 ## Overview

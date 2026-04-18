@@ -1,5 +1,12 @@
 # Intent Schema
 
+---
+tags:
+  - #reference
+  - #contracts
+  - #decision
+---
+
 Normalized representation of user input.
 
 ## Definition

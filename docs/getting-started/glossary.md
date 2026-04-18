@@ -1,5 +1,11 @@
 # Glossary
 
+---
+tags:
+  - #guide
+  - #reference
+---
+
 Technical terms and definitions.
 
 ## A
@@ -95,7 +101,7 @@ Learning component that adjusts evaluation weights when dimension accuracy falls
 ## V
 
 ### Vector Index
-ChromaDB-based semantic search index for context matching.
+sqlite-vec based semantic search index for context matching. Embeddings generated locally via sentence-transformers (all-MiniLM-L6-v2).
 
 ### vLLM
 High-performance LLM inference server, primary model provider for xnch.

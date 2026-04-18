@@ -1,5 +1,12 @@
 # Episode Schema
 
+---
+tags:
+  - #reference
+  - #contracts
+  - #learning
+---
+
 Learning episode record.
 
 ## Definition

@@ -5,6 +5,13 @@ merged: 2026-04-18
 
 # Infrastructure Design
 
+---
+tags:
+  - #architecture
+  - #runtime
+  - #execution
+---
+
 ## 1. Process Architecture
 
 Two nodes. Clear separation. Primary does all heavy work. Secondary is overflow and lightweight model serving only.

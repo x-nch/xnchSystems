@@ -1,5 +1,11 @@
 # Getting Started
 
+---
+tags:
+  - #guide
+  - #reference
+---
+
 Getting up and running with xnch + Nexi.
 
 ## Quick Start

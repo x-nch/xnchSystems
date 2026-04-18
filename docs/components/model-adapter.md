@@ -1,5 +1,12 @@
 # Model Adapter
 
+---
+tags:
+  - #component
+  - #runtime
+  - #nexi
+---
+
 Unified interface to LLM providers.
 
 ## Overview

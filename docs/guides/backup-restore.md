@@ -1,5 +1,11 @@
 # Backup and Restore
 
+---
+tags:
+  - #guide
+  - #data
+---
+
 Data backup and restore procedures.
 
 ## What to Backup

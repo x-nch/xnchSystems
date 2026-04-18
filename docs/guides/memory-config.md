@@ -1,12 +1,18 @@
 # Memory Backend Configuration
 
+---
+tags:
+  - #guide
+  - #memory
+---
+
 Configure memory storage backends.
 
 ## Overview
 
 The memory layer uses multiple backends:
 - SQLite (Context, Outcome, Pattern, Episodic stores)
-- ChromaDB (Vector Index)
+- sqlite-vec (Vector Index)
 - Redis (KV Cache)
 
 ## SQLite Configuration
@@ -40,26 +46,20 @@ memory:
     journal_mode: wal   # Write-ahead logging
 ```
 
-## ChromaDB Configuration
+## Vector Index Configuration
+
+sqlite-vec is embedded within SQLite — no separate process or service required.
 
 ```yaml
 memory:
   vector_store:
-    type: chroma
-    path: ~/.xnch/memory/vectors
-    collection: xnch_context
-    embedding_model: all-MiniLM-L6-v2  # Default
+    type: sqlite-vec
+    path: ~/.xnch/memory/vectors.db
+    embedding_model: sentence-transformers/all-MiniLM-L6-v2
+    embedding_dim: 384
 ```
 
-### Custom Embeddings
-
-```yaml
-memory:
-  vector_store:
-    type: chroma
-    embedding_model: sentence-transformers/all-mpnet-base-v2
-    embedding_dim: 768  # Match model dimension
-```
+The embedding model runs locally on CPU. The `all-MiniLM-L6-v2` model is 22MB and produces 384-dimensional vectors. Do not change `embedding_dim` without reindexing the entire vector store — dimension mismatch will cause query errors.
 
 ## Redis Configuration
 
@@ -102,7 +102,7 @@ memory:
 | Backend | Use Case | Performance |
 |---------|----------|-------------|
 | SQLite | Context, Outcomes, Patterns | ~1ms read |
-| ChromaDB | Semantic search | ~10ms query |
+| sqlite-vec | Semantic search | ~10ms query |
 | Redis | Fast cache | ~0.1ms read |
 
 ## Disabling Backends

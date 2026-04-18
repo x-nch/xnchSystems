@@ -1,5 +1,11 @@
 # Installation
 
+---
+tags:
+  - #guide
+  - #reference
+---
+
 Complete installation guide for xnch + Nexi.
 
 ## System Requirements
@@ -47,8 +53,8 @@ pip install -e ".[dev]"
 # Redis for KV cache
 pip install xnch-cli[redis]
 
-# ChromaDB for vector index
-pip install xnch-cli[chroma]
+# sqlite-vec + sentence-transformers for vector index
+pip install xnch-cli[vector]
 ```
 
 ### LLM Providers

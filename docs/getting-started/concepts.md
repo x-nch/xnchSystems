@@ -1,5 +1,11 @@
 # Core Concepts
 
+---
+tags:
+  - #guide
+  - #reference
+---
+
 Key concepts and terminology for understanding xnch + Nexi.
 
 ## xnch Overview
@@ -66,7 +72,7 @@ Nexi evaluates plans across four dimensions:
 | Store | Purpose | Technology |
 |-------|---------|------------|
 | Context Store | Current execution context | SQLite (WAL) |
-| Vector Store | Semantic similarity search | ChromaDB |
+| Vector Store | Semantic similarity search | sqlite-vec |
 | KV Cache | Fast key-value lookups | Redis |
 | Outcome Store | Historical outcome records | SQLite |
 | Pattern Store | Learned patterns and heuristics | SQLite |

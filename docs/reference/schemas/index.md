@@ -1,6 +1,17 @@
 # Data Models
 
+---
+tags:
+  - #reference
+  - #contracts
+  - #data
+---
+
 Reference for data models and schemas.
+
+## Related
+
+- [[reference/_data-map.md]]
 
 ## Overview
 

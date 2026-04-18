@@ -5,6 +5,14 @@ merged: 2026-04-18
 
 # Nexi — Decision Engine Architecture
 
+---
+tags:
+  - #architecture
+  - #nexi
+  - #decision
+  - #component
+---
+
 ## 1. Architecture: Modules + Flow
 
 Nexi is a **stateless reasoning orchestrator with ephemeral working context**. It holds no persistent state between sessions. Everything it needs to reason is loaded at session initialization from xnch. Everything it produces is either submitted to xnch for execution or written back to xnch memory through the governed write path.
@@ -283,6 +291,13 @@ The constrained generation prompts sent to the model layer are versioned templat
 This means Nexi improves by becoming **better at asking**, not by the model becoming smarter.
 
 ### The Compounding Effect
+
+---
+
+## Related
+
+- [[_decision-map.md]]
+- [[execution-flow.md]]
 
 After sufficient operational history, Nexi's Option Evaluator is not speculating — it is pattern-matching against a rich, structured, outcome-validated decision corpus. The model layer is still generating raw options, but the filter + scoring pipeline is increasingly well-calibrated. The system converges toward higher-quality decisions not because the model improved, but because Nexi's evaluation of model output improved.
 

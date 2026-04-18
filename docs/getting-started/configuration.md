@@ -1,5 +1,11 @@
 # Configuration
 
+---
+tags:
+  - #guide
+  - #reference
+---
+
 Comprehensive configuration guide for xnch + Nexi.
 
 ## Configuration Files
@@ -39,8 +45,9 @@ memory:
     path: ~/.xnch/memory/context.db
     
   vector_store:
-    type: chroma
-    path: ~/.xnch/memory/vectors
+    type: sqlite-vec
+    path: ~/.xnch/memory/vectors.db
+    embedding_model: sentence-transformers/all-MiniLM-L6-v2
     
   kv_cache:
     type: redis
@@ -101,9 +108,10 @@ memory:
     wal_mode: true
     
   vector_store:
-    type: chroma
-    path: ~/.xnch/memory/vectors
-    collection: xnch_context
+    type: sqlite-vec
+    path: ~/.xnch/memory/vectors.db
+    embedding_model: sentence-transformers/all-MiniLM-L6-v2
+    embedding_dim: 384
     
   kv_cache:
     type: redis

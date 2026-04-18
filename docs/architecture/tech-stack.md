@@ -5,6 +5,13 @@ merged: 2026-04-18
 
 # Tech Stack
 
+---
+tags:
+  - #architecture
+  - #reference
+  - #data
+---
+
 ## Core
 
 | Component | Technology | Why |

@@ -1,5 +1,12 @@
 # Execution Engine
 
+---
+tags:
+  - #component
+  - #execution
+  - #runtime
+---
+
 Plans execution and step orchestration.
 
 ## Overview

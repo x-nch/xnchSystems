@@ -1,5 +1,11 @@
 # Model Provider Setup
 
+---
+tags:
+  - #guide
+  - #runtime
+---
+
 Configure LLM providers for xnch + Nexi.
 
 ## Supported Providers

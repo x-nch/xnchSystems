@@ -1,5 +1,12 @@
 # EvaluatedPlan Schema
 
+---
+tags:
+  - #reference
+  - #contracts
+  - #decision
+---
+
 Plan with evaluation scores.
 
 ## Definition

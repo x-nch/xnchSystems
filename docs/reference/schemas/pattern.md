@@ -1,5 +1,12 @@
 # Pattern Schema
 
+---
+tags:
+  - #reference
+  - #contracts
+  - #learning
+---
+
 Extracted learning pattern.
 
 ## Definition

@@ -1,5 +1,11 @@
 # Troubleshooting
 
+---
+tags:
+  - #guide
+  - #reference
+---
+
 Common issues and solutions.
 
 ## Quick Diagnostics
@@ -114,7 +120,7 @@ memory:
 
 #### Vector Index Error
 
-**Symptom**: `ChromaDB collection not found`
+**Symptom**: `sqlite-vec: vector table not found` or `no such table: vec_contexts`
 
 **Solution**:
 ```bash

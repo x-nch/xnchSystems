@@ -1,5 +1,12 @@
 # xnch CLI
 
+---
+tags:
+  - #component
+  - #reference
+  - #xnch
+---
+
 The command-line interface for interacting with xnch + Nexi.
 
 ## Overview

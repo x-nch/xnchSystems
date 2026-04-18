@@ -1,5 +1,11 @@
 # FAQs
 
+---
+tags:
+  - #guide
+  - #reference
+---
+
 Frequently asked questions.
 
 ## General

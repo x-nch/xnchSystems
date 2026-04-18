@@ -1,5 +1,11 @@
 # Scaling
 
+---
+tags:
+  - #guide
+  - #runtime
+---
+
 Horizontal scaling guide for xnch + Nexi.
 
 ## Architecture Options
@@ -78,20 +84,14 @@ memory:
 
 #### Vector Store Scaling
 
-ChromaDB supports distributed mode:
+sqlite-vec is embedded in SQLite and scales with the SQLite instance. For multi-writer scenarios, migrate the entire memory layer to PostgreSQL with pgvector:
 
 ```yaml
 memory:
   vector_store:
-    type: chroma
-    collection: xnch_context
-    persistence: true
-    
-  # Or use Pinecone for fully managed
-  vector_store:
-    type: pinecone
-    api_key: ${PINECONE_API_KEY}
-    index: xnch-vectors
+    type: pgvector
+    connection: postgresql://user:pass@host:5432/xnch
+    embedding_dim: 384
 ```
 
 ### Model Scaling

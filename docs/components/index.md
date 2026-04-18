@@ -1,17 +1,33 @@
 # Components
 
-Detailed documentation for each system component.
+---
+tags:
+  - #component
+  - #reference
+---
 
-## Core Components
+Usage, configuration, and integration documentation for each component.
 
-- [xnch CLI](components/cli.md) - Command-line interface
-- [Intent Parser](components/intent-parser.md) - Input normalization
-- [Nexi Engine](components/nexi-engine.md) - Decision engine
-- [Model Adapter](components/model-adapter.md) - LLM abstraction
-- [Execution Engine](components/execution-engine.md) - Plan execution
+## Control Plane
+
+- [[xnch.md]]
+
+## Decision Engine
+
+- [[nexi-engine.md]]
+
+## Input & Execution
+
+- [[cli.md]]
+- [[intent-parser.md]]
+- [[execution-engine.md]]
+- [[model-adapter.md]]
 
 ## Infrastructure
 
-- [Memory Layer](components/memory-layer.md) - Storage components
-- [Audit Layer](components/audit-layer.md) - Logging and replay
-- [Learning System](components/learning-system.md) - Continuous improvement
+- [[audit.md]]
+- [[learning-loop.md]]
+
+## Related
+
+- [[architecture/_system-map.md]]

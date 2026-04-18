@@ -1,5 +1,11 @@
 # Understanding Learning
 
+---
+tags:
+  - #guide
+  - #learning
+---
+
 How the learning system improves over time.
 
 ## Overview

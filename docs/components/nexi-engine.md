@@ -1,126 +1,154 @@
 # Nexi Engine
 
-The policy-aware multi-option decision engine.
+---
+tags:
+  - #component
+  - #nexi
+  - #decision
+---
 
-## Overview
+The decision engine. Receives a session context from xnch, generates candidate plans, filters and scores them, and submits a decision record back to xnch. Does not execute. Does not write memory directly.
 
-Nexi is the decision engine that sits between Intent Parser and Plan Compiler. It generates N candidate plans, evaluates them against policies and memory context, and selects the best option.
+For internal architecture, module definitions, and design rationale, see [[nexi.md]].
 
-## Sub-Components
+---
 
-The Nexi Engine consists of five sub-components:
+## Related
 
-1. **Intent Interpreter** - Prepares intent for option generation
-2. **Option Generator** - Generates N candidate plans via LLM
-3. **Policy Filter** - Removes candidates violating policies
-4. **Evaluator** - Scores candidates across four dimensions
-5. **Decision Selector** - Selects final plan
+- [[nexi.md]]
+- [[decision-model.md]]
 
-## Usage
+---
+
+## Instantiation
 
 ```python
-from xnch.nexi import NexiEngine
+from xnch.nexi import NexiEngine, NexiConfig
 
+config = NexiConfig.from_file("~/.xnch/config.yaml")
 engine = NexiEngine(config)
-
-# Execute full pipeline
-result = engine.execute(intent)
-# Returns: (SelectedPlan, DecisionToken, AllCandidates)
 ```
+
+---
+
+## Primary API
+
+```python
+class NexiEngine:
+    def execute(self, intent: Intent) -> NexiResult:
+        """Run full decision pipeline. Returns decision package."""
+
+    def generate_options(self, intent: Intent) -> list[Plan]:
+        """Generate candidate plans only — no filtering or selection."""
+
+    def evaluate(self, plans: list[Plan]) -> list[EvaluatedPlan]:
+        """Score plans without generating new options."""
+
+    def select(self, evaluated: list[EvaluatedPlan]) -> tuple[Plan, str]:
+        """Select final plan. Returns (plan, decision_token)."""
+```
+
+### NexiResult
+
+```python
+class NexiResult:
+    session_id: str
+    decision_id: str
+    trace_id: str
+    status: str              # DECIDED | ESCALATED | CLARIFICATION_REQUIRED | DEGRADED
+    verdict_ref: str
+    selected_action: dict    # action_type, action_spec, execution_token, token_ttl_ms
+    decision_record_ref: str
+    escalation: dict | None  # reason, required_actor, hold_id
+    clarification: dict | None
+```
+
+---
 
 ## Configuration
 
 ```yaml
 nexi:
-  max_candidates: 5
-  
-  # Option generation
+  host: localhost
+  port: 8200
+
+  max_candidates: 5          # number of options generated per session (3–7)
+
   option_generator:
     temperature: 0.7
     max_tokens: 2048
     top_p: 0.9
-    
-  # Evaluation weights
+
   evaluation:
-    weights:
+    weights:                 # per intent_class; these are defaults
       safety: 0.30
       efficiency: 0.25
       compliance: 0.25
       context_fit: 0.20
-      
-  # Policy paths
+
   policy_paths:
     - ~/.xnch/policies/default.yaml
     - ~/.xnch/policies/custom.yaml
+
+  outcome_simulator:
+    enabled: true
+    risk_threshold: 0.6      # simulate when risk_score exceeds this
 ```
 
-## Detailed Components
+---
 
-### Intent Interpreter
+## Session Flow
 
-Prepares the intent for option generation by extracting constraints and preparing context.
+Each call to `execute()` opens a session with xnch and runs the full pipeline:
 
-### Option Generator
-
-Uses the Model Adapter to generate candidate plans:
-
-```python
-def generate_options(intent, context):
-    prompt = build_prompt(intent, context)
-    response = model_adapter.generate(prompt)
-    plans = parse_plans(response)
-    return plans
+```
+session init → intent interpretation → context manifest load
+  → option generation → parallel policy dry-run
+  → scoring → outcome simulation (conditional)
+  → decision selection → POST /verdict to xnch
+  → return NexiResult
 ```
 
-### Policy Filter
+A session is stateless on Nexi's side. All persistent state lives in xnch.
 
-Filters candidates against defined policies:
+---
+
+## Degraded Mode
+
+If the model layer fails (timeout or schema validation failure on retry), Nexi activates a rule-based option generator that produces 3 conservative options from policy memory. The `NexiResult.status` is set to `DEGRADED` and the decision record notes the degraded generation path.
+
+Nexi does not fail closed on model unavailability. It fails to a deterministic fallback.
+
+---
+
+## Escalation
+
+Nexi escalates (rather than selecting) in three cases:
+
+1. All generated options are blocked by xnch policy dry-run
+2. All options simulate to constraint-violating projected states
+3. xnch returns `BLOCK` on the final `/verdict` call
+
+Escalation writes a hold record to xnch and returns `status: ESCALATED` with `hold_id` and `required_actor`. No execution token is issued. The session is preserved pending admin resolution.
+
+---
+
+## Monitoring
 
 ```yaml
-policies:
-  - name: no_destructive_production
-    rule:
-      action_type: delete
-      entity_class: production
-    action: reject
-    
-  - name: require_confirmation
-    rule:
-      risk_score: ">0.7"
-    action: require_human_approval
-```
-
-### Evaluator
-
-Scores across dimensions:
-
-| Dimension | Description |
-|-----------|-------------|
-| Safety | No harmful side effects |
-| Efficiency | Optimal resource usage |
-| Compliance | Follows policies/rules |
-| Context Fit | Matches current context |
-
-### Decision Selector
-
-Selects highest-scoring plan, generates decision token.
-
-## API Reference
-
-```python
-class NexiEngine:
-    def __init__(self, config: NexiConfig):
-        ...
-        
-    def execute(self, intent: Intent) -> NexiResult:
-        """Execute full decision pipeline."""
-        
-    def generate_options(self, intent: Intent) -> List[Plan]:
-        """Generate candidate plans only."""
-        
-    def evaluate(self, plans: List[Plan]) -> List[EvaluatedPlan]:
-        """Evaluate plans without generating new options."""
-        
-    def select(self, evaluated: List[EvaluatedPlan]) -> Tuple[Plan, str]:
-        """Select final plan, return (plan, decision_token)."""
+metrics:
+  nexi:
+    sessions_total: true
+    options_generated: true
+    options_blocked: true
+    decisions_escalated: true
+    model_fallback_total: true
+    latency_ms:
+      intent_interpretation: true
+      context_load: true
+      option_generation: true
+      policy_filter: true
+      scoring: true
+      simulation: true
+      verdict_submission: true
 ```

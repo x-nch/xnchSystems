@@ -1,5 +1,11 @@
 # Guides
 
+---
+tags:
+  - #guide
+  - #reference
+---
+
 Step-by-step guides for common tasks.
 
 ## Execution

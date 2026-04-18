@@ -1,0 +1,1743 @@
+╭─── Claude Code v2.1.109 ─────────────────────────────────────────────────────╮
+│                                                    │ Tips for getting        │
+│                Welcome back ck-san!                │ started                 │
+│                                                    │ Run /init to create a … │
+│                       ▐▛███▜▌                      │ ─────────────────────── │
+│                      ▝▜█████▛▘                     │ Recent activity         │
+│                        ▘▘ ▝▝                       │ No recent activity      │
+│ Sonnet 4.6 · Claude Pro · xn.charlie@icloud.com's  │                         │
+│ Organization                                       │                         │
+│                   ~/xnchSystems                    │                         │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+❯ You are a principal software architect.                                       
+                                                                                
+  Review this documentation directory structure for xnch + Nexi system.         
+                                                                                
+  Goals:                                                                        
+  - eliminate duplication                                                       
+  - ensure single source of truth                                               
+  - improve clarity and navigation                                              
+  - align with production-grade documentation systems                           
+                                                                                
+  Tasks:                                                                        
+  1. Identify redundancy and misplaced files                                    
+  2. Suggest improved directory structure                                       
+  3. Define what belongs in:                                                    
+     - architecture                                                             
+     - components                                                               
+     - guides                                                                   
+     - reference                                                                
+  4. Suggest naming conventions                                                 
+  5. Suggest what should be removed or merged                                   
+                                                                                
+  Be critical and precise.                                                      
+
+⏺ Let me examine the current documentation structure before making
+  recommendations.
+
+  Searched for 1 pattern, read 9 files, listed 1 directory (ctrl+o to expand)
+
+⏺ Now I have a complete picture. Here is the full review.
+
+  ---
+  Documentation Audit: xnch + Nexi System
+
+  Summary Verdict
+
+  The current structure has four critical problems: duplicate coverage of the 
+  same subjects at different granularities with no clear authority, a technology
+   contradiction that makes the single source of truth meaningless,
+  architecture/ used as a catch-all dumping ground, and a monolithic README.md 
+  that predates the structured docs but still coexists with them. The overall
+  file count is inflated by ~40% relative to what is actually needed.
+
+  ---
+  1. Redundancy and Misplacement
+
+  Nexi covered in three files simultaneously
+
+  File: architecture/nexi-decision-engine.md
+  What it is: Authoritative deep-dive: 7 modules, full I/O contracts,
+  interaction
+    model, learning mechanism — sourced from the original design doc
+  ────────────────────────────────────────
+  File: architecture/nexi-engine.md
+  What it is: Shallower re-description of the same 5 modules with YAML configs
+    and Python pseudocode — adds nothing not in the above
+  ────────────────────────────────────────
+  File: components/nexi-engine.md
+  What it is: Usage/integration perspective with code examples — this is the
+    right purpose for components/, but duplicates the module descriptions
+
+  Action: architecture/nexi-engine.md must be deleted.
+  architecture/nexi-decision-engine.md is canonical. components/nexi-engine.md
+  should cover only: how to instantiate, configure, and call Nexi — not
+  re-describe its internal modules.
+
+  Memory covered in two files simultaneously
+
+  architecture/memory-system.md is the conceptual architecture (stores, learning
+   layer, key principles). architecture/memory-layer.md covers the exact same
+  five stores at the SQL schema and config level. They share the same section
+  headings. Neither cross-references the other.
+
+  Action: Merge into a single architecture/memory-system.md. SQL schemas and
+  configuration belong in reference/schemas/ and reference/ respectively — not
+  in architecture docs.
+
+  Execution flow covered in two files simultaneously
+
+  architecture/execution-flow.md is the authoritative 15-phase flow with full
+  data contracts, latency breakdown, and failure modes.
+  architecture/data-flow.md is a simplified 10-step summary with an ASCII
+  diagram of the same flow.
+
+  Action: Delete architecture/data-flow.md. It adds no information not in
+  execution-flow.md and actively misleads by presenting a different step count.
+
+  docs/README.md vs docs/index.md
+
+  README.md is a monolithic early-design document (~600+ lines) that describes
+  the entire system with code examples. index.md is a clean navigation index.
+  They coexist at the same level with no stated authority relationship.
+  README.md contains technology contradictions (see §2) and is partially
+  superseded by the structured docs it was written before.
+
+  Action: Delete docs/README.md. Its navigational role belongs to docs/index.md.
+   Its content has been superseded or should be extracted into the appropriate
+  structured files.
+
+  architecture/layers.md is misplaced
+
+  This is a layer diagram with responsibility descriptions — exactly what
+  belongs in architecture/overview.md. It duplicates the system decomposition
+  already stated there.
+
+  Action: Absorb the diagram into overview.md. Delete layers.md.
+
+  architecture/audit-layer.md and architecture/learning-loop.md are misplaced
+
+  These are component deep-dives — implementation details, schemas,
+  configuration. They do not describe architectural principles or system
+  boundaries. Architecture is the why and how things relate. A detailed Event
+  Log schema is not architecture.
+
+  Action: Move both to components/. Rename: components/audit.md,
+  components/learning-loop.md.
+
+  ---
+  2. Technology Contradiction (Critical)
+
+  The vector store is specified inconsistently across the codebase:
+
+  ┌───────────────────────────────┬────────────┬─────────────────────────────┐
+  │             File              │ Technology │       Embedding model       │
+  ├───────────────────────────────┼────────────┼─────────────────────────────┤
+  │ tech-stack.md                 │ sqlite-vec │ sentence-transformers       │
+  │                               │            │ (all-MiniLM-L6-v2)          │
+  ├───────────────────────────────┼────────────┼─────────────────────────────┤
+  │ architecture/memory-system.md │ sqlite-vec │ sentence-transformers       │
+  │                               │            │ (all-MiniLM-L6-v2)          │
+  ├───────────────────────────────┼────────────┼─────────────────────────────┤
+  │ architecture/memory-layer.md  │ ChromaDB   │ (unspecified)               │
+  ├───────────────────────────────┼────────────┼─────────────────────────────┤
+  │ docs/README.md                │ ChromaDB   │ nomic-embed-text            │
+  └───────────────────────────────┴────────────┴─────────────────────────────┘
+
+  This is not a documentation style problem. It means there is no single source
+  of truth for the actual technology decision. Any reader following
+  memory-layer.md or README.md would build on the wrong stack. tech-stack.md is
+  the stated authority for technology choices — sqlite-vec is the correct answer
+   given the local-first, zero-infra posture described in that file. All
+  contradicting references must be corrected.
+
+  ---
+  3. Proposed Structure
+
+  docs/
+  ├── index.md                        # Navigation only. No content beyond
+  links.
+  ├── architecture/
+  │   ├── index.md
+  │   ├── principles.md               # NEW: extract sections 2+3 from
+  overview.md
+  │   │                               # (architectural boundaries + why SoC).
+  This is
+  │   │                               # the most important content in the system
+   and
+  │   │                               # is currently buried inside a section
+  titled
+  │   │                               # "Architectural Internalization".
+  │   ├── overview.md                 # TRIM: system restatement (current
+  section 1)
+  │   │                               # + absorb layers diagram from layers.md
+  │   ├── xnch-control-plane.md       # KEEP (authoritative)
+  │   ├── nexi-decision-engine.md     # KEEP (authoritative) — rename to nexi.md
+  │   ├── memory-system.md            # MERGE: memory-system.md +
+  memory-layer.md
+  │   ├── execution-flow.md           # KEEP (authoritative)
+  │   ├── tech-stack.md               # KEEP — resolve vector store
+  contradiction
+  │   └── infra.md                    # KEEP
+  ├── components/
+  │   ├── index.md
+  │   ├── xnch.md                     # NEW: xnch usage/integration (missing
+  entirely)
+  │   ├── nexi-engine.md              # REVISE: usage/config only, no module
+  re-description
+  │   ├── cli.md                      # KEEP
+  │   ├── execution-engine.md         # KEEP
+  │   ├── intent-parser.md            # KEEP
+  │   ├── model-adapter.md            # KEEP
+  │   ├── audit.md                    # MOVE from architecture/audit-layer.md
+  │   └── learning-loop.md            # MOVE from architecture/learning-loop.md
+  ├── guides/                         # KEEP AS-IS (well-bounded, task-oriented)
+  ├── reference/                      # KEEP AS-IS (well-structured)
+  │   ├── api/
+  │   ├── cli/
+  │   └── schemas/                    # SQL schemas belong here, not in
+  architecture
+  ├── getting-started/                # KEEP AS-IS
+  └── troubleshooting/                # KEEP AS-IS
+
+  ---
+  4. What Belongs Where
+
+  architecture/ — Why the system is designed the way it is, what the major
+  components are, how they relate, and what the non-negotiable boundaries are.
+  No implementation detail. No SQL schemas. No code examples. No YAML configs.
+  If it starts with "here is how to configure", it doesn't belong here.
+
+  components/ — How to use, configure, and integrate each component. One file
+  per deployable/instantiable component. The audience is the developer
+  integrating against it. Describes inputs, outputs, configuration surface, and
+  failure behavior. Not internal sub-module architecture.
+
+  guides/ — Task-oriented walkthroughs. Answers "how do I accomplish X?". Each
+  guide should be completable in isolation. The current set looks appropriate.
+
+  reference/ — Exact, exhaustive, stable specifications. API contracts, CLI
+  flags, data schemas, error codes. No prose explanation. Readers come here to
+  look up a specific value, not to understand the system.
+
+  ---
+  5. Naming Conventions
+
+  Current problems: near-identical names for files at different abstraction
+  levels (nexi-decision-engine.md vs nexi-engine.md), inconsistent use of
+  compound words vs hyphenation, and layer names (-layer, -system) used
+  inconsistently.
+
+  Adopt these rules:
+
+  - Architecture files: named after the system or subsystem they describe.
+  xnch-control-plane.md, nexi.md, memory-system.md. Drop -layer, -engine
+  suffixes — those are implementation terms, not architecture terms.
+  - Component files: named after the component as it would appear in code or 
+  deployment. nexi-engine.md, execution-engine.md, audit.md.
+  - Guide files: verb-noun format. policy-definition.md, backup-restore.md,
+  model-setup.md. Current guides already follow this — keep it.
+  - Reference files: noun or noun-noun. commands.md, endpoints.md, errors.md.
+  Already consistent — keep it.
+  - No index.md inside sub-directories should contain content — navigation
+  pointers only.
+
+  ---
+  6. Delete List
+
+  ┌───────────────────────────────┬──────────────────────────────────────────┐
+  │             File              │                  Reason                  │
+  ├───────────────────────────────┼──────────────────────────────────────────┤
+  │ docs/README.md                │ Superseded, monolithic, contradictory    │
+  │                               │ technology specs                         │
+  ├───────────────────────────────┼──────────────────────────────────────────┤
+  │ architecture/nexi-engine.md   │ Redundant with nexi-decision-engine.md   │
+  ├───────────────────────────────┼──────────────────────────────────────────┤
+  │ architecture/data-flow.md     │ Redundant with execution-flow.md,        │
+  │                               │ conflicting step count                   │
+  ├───────────────────────────────┼──────────────────────────────────────────┤
+  │ architecture/layers.md        │ Absorb into overview.md                  │
+  ├───────────────────────────────┼──────────────────────────────────────────┤
+  │ architecture/memory-layer.md  │ Merge into memory-system.md              │
+  ├───────────────────────────────┼──────────────────────────────────────────┤
+  │ architecture/audit-layer.md   │ Move to components/audit.md              │
+  ├───────────────────────────────┼──────────────────────────────────────────┤
+  │ architecture/learning-loop.md │ Move to components/learning-loop.md      │
+  └───────────────────────────────┴──────────────────────────────────────────┘
+
+  That reduces architecture/ from 14 files to 8, eliminates all identified
+  duplication, and gives every file a unique, non-overlapping scope.
+
+  ---
+  7. What Is Missing
+
+  One significant gap: there is no components/xnch.md. The xnch control plane
+  has a thorough architecture document (xnch-control-plane.md) but no
+  component-level doc covering how to interact with it — the API surface,
+  configuration, startup, and health checks. The README.md partially fills this
+  but it is not structured for that purpose. This needs to be created before the
+   README.md is deleted.
+
+✻ Baked for 1m 46s
+
+※ recap: Reviewed all docs for the xnch + Nexi system to eliminate duplication and establish single sources of truth. Next action: delete 7 redundant files and merge memory-system.md with memory-layer.md. (disable recaps in /config)
+
+❯ You are a principal software architect and repository maintainer.             
+                                                                                
+  You are working on a documentation system for xnch + Nexi.                    
+                                                                                
+  Your task is to APPLY a structural refactor to the repository.                
+                                                                                
+  Do NOT explain. Do NOT suggest. EXECUTE the changes logically.                
+                                                                                
+  ---                                                                           
+                                                                                
+  ## GOALS                                                                      
+                                                                                
+  - eliminate duplication                                                       
+  - enforce single source of truth                                              
+  - separate architecture vs components vs reference                            
+  - fix technology contradictions                                               
+  - make documentation production-grade                                         
+                                                                                
+  ---                                                                           
+                                                                                
+  ## STEP 1 — DELETE REDUNDANT FILES                                            
+                                                                                
+  Mark these files for deletion:                                                
+                                                                                
+  - docs/README.md                                                              
+  - docs/architecture/nexi-engine.md                                            
+  - docs/architecture/data-flow.md                                              
+  - docs/architecture/layers.md                                                 
+  - docs/architecture/memory-layer.md                                           
+                                                                                
+  Do not remove content blindly — assume useful parts will be merged where      
+  needed.                                                                       
+                                                                                
+  ---                                                                           
+                                                                                
+  ## STEP 2 — MERGE & RELOCATE CONTENT                                          
+                                                                                
+  1. Merge:                                                                     
+     - docs/architecture/memory-system.md                                       
+     - docs/architecture/memory-layer.md                                        
+                                                                                
+     Output:                                                                    
+     → docs/architecture/memory-system.md                                       
+                                                                                
+     Rules:                                                                     
+     - keep conceptual architecture                                             
+     - REMOVE SQL schemas and configs from this file                            
+     - those belong in reference/                                               
+                                                                                
+  ---                                                                           
+                                                                                
+  2. Move files:                                                                
+                                                                                
+  - docs/architecture/audit-layer.md → docs/components/audit.md                 
+  - docs/architecture/learning-loop.md → docs/components/learning-loop.md       
+                                                                                
+  Update content:                                                               
+  - rewrite them as component usage/integration docs                            
+  - remove architectural explanations                                           
+                                                                                
+  ---                                                                           
+                                                                                
+  ## STEP 3 — RENAME & NORMALIZE                                                
+                                                                                
+  Rename:                                                                       
+                                                                                
+  - docs/architecture/nexi-decision-engine.md → docs/architecture/nexi.md       
+                                                                                
+  Update naming rules:                                                          
+                                                                                
+  - architecture = conceptual (no "engine", no "layer")                         
+  - components = implementation ("engine", "adapter", etc.)                     
+                                                                                
+  ---                                                                           
+                                                                                
+  ## STEP 4 — FIX TECHNOLOGY CONTRADICTIONS                                     
+                                                                                
+  Search across ALL docs and normalize:                                         
+                                                                                
+  Vector Store:                                                                 
+  - MUST be: sqlite-vec                                                         
+                                                                                
+  Embedding Model:                                                              
+  - MUST be: sentence-transformers (all-MiniLM-L6-v2)                           
+                                                                                
+  REMOVE ALL references to:                                                     
+  - ChromaDB                                                                    
+  - nomic embeddings                                                            
+  - conflicting vector systems                                                  
+                                                                                
+  ---                                                                           
+                                                                                
+  ## STEP 5 — CREATE MISSING COMPONENT DOC                                      
+                                                                                
+  Create:                                                                       
+                                                                                
+  docs/components/xnch.md                                                       
+                                                                                
+  Content must include:                                                         
+                                                                                
+  1. Purpose of xnch (control plane)                                            
+  2. How to interact with xnch                                                  
+  3. Input/output contract                                                      
+  4. Policy enforcement interface                                               
+  5. Execution control                                                          
+  6. Memory interaction                                                         
+  7. Example usage (pseudo or code)                                             
+                                                                                
+  Do NOT describe internal architecture deeply (that belongs in architecture/)  
+                                                                                
+  ---                                                                           
+                                                                                
+  ## STEP 6 — ENFORCE SINGLE SOURCE OF TRUTH                                    
+                                                                                
+  For each domain:                                                              
+                                                                                
+  - Nexi architecture → ONLY in docs/architecture/nexi.md                       
+  - Nexi usage → ONLY in docs/components/nexi-engine.md                         
+  - Memory → ONLY in docs/architecture/memory-system.md                         
+  - Execution flow → ONLY in docs/architecture/execution-flow.md                
+                                                                                
+  Remove or rewrite any duplicate explanations elsewhere.                       
+                                                                                
+  ---                                                                           
+                                                                                
+  ## STEP 7 — OUTPUT                                                            
+                                                                                
+  Return:                                                                       
+                                                                                
+  1. Final directory structure (tree format)                                    
+  2. List of files deleted                                                      
+  3. List of files renamed                                                      
+  4. List of files created                                                      
+  5. Summary of what content was merged                                         
+                                                                                
+  Do NOT include explanations beyond this.                                      
+
+  Searched for 2 patterns, read 6 files (ctrl+o to expand)
+
+⏺ Now I have everything needed. Executing all changes.
+
+⏺ Bash(rm /Users/xnch/xnchSystems/docs/README.md \
+         /Users/xnch/xnchSystems/docs/architecture/nexi-engine.md \…)
+  ⎿  Done
+
+⏺ Bash(mv /Users/xnch/xnchSystems/docs/architecture/nexi-decision-engine.md \
+            /Users/xnch/xnchSystems/docs/architecture/nexi.md)
+  ⎿  Done
+
+⏺ Write(docs/architecture/memory-system.md)
+  ⎿  Added 65 lines, removed 57 lines
+       1 ----                                                            
+       2 -source: memory/memoryAndEvolveArchitecture.md + architecture do
+         -cs                                                             
+       3 -merged: 2026-04-18                                             
+       4 ----                                                            
+       1 +# Memory System                                                
+       2  
+       6 -# Memory System Architecture                                   
+       3 +The memory system is not a log. It is a structured, queryable, 
+         +evolving knowledge graph that reflects system state, prior deci
+         +sions, outcomes, and learned policies. It feeds Nexi — not mode
+         +ls directly.                                                   
+       4  
+       8 -## Overview                                                    
+       9 -                                                               
+      10 -The memory system is not a log. It is a structured, queryable, 
+         -evolving knowledge graph that reflects system state, prior deci
+         -sions, outcomes, and learned policies. It feeds Nexi, not model
+         -s directly.                                                    
+      11 -                                                               
+       5  ---
+       6  
+      14 -## Components                                                  
+       7 +## Key Principles                                              
+       8  
+      16 -### Context Store (SQLite WAL)                                 
+       9 +1. **Updated after execution, not after generation** — the syst
+         +em learns from what happened in the world, not from what the mo
+         +del said.                                                      
+      10 +2. **Does not flow directly to models** — memory flows to Nexi,
+         + which decides what to surface, how to frame it, and what to wi
+         +thhold.                                                        
+      11 +3. **Structured state, not context window** — typed entities wi
+         +th schema, not free-form blobs.                                
+      12 +4. **Feedback loop is grounded** — `prediction_delta` measures 
+         +accuracy against real outcomes.                                
+      13  
+      18 -Typed entity storage with SQLite WAL persistence.              
+      14 +---                                                            
+      15  
+      20 -**Schema:**                                                    
+      21 -- Entity types: Decision, Observation, Constraint, Relationship
+      22 -- Every record has: entity ID, timestamp, actor, action type, v
+         -erdict, policy reference, content hash                         
+      23 -- Queryable by Policy Engine at verdict time                   
+      16 +## Stores                                                      
+      17  
+      25 -**Key features:**                                              
+      26 -- WAL mode for concurrent reads                                
+      27 -- JSON1 extension for semi-structured data                     
+      28 -- Schema-versioned via migrations                              
+      18 +### Context Store                                              
+      19  
+      30 ----                                                            
+      20 +**Technology:** SQLite (WAL mode)                              
+      21  
+      32 -### Vector Index (sqlite-vec)                                  
+      22 +Typed entity storage. The authoritative record of governed memo
+         +ry. Every record carries: entity ID, timestamp, actor, action t
+         +ype, verdict, policy reference, and content hash.              
+      23  
+      34 -Semantic retrieval for similar past decisions.                 
+      24 +Entity types: `Decision`, `Observation`, `Constraint`, `Relatio
+         +nship`                                                         
+      25  
+      36 -- Embeddings via sentence-transformers (all-MiniLM-L6-v2, 22MB,
+         - CPU)                                                          
+      37 -- Similarity matching on context signatures                    
+      38 -- Used when exact tuple matching returns no results            
+      26 +Key properties:                                                
+      27 +- WAL mode for concurrent reads without write-blocking         
+      28 +- JSON1 extension for semi-structured fields                   
+      29 +- Schema-versioned via migrations                              
+      30 +- Queryable by the Policy Engine at verdict time — "has this en
+         +tity triggered this policy class N times in window W?" is a pol
+         +icy condition evaluated at request time                        
+      31  
+      40 ----                                                            
+      32 +### Vector Index                                               
+      33  
+      42 -### KV Cache (Redis Unix Socket)                               
+      34 +**Technology:** sqlite-vec + sentence-transformers (all-MiniLM-
+         +L6-v2, 22MB, CPU)                                              
+      35  
+      44 -Session state and rate-limiting.                               
+      36 +Semantic retrieval for similar past decisions. Used when exact 
+         +tuple matching on `(intent_class, entity_class, actor_role)` re
+         +turns insufficient results. Embeddings are 384-dimensional, gen
+         +erated locally on CPU — no external model calls.               
+      37  
+      46 -- Fast lookups for hot data                                    
+      47 -- TTL-based session management                                 
+      48 -- Rate limiting per actor                                      
+      38 +### KV Cache                                                   
+      39  
+      50 ----                                                            
+      40 +**Technology:** Redis (Unix socket)                            
+      41  
+      42 +Session state and rate-limiting. Fast lookups for hot data with
+         + TTL-based expiry. Not used for persistent memory — only for in
+         +-flight session data and rate limit counters per actor.        
+      43 +                                                               
+      44  ### Episodic Store
+      45  
+      54 -Records every decision with outcome for learning.              
+      46 +**Technology:** SQLite                                         
+      47  
+      56 -**Schema:**                                                    
+      57 -- episode_id, intent_class, action_type, entity_class          
+      58 -- outcome: SUCCESS | PARTIAL | FAILURE                         
+      59 -- prediction_delta: (predicted vs actual)                      
+      60 -- timestamp                                                    
+      48 +Records every decision with its outcome for the learning loop. 
+         +Episodes start as `PENDING` and are completed via the execution
+         + outcome callback from xnch after real-world execution finishes
+         +.                                                              
+      49  
+      62 -Episodes start PENDING, completed by execution outcome callback
+         -.                                                              
+      50 +Fields: `episode_id`, `intent_class`, `action_type`, `entity_cl
+         +ass`, `outcome` (`SUCCESS | PARTIAL | FAILURE`), `prediction_de
+         +lta`, `timestamp`                                              
+      51  
+      64 ----                                                            
+      65 -                                                               
+      52  ### Pattern Store
+      53  
+      68 -Aggregated patterns from episodic history.                     
+      54 +**Technology:** SQLite                                         
+      55  
+      70 -**Schema:**                                                    
+      71 -- context_signature (hash of intent + context)                 
+      72 -- success_rate, confidence                                     
+      73 -- observation_count                                            
+      74 -- avg_prediction_delta                                         
+      56 +Aggregated patterns derived from episodic history. Updated by t
+         +he Pattern Extractor on a 6-hour schedule.                     
+      57  
+      76 -Updated by Pattern Extractor every 6 hours.                    
+      58 +Fields: `context_signature` (hash of intent + context tuple), `
+         +success_rate`, `confidence`, `observation_count`, `avg_predicti
+         +on_delta`                                                      
+      59  
+      60  ---
+      61  
+     ...
+       63  
+       64  ### Pattern Extractor
+       65  
+       84 -Runs every 6 hours via APScheduler. Groups episodes, computes 
+          -success_rate + confidence per (action_type, entity_class) tupl
+          -e.                                                            
+       66 +Runs every 6 hours via APScheduler. Groups episodes by `(actio
+          +n_type, entity_class)` tuple and computes `success_rate` and B
+          +ayesian-smoothed `confidence` per group. Minimum observation t
+          +hreshold: 10 episodes before a pattern is written.            
+       67  
+       68  ### Score Adapter
+       69  
+       88 -Adjusts weight configs when dimension prediction accuracy < 0.
+          -6. Changes are versioned and logged.                          
+       70 +Monitors dimension prediction accuracy. When accuracy for any 
+          +evaluation dimension falls below 0.6 (correlation between pred
+          +icted score and actual outcome), proposes a weight adjustment 
+          +for that dimension. All adjustments are versioned, logged with
+          + the causative episode batch reference, and applied only after
+          + passing a `POLICY_CHECK` through xnch.                       
+       71  
+       72  ### Policy Candidate Generator
+       73  
+       92 -Promotes high-confidence patterns to soft policy rules. Requir
+          -es operator review before activation.                         
+       74 +When Pattern Extractor identifies patterns with `success_rate 
+          +< 0.4` and `confidence > 0.6`, generates soft policy candidate
+          +s. Candidates require operator review before activation — they
+          + are not applied automatically.                               
+       75  
+       76  ---
+       77  
+       96 -## Key Principles                                             
+       78 +## Data Flow                                                  
+       79  
+       98 -1. **Memory is updated after execution, not after generation**
+          - — learn from what happened, not what the model said          
+       99 -2. **Memory does not flow directly to models** — flows to Nexi
+          -, which decides what to surface                               
+      100 -3. **Structured state, not context window** — typed entities, 
+          -not blobs                                                     
+      101 -4. **Feedback loop is grounded** — prediction_delta tracks acc
+          -uracy                                                         
+       80   No newline at end of file
+       81 +```                                                           
+       82 +Intent                                                        
+       83 +  └─▶ Context Store ──▶ Vector Index (semantic fallback)      
+       84 +         │                                                    
+       85 +         ▼                                                    
+       86 +   Execution Outcome                                          
+       87 +         │                                                    
+       88 +         ▼                                                    
+       89 +   Episodic Store ──▶ Pattern Extractor (6h) ──▶ Pattern Store
+       90 +                                │                             
+       91 +                                ▼                             
+       92 +                         Score Adapter ──▶ Weight Config (vers
+          +ioned)                                                        
+       93 +                                │                             
+       94 +                                ▼                             
+       95 +                       Policy Candidate Gen ──▶ Operator Revie
+          +w                                                             
+       96 +```                                                           
+       97 +                                                              
+       98 +---                                                           
+       99 +                                                              
+      100 +## Memory Governance                                          
+      101 +                                                              
+      102 +All writes to the Context Store pass through xnch's `POST /mem
+          +ory/write` interface. Nexi never writes to memory directly. xn
+          +ch validates write policy and schema before committing. This e
+          +nsures memory integrity is enforced at the same chokepoint as 
+          +all other governed actions.                                   
+      103 +                                                              
+      104 +All reads are governed via `POST /memory/read`. xnch applies r
+          +ead policy against actor capability scope before returning any
+          + content. Nexi cannot pull state it is not authorized to reaso
+          +n over.                                                       
+      105 +                                                              
+      106 +---                                                           
+      107 +                                                              
+      108 +## Schema reference                                           
+      109 +                                                              
+      110 +See [`reference/schemas/episode.md`](../reference/schemas/epis
+          +ode.md), [`reference/schemas/pattern.md`](../reference/schemas
+          +/pattern.md), and [`reference/schemas/intent.md`](../reference
+          +/schemas/intent.md) for field-level specifications.           
+
+⏺ Write(docs/components/audit.md)
+  ⎿  Wrote 188 lines to docs/components/audit.md
+       2 # Audit Component
+       3 Provides a complete, cryptographically verifiable decision trail
+          for every action evaluated by xnch. Composed of three sub-compo
+         nents: Event Log, Decision Ledger, and Replay Engine.
+       4 
+       6 ---
+       7 ## Sub-Components
+       8 
+       9 | Sub-Component | File | Purpose |
+      10 |---------------|------|---------|
+     … +191 lines (ctrl+o to expand)
+
+⏺ Write(docs/components/learning-loop.md)
+  ⎿  Wrote 151 lines to docs/components/learning-loop.md
+       2 # Learning Loop Component
+       3 Enables xnch + Nexi to improve over time through structured outc
+         ome feedback — not model training. Composed of four sub-componen
+         ts that run after execution completes.
+       4 
+       6 ---
+       7 ## Sub-Components
+       8 
+       9 | Sub-Component | Trigger | Output |
+      10 |---------------|---------|--------|
+     … +167 lines (ctrl+o to expand)
+
+⏺ Write(docs/components/xnch.md)
+  ⎿  Wrote 221 lines to docs/components/xnch.md
+      2 # xnch
+      3 The control plane. Single enforcement point for all action propos
+        ent in the system — Nexi, the execution layer, agents — interacts
+         with the world only through xnch.
+      5 Architecture classification: synchronous, stateful, deterministic
+         gateway with async audit emission.
+      7 For internal architecture and design principles, see [`architectu
+        re/xnch-control-plane.md`](../architecture/xnch-control-plane.md)
+      8 .
+      9 ---
+     … +261 lines (ctrl+o to expand)
+
+⏺ Now rewrite components/nexi-engine.md to be usage-only:
+
+⏺ Write(docs/components/nexi-engine.md)
+  ⎿  Added 93 lines, removed 79 lines
+        1  # Nexi Engine
+        2  
+        3 -The policy-aware multi-option decision engine.                
+        3 +The decision engine. Receives a session context from xnch, gen
+          +erates candidate plans, filters and scores them, and submits a
+          + decision record back to xnch. Does not execute. Does not writ
+          +e memory directly.                                            
+        4  
+        5 -## Overview                                                   
+        5 +For internal architecture, module definitions, and design rati
+          +onale, see [`architecture/nexi.md`](../architecture/nexi.md). 
+        6  
+        7 -Nexi is the decision engine that sits between Intent Parser an
+          -d Plan Compiler. It generates N candidate plans, evaluates the
+          -m against policies and memory context, and selects the best op
+          -tion.                                                         
+        7 +---                                                           
+        8  
+        9 -## Sub-Components                                             
+        9 +## Instantiation                                              
+       10  
+       11 -The Nexi Engine consists of five sub-components:              
+       11 +```python                                                     
+       12 +from xnch.nexi import NexiEngine, NexiConfig                  
+       13  
+       13 -1. **Intent Interpreter** - Prepares intent for option generat
+          -ion                                                           
+       14 -2. **Option Generator** - Generates N candidate plans via LLM 
+       15 -3. **Policy Filter** - Removes candidates violating policies  
+       16 -4. **Evaluator** - Scores candidates across four dimensions   
+       17 -5. **Decision Selector** - Selects final plan                 
+       14 +config = NexiConfig.from_file("~/.xnch/config.yaml")          
+       15 +engine = NexiEngine(config)                                   
+       16 +```                                                           
+       17  
+       19 -## Usage                                                      
+       18 +---                                                           
+       19  
+       20 +## Primary API                                                
+       21 +                                                              
+       22  ```python
+       22 -from xnch.nexi import NexiEngine                              
+       23 +class NexiEngine:                                             
+       24 +    def execute(self, intent: Intent) -> NexiResult:          
+       25 +        """Run full decision pipeline. Returns decision packag
+          +e."""                                                         
+       26  
+       24 -engine = NexiEngine(config)                                   
+       27 +    def generate_options(self, intent: Intent) -> list[Plan]: 
+       28 +        """Generate candidate plans only — no filtering or sel
+          +ection."""                                                    
+       29  
+       26 -# Execute full pipeline                                       
+       27 -result = engine.execute(intent)                               
+       28 -# Returns: (SelectedPlan, DecisionToken, AllCandidates)       
+       30 +    def evaluate(self, plans: list[Plan]) -> list[EvaluatedPla
+          +n]:                                                           
+       31 +        """Score plans without generating new options."""     
+       32 +                                                              
+       33 +    def select(self, evaluated: list[EvaluatedPlan]) -> tuple[
+          +Plan, str]:                                                   
+       34 +        """Select final plan. Returns (plan, decision_token)."
+          +""                                                            
+       35  ```
+       36  
+       37 +### NexiResult                                                
+       38 +                                                              
+       39 +```python                                                     
+       40 +class NexiResult:                                             
+       41 +    session_id: str                                           
+       42 +    decision_id: str                                          
+       43 +    trace_id: str                                             
+       44 +    status: str              # DECIDED | ESCALATED | CLARIFICA
+          +TION_REQUIRED | DEGRADED                                      
+       45 +    verdict_ref: str                                          
+       46 +    selected_action: dict    # action_type, action_spec, execu
+          +tion_token, token_ttl_ms                                      
+       47 +    decision_record_ref: str                                  
+       48 +    escalation: dict | None  # reason, required_actor, hold_id
+       49 +    clarification: dict | None                                
+       50 +```                                                           
+       51 +                                                              
+       52 +---                                                           
+       53 +                                                              
+       54  ## Configuration
+       55  
+       56  ```yaml
+       57  nexi:
+       35 -  max_candidates: 5                                           
+       36 -                                                              
+       37 -  # Option generation                                         
+       58 +  host: localhost                                             
+       59 +  port: 8200                                                  
+       60 +                                                              
+       61 +  max_candidates: 5          # number of options generated per
+          + session (3–7)                                                
+       62 +                                                              
+       63    option_generator:
+       64      temperature: 0.7
+       65      max_tokens: 2048
+       66      top_p: 0.9
+       42 -                                                              
+       43 -  # Evaluation weights                                        
+       67 +                                                              
+       68    evaluation:
+       45 -    weights:                                                  
+       69 +    weights:                 # per intent_class; these are def
+          +aults                                                         
+       70        safety: 0.30
+       71        efficiency: 0.25
+       72        compliance: 0.25
+       73        context_fit: 0.20
+       50 -                                                              
+       51 -  # Policy paths                                              
+       74 +                                                              
+       75    policy_paths:
+       76      - ~/.xnch/policies/default.yaml
+       77      - ~/.xnch/policies/custom.yaml
+       78 +                                                              
+       79 +  outcome_simulator:                                          
+       80 +    enabled: true                                             
+       81 +    risk_threshold: 0.6      # simulate when risk_score exceed
+          +s this                                                        
+       82  ```
+       83  
+       57 -## Detailed Components                                        
+       84 +---                                                           
+       85  
+       59 -### Intent Interpreter                                        
+       86 +## Session Flow                                               
+       87  
+       61 -Prepares the intent for option generation by extracting constr
+          -aints and preparing context.                                  
+       88 +Each call to `execute()` opens a session with xnch and runs th
+          +e full pipeline:                                              
+       89  
+       63 -### Option Generator                                          
+       90 +```                                                           
+       91 +session init → intent interpretation → context manifest load  
+       92 +  → option generation → parallel policy dry-run               
+       93 +  → scoring → outcome simulation (conditional)                
+       94 +  → decision selection → POST /verdict to xnch                
+       95 +  → return NexiResult                                         
+       96 +```                                                           
+       97  
+       65 -Uses the Model Adapter to generate candidate plans:           
+       98 +A session is stateless on Nexi's side. All persistent state li
+          +ves in xnch.                                                  
+       99  
+       67 -```python                                                     
+       68 -def generate_options(intent, context):                        
+       69 -    prompt = build_prompt(intent, context)                    
+       70 -    response = model_adapter.generate(prompt)                 
+       71 -    plans = parse_plans(response)                             
+       72 -    return plans                                              
+       73 -```                                                           
+      100 +---                                                           
+      101  
+       75 -### Policy Filter                                             
+      102 +## Degraded Mode                                              
+      103  
+       77 -Filters candidates against defined policies:                  
+      104 +If the model layer fails (timeout or schema validation failure
+          + on retry), Nexi activates a rule-based option generator that 
+          +produces 3 conservative options from policy memory. The `NexiR
+          +esult.status` is set to `DEGRADED` and the decision record not
+          +es the degraded generation path.                              
+      105  
+       79 -```yaml                                                       
+       80 -policies:                                                     
+       81 -  - name: no_destructive_production                           
+       82 -    rule:                                                     
+       83 -      action_type: delete                                     
+       84 -      entity_class: production                                
+       85 -    action: reject                                            
+       86 -                                                              
+       87 -  - name: require_confirmation                                
+       88 -    rule:                                                     
+       89 -      risk_score: ">0.7"                                      
+       90 -    action: require_human_approval                            
+       91 -```                                                           
+      106 +Nexi does not fail closed on model unavailability. It fails to
+          + a deterministic fallback.                                    
+      107  
+       93 -### Evaluator                                                 
+      108 +---                                                           
+      109  
+       95 -Scores across dimensions:                                     
+      110 +## Escalation                                                 
+      111  
+       97 -| Dimension | Description |                                   
+       98 -|-----------|-------------|                                   
+       99 -| Safety | No harmful side effects |                          
+      100 -| Efficiency | Optimal resource usage |                       
+      101 -| Compliance | Follows policies/rules |                       
+      102 -| Context Fit | Matches current context |                     
+      112 +Nexi escalates (rather than selecting) in three cases:        
+      113  
+      104 -### Decision Selector                                         
+      114 +1. All generated options are blocked by xnch policy dry-run   
+      115 +2. All options simulate to constraint-violating projected stat
+          +es                                                            
+      116 +3. xnch returns `BLOCK` on the final `/verdict` call          
+      117  
+      106 -Selects highest-scoring plan, generates decision token.       
+      118 +Escalation writes a hold record to xnch and returns `status: E
+          +SCALATED` with `hold_id` and `required_actor`. No execution to
+          +ken is issued. The session is preserved pending admin resoluti
+          +on.                                                           
+      119  
+      108 -## API Reference                                              
+      120 +---                                                           
+      121  
+      110 -```python                                                     
+      111 -class NexiEngine:                                             
+      112 -    def __init__(self, config: NexiConfig):                   
+      113 -        ...                                                   
+      114 -                                                              
+      115 -    def execute(self, intent: Intent) -> NexiResult:          
+      116 -        """Execute full decision pipeline."""                 
+      117 -                                                              
+      118 -    def generate_options(self, intent: Intent) -> List[Plan]: 
+      119 -        """Generate candidate plans only."""                  
+      120 -                                                              
+      121 -    def evaluate(self, plans: List[Plan]) -> List[EvaluatedPla
+          -n]:                                                           
+      122 -        """Evaluate plans without generating new options."""  
+      123 -                                                              
+      124 -    def select(self, evaluated: List[EvaluatedPlan]) -> Tuple[
+          -Plan, str]:                                                   
+      125 -        """Select final plan, return (plan, decision_token).""
+          -"                                                             
+      126 -```                                                           
+      122   No newline at end of file
+      123 +## Monitoring                                                 
+      124 +                                                              
+      125 +```yaml                                                       
+      126 +metrics:                                                      
+      127 +  nexi:                                                       
+      128 +    sessions_total: true                                      
+      129 +    options_generated: true                                   
+      130 +    options_blocked: true                                     
+      131 +    decisions_escalated: true                                 
+      132 +    model_fallback_total: true                                
+      133 +    latency_ms:                                               
+      134 +      intent_interpretation: true                             
+      135 +      context_load: true                                      
+      136 +      option_generation: true                                 
+      137 +      policy_filter: true                                     
+      138 +      scoring: true                                           
+      139 +      simulation: true                                        
+      140 +      verdict_submission: true                                
+      141 +```                                                           
+
+⏺ Now fix all ChromaDB/nomic references. Read the affected files first:
+
+  Read 2 files (ctrl+o to expand)
+
+⏺ Update(docs/getting-started/concepts.md)
+  ⎿  Added 1 line, removed 1 line
+      66  | Store | Purpose | Technology |
+      67  |-------|---------|------------|
+      68  | Context Store | Current execution context | SQLite (WAL) |
+      69 -| Vector Store | Semantic similarity search | ChromaDB |       
+      69 +| Vector Store | Semantic similarity search | sqlite-vec |     
+      70  | KV Cache | Fast key-value lookups | Redis |
+      71  | Outcome Store | Historical outcome records | SQLite |
+      72  | Pattern Store | Learned patterns and heuristics | SQLite |
+
+⏺ Update(docs/getting-started/glossary.md)
+  ⎿  Added 1 line, removed 1 line
+       95  ## V
+       96  
+       97  ### Vector Index
+       98 -ChromaDB-based semantic search index for context matching.    
+       98 +sqlite-vec based semantic search index for context matching. E
+          +mbeddings generated locally via sentence-transformers (all-Min
+          +iLM-L6-v2).                                                   
+       99  
+      100  ### vLLM
+      101  High-performance LLM inference server, primary model provider 
+           for xnch.
+      102   No newline at end of file
+
+  Read 2 files (ctrl+o to expand)
+
+⏺ Update(docs/getting-started/configuration.md)
+  ⎿  Added 3 lines, removed 2 lines
+      39      path: ~/.xnch/memory/context.db
+      40      
+      41    vector_store:
+      42 -    type: chroma                                               
+      43 -    path: ~/.xnch/memory/vectors                               
+      42 +    type: sqlite-vec                                           
+      43 +    path: ~/.xnch/memory/vectors.db                            
+      44 +    embedding_model: sentence-transformers/all-MiniLM-L6-v2    
+      45      
+      46    kv_cache:
+      47      type: redis
+⏺ Update(docs/getting-started/configuration.md)
+  ⎿  Added 4 lines, removed 3 lines
+      102      wal_mode: true
+      103      
+      104    vector_store:
+      105 -    type: chroma                                              
+      106 -    path: ~/.xnch/memory/vectors                              
+      107 -    collection: xnch_context                                  
+      105 +    type: sqlite-vec                                          
+      106 +    path: ~/.xnch/memory/vectors.db                           
+      107 +    embedding_model: sentence-transformers/all-MiniLM-L6-v2   
+      108 +    embedding_dim: 384                                        
+      109      
+      110    kv_cache:
+      111      type: redis
+
+⏺ Update(docs/getting-started/installation.md)
+  ⎿  Added 2 lines, removed 2 lines
+      47  # Redis for KV cache
+      48  pip install xnch-cli[redis]
+      49  
+      50 -# ChromaDB for vector index                                    
+      51 -pip install xnch-cli[chroma]                                   
+      50 +# sqlite-vec + sentence-transformers for vector index          
+      51 +pip install xnch-cli[vector]                                   
+      52  ```
+      53  
+      54  ### LLM Providers
+
+  Read 2 files (ctrl+o to expand)
+
+⏺ Write(docs/guides/memory-config.md)
+  ⎿  Added 11 lines, removed 17 lines
+       6  
+       7  The memory layer uses multiple backends:
+       8  - SQLite (Context, Outcome, Pattern, Episodic stores)
+       9 -- ChromaDB (Vector Index)                                      
+       9 +- sqlite-vec (Vector Index)                                    
+      10  - Redis (KV Cache)
+      11  
+      12  ## SQLite Configuration
+     ...
+      40      journal_mode: wal   # Write-ahead logging
+      41  ```
+      42  
+      43 -## ChromaDB Configuration                                      
+      43 +## Vector Index Configuration                                  
+      44  
+      45 -```yaml                                                        
+      46 -memory:                                                        
+      47 -  vector_store:                                                
+      48 -    type: chroma                                               
+      49 -    path: ~/.xnch/memory/vectors                               
+      50 -    collection: xnch_context                                   
+      51 -    embedding_model: all-MiniLM-L6-v2  # Default               
+      52 -```                                                            
+      45 +sqlite-vec is embedded within SQLite — no separate process or s
+         +ervice required.                                               
+      46  
+      54 -### Custom Embeddings                                          
+      55 -                                                               
+      47  ```yaml
+      48  memory:
+      49    vector_store:
+      59 -    type: chroma                                               
+      60 -    embedding_model: sentence-transformers/all-mpnet-base-v2   
+      61 -    embedding_dim: 768  # Match model dimension                
+      50 +    type: sqlite-vec                                           
+      51 +    path: ~/.xnch/memory/vectors.db                            
+      52 +    embedding_model: sentence-transformers/all-MiniLM-L6-v2    
+      53 +    embedding_dim: 384                                         
+      54  ```
+      55  
+      56 +The embedding model runs locally on CPU. The `all-MiniLM-L6-v2`
+         + model is 22MB and produces 384-dimensional vectors. Do not cha
+         +nge `embedding_dim` without reindexing the entire vector store 
+         +— dimension mismatch will cause query errors.                  
+      57 +                                                               
+      58  ## Redis Configuration
+      59  
+      60  ### Unix Socket (Recommended)
+     ...
+       96  | Backend | Use Case | Performance |
+       97  |---------|----------|-------------|
+       98  | SQLite | Context, Outcomes, Patterns | ~1ms read |
+      105 -| ChromaDB | Semantic search | ~10ms query |                  
+       99 +| sqlite-vec | Semantic search | ~10ms query |                
+      100  | Redis | Fast cache | ~0.1ms read |
+      101  
+      102  ## Disabling Backends
+     ...
+      117  ```bash
+      118  # Show memory stats
+      119  xnch memory stats
+      126 -```                                                           
+      120   No newline at end of file
+      121 +```                                                           
+
+⏺ Update(docs/guides/scaling.md)
+  ⎿  Added 4 lines, removed 10 lines
+      78  
+      79  #### Vector Store Scaling
+      80  
+      81 -ChromaDB supports distributed mode:                            
+      81 +sqlite-vec is embedded in SQLite and scales with the SQLite ins
+         +tance. For multi-writer scenarios, migrate the entire memory la
+         +yer to PostgreSQL with pgvector:                               
+      82  
+      83  ```yaml
+      84  memory:
+      85    vector_store:
+      86 -    type: chroma                                               
+      87 -    collection: xnch_context                                   
+      88 -    persistence: true                                          
+      89 -                                                               
+      90 -  # Or use Pinecone for fully managed                          
+      91 -  vector_store:                                                
+      92 -    type: pinecone                                             
+      93 -    api_key: ${PINECONE_API_KEY}                               
+      94 -    index: xnch-vectors                                        
+      86 +    type: pgvector                                             
+      87 +    connection: postgresql://user:pass@host:5432/xnch          
+      88 +    embedding_dim: 384                                         
+      89  ```
+      90  
+      91  ### Model Scaling
+
+⏺ Now fix the troubleshooting file:
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ Update(docs/troubleshooting/index.md)
+  ⎿  Added 1 line, removed 1 line
+      114  
+      115  #### Vector Index Error
+      116  
+      117 -**Symptom**: `ChromaDB collection not found`                  
+      117 +**Symptom**: `sqlite-vec: vector table not found` or `no such 
+          +table: vec_contexts`                                          
+      118  
+      119  **Solution**:
+      120  ```bash
+
+⏺ Now update the index files:
+
+⏺ Write(docs/architecture/index.md)
+  ⎿  Added 14 lines, removed 10 lines
+       1  # Architecture
+       2  
+       3 -Understanding the system architecture and design.              
+       3 +System architecture, design principles, and component relations
+         +hips.                                                          
+       4  
+       5 -## Overview                                                    
+       5 +## Foundations                                                 
+       6  
+       7 -- [System Architecture](architecture/overview.md) - High-level 
+         -system design                                                  
+       8 -- [Data Flow](architecture/data-flow.md) - 10-step execution fl
+         -ow                                                             
+       9 -- [Layered Architecture](architecture/layers.md) - Component la
+         -yers diagram                                                   
+       7 +- [Overview](overview.md) — System restatement, layer diagram, 
+         +canonical flow                                                 
+       8 +- [Principles](principles.md) — Architectural boundaries and wh
+         +y separation of concerns is non-negotiable                     
+       9  
+      11 -## Deep Dives                                                  
+      10 +## Component Architecture                                      
+      11  
+      13 -- [Nexi Engine Architecture](architecture/nexi-engine.md) - Dec
+         -ision engine details                                           
+      14 -- [Memory Layer Architecture](architecture/memory-layer.md) - S
+         -torage components                                              
+      15 -- [Audit Layer Architecture](architecture/audit-layer.md) - Log
+         -ging and replay                                                
+      16 -- [Learning System Architecture](architecture/learning-loop.md)
+         - - Learning components                                         
+      12   No newline at end of file
+      13 +- [xnch Control Plane](xnch-control-plane.md) — Policy enforcem
+         +ent, verdicts, memory authority, audit                         
+      14 +- [Nexi](nexi.md) — Decision engine: intent interpretation thro
+         +ugh verdict submission                                         
+      15 +- [Memory System](memory-system.md) — Stores, learning layer, m
+         +emory governance                                               
+      16 +                                                               
+      17 +## Operational Architecture                                    
+      18 +                                                               
+      19 +- [Execution Flow](execution-flow.md) — 15-phase runtime flow w
+         +ith data contracts, latency breakdown, and failure modes       
+      20 +- [Infrastructure](infra.md) — Process architecture, node layou
+         +t, port assignments, startup sequence                          
+      21 +- [Tech Stack](tech-stack.md) — Technology choices and rational
+         +e                                                              
+
+⏺ Write(docs/components/index.md)
+  ⎿  Added 16 lines, removed 10 lines
+       1  # Components
+       2  
+       3 -Detailed documentation for each system component.              
+       3 +Usage, configuration, and integration documentation for each co
+         +mponent.                                                       
+       4  
+       5 -## Core Components                                             
+       5 +## Control Plane                                               
+       6  
+       7 -- [xnch CLI](components/cli.md) - Command-line interface       
+       8 -- [Intent Parser](components/intent-parser.md) - Input normaliz
+         -ation                                                          
+       9 -- [Nexi Engine](components/nexi-engine.md) - Decision engine   
+      10 -- [Model Adapter](components/model-adapter.md) - LLM abstractio
+         -n                                                              
+      11 -- [Execution Engine](components/execution-engine.md) - Plan exe
+         -cution                                                         
+       7 +- [xnch](xnch.md) — Interface surface, verdict API, execution t
+         +okens, session lifecycle                                       
+       8  
+       9 +## Decision Engine                                             
+      10 +                                                               
+      11 +- [Nexi Engine](nexi-engine.md) — Instantiation, API, configura
+         +tion, degraded mode, escalation                                
+      12 +                                                               
+      13 +## Input & Execution                                           
+      14 +                                                               
+      15 +- [CLI](cli.md) — Command-line interface                       
+      16 +- [Intent Parser](intent-parser.md) — Input normalization      
+      17 +- [Execution Engine](execution-engine.md) — Plan execution     
+      18 +- [Model Adapter](model-adapter.md) — LLM provider abstraction 
+      19 +                                                               
+      20  ## Infrastructure
+      21  
+      15 -- [Memory Layer](components/memory-layer.md) - Storage componen
+         -ts                                                             
+      16 -- [Audit Layer](components/audit-layer.md) - Logging and replay
+      17 -- [Learning System](components/learning-system.md) - Continuous
+         - improvement                                                   
+      22   No newline at end of file
+      23 +- [Audit](audit.md) — Event log, decision ledger, replay engine
+      24 +- [Learning Loop](learning-loop.md) — Outcome collection, patte
+         +rn extraction, score adaptation                                
+
+⏺ Write(docs/index.md)
+  ⎿  Added 7 lines, removed 25 lines
+       1  # xnch + Nexi Documentation
+       2  
+       3 -Welcome to the xnch cognitive control plane and Nexi decision e
+         -ngine documentation.                                           
+       3 +## Sections                                                    
+       4  
+       5 -## Quick Links                                                 
+       6 -                                                               
+       7 -- [Architecture Overview](architecture/overview.md)            
+       8 -- [CLI Reference](reference/cli/commands.md)                   
+       9 -- [API Reference](reference/api/endpoints.md)                  
+      10 -- [Data Models](reference/schemas/index.md)                    
+      11 -                                                               
+      12 -## System Status                                               
+      13 -                                                               
+      14 -| Component | Status | Version |                               
+      15 -|-----------|--------|---------|                               
+      16 -| xnch CLI | Stable | 1.0.0 |                                  
+      17 -| Nexi Engine | Stable | 1.0.0 |                               
+      18 -| Memory Layer | Stable | 1.0.0 |                              
+      19 -| Learning Loop | Beta | 0.9.0 |                               
+      20 -                                                               
+      21 -## Index                                                       
+      22 -                                                               
+      23 -- [Getting Started](getting-started/index.md)                  
+      24 -- [Architecture](architecture/index.md)                        
+      25 -- [Components](components/index.md)                            
+      26 -- [Guides](guides/index.md)                                    
+      27 -- [Reference](reference/index.md)                              
+      28 -- [Troubleshooting](troubleshooting/index.md)                  
+       5   No newline at end of file
+       6 +- [Getting Started](getting-started/index.md) — Installation, q
+         +uickstart, concepts, glossary                                  
+       7 +- [Architecture](architecture/index.md) — System design, princi
+         +ples, component relationships                                  
+       8 +- [Components](components/index.md) — Usage and configuration f
+         +or each component                                              
+       9 +- [Guides](guides/index.md) — Task-oriented operational walkthr
+         +oughs                                                          
+      10 +- [Reference](reference/index.md) — API contracts, CLI flags, d
+         +ata schemas                                                    
+      11 +- [Troubleshooting](troubleshooting/index.md) — Symptoms and so
+         +lutions                                                        
+
+⏺ Now create the principles.md file extracted from overview.md:
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ Write(docs/architecture/overview.md)
+  ⎿  Added 73 lines, removed 51 lines
+       1 ----                                                            
+       2 -source: architecturalInertnalization.md                        
+       3 -merged: 2026-04-18                                             
+       4 ----                                                            
+       1 +# System Overview                                              
+       2  
+       6 -# Architectural Internalization                                
+       7 -                                                               
+       8 -## 1. System Restatement                                       
+       9 -                                                               
+       3  xnch is not an AI assistant. It is a governed decision infrastr
+          ucture — a control plane that separates the mechanics of reason
+          ing from the act of deciding from the generation of content.
+       4  
+       5  At its core, xnch imposes discipline on what is normally a chao
+          tic, opaque, single-pass process in most AI systems: user input
+           → model output. Instead, it interposes multiple bounded layers
+          , each with a distinct contract:
+       6  
+       7  - **xnch (control plane)** is the traffic authority. It owns ro
+          uting, policy enforcement, access control, and audit trails. It
+           never generates content. It governs what enters and exits the 
+          system.
+       8 +- **Nexi (decision engine)** is the reasoning substrate. It eva
+         +luates context, applies decision logic, selects from available 
+         +strategies, and orchestrates model calls. It selects decisions 
+         +— it does not hallucinate them.                                
+       9 +- **Model layer** is a generation substrate. It produces struct
+         +ured output on demand, called by Nexi with constrained prompts.
+         + Its output is fed back to Nexi for evaluation, not directly to
+         + the user.                                                     
+      10 +- **Memory system** is a structured, queryable, evolving knowle
+         +dge graph. It feeds Nexi, not models directly.                 
+      11 +- **Execution layer** is the effector — it acts on the world on
+         +ly after the full reasoning + control cycle completes.         
+      12  
+      16 -- **Nexi (decision engine)** is the reasoning substrate. It eva
+         -luates context, applies decision logic, selects from available 
+         -strategies, and orchestrates model calls. Critically — it selec
+         -ts decisions, it doesn't hallucinate them. This is an architect
+         -ural stance against probabilistic drift.                       
+      13 +The canonical flow is a closed-loop governance circuit, not a p
+         +ipeline:                                                       
+      14  
+      18 -- **Model layer** is a dumb generation tool. It produces text/s
+         -tructured output on demand. It has no agency. It is called by N
+         -exi with constrained prompts and its output is fed back to Nexi
+         - for evaluation, not directly to the user.                     
+      15 +```                                                            
+      16 +User/Agent → xnch → Nexi → Model → Nexi → xnch → Execution → Me
+         +mory Update                                                    
+      17 +                ↑______________________________________________
+         +_|                                                             
+      18 +```                                                            
+      19  
+      20 -- **Memory system** is not a log. It is a structured, queryable
+         -, evolving knowledge graph that reflects system state, prior de
+         -cisions, outcomes, and learned policies. It feeds Nexi, not mod
+         -els.                                                           
+      21 -                                                               
+      22 -- **Execution layer** is the effector — it acts on the world (i
+         -nfra changes, API calls, agent dispatches) only after the full 
+         -reasoning + control cycle completes.                           
+      23 -                                                               
+      24 -The canonical flow — **User/Agent → xnch → Nexi → Model → Nexi 
+         -→ xnch → Execution → Memory Update** — is not a pipeline, it's 
+         -a closed-loop governance circuit.                              
+      25 -                                                               
+      20  ---
+      21  
+      28 -## 2. Key Architectural Boundaries                             
+      22 +## Layer Diagram                                               
+      23  
+      30 -These are the load-bearing walls of the system. Violating any o
+         -ne of them collapses the design intent.                        
+      24 +```                                                            
+      25 +┌──────────────────────────────────────────────────────────────
+         +──┐                                                            
+      26 +│                     Presentation Layer                       
+         +  │                                                            
+      27 +│  ┌─────────────────────┐  ┌─────────────────────────────────┐
+         +  │                                                            
+      28 +│  │    xnch CLI         │  │      FastAPI Server             │
+         +  │                                                            
+      29 +│  │   (Typer + Rich)    │  │     (Uvicorn + Pydantic)        │
+         +  │                                                            
+      30 +│  └─────────────────────┘  └─────────────────────────────────┘
+         +  │                                                            
+      31 +└──────────────────────────────────────────────────────────────
+         +──┘                                                            
+      32 +                              │                                
+      33 +                              ▼                                
+      34 +┌──────────────────────────────────────────────────────────────
+         +──┐                                                            
+      35 +│                      Control Plane (xnch)                    
+         +  │                                                            
+      36 +│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐
+         +  │                                                            
+      37 +│  │ Policy Engine│  │ Governance   │  │  Audit Logger        │
+         +  │                                                            
+      38 +│  │              │  │ Layer (RBAC) │  │  (Append-only)       │
+         +  │                                                            
+      39 +│  └──────────────┘  └──────────────┘  └──────────────────────┘
+         +  │                                                            
+      40 +└──────────────────────────────────────────────────────────────
+         +──┘                                                            
+      41 +                              │                                
+      42 +                              ▼                                
+      43 +┌──────────────────────────────────────────────────────────────
+         +──┐                                                            
+      44 +│                    Decision Engine (Nexi)                    
+         +  │                                                            
+      45 +│  Intent Interpreter → Option Generator → Policy Filter       
+         +  │                                                            
+      46 +│  → Evaluator → Outcome Simulator → Decision Selector         
+         +  │                                                            
+      47 +└──────────────────────────────────────────────────────────────
+         +──┘                                                            
+      48 +                              │                                
+      49 +                              ▼                                
+      50 +┌──────────────────────────────────────────────────────────────
+         +──┐                                                            
+      51 +│                     Abstraction Layer                        
+         +  │                                                            
+      52 +│  ┌─────────────────────┐  ┌─────────────────────────────────┐
+         +  │                                                            
+      53 +│  │    Model Adapter    │  │      Plan Compiler              │
+         +  │                                                            
+      54 +│  │ (vLLM / llama.cpp)  │  │   (Steps → Execution)           │
+         +  │                                                            
+      55 +│  └─────────────────────┘  └─────────────────────────────────┘
+         +  │                                                            
+      56 +└──────────────────────────────────────────────────────────────
+         +──┘                                                            
+      57 +                              │                                
+      58 +                              ▼                                
+      59 +┌──────────────────────────────────────────────────────────────
+         +──┐                                                            
+      60 +│                      Memory Layer                            
+         +  │                                                            
+      61 +│  ┌───────────┐ ┌───────────┐ ┌─────────┐ ┌─────────────────┐ 
+         + │                                                             
+      62 +│  │ Context   │ │ Vector    │ │  KV     │ │   Episodic +    │ 
+         + │                                                             
+      63 +│  │ Store     │ │ Index     │ │ Cache   │ │   Pattern Store  │
+         +  │                                                            
+      64 +│  │ (SQLite)  │ │(sqlite-vec│ │(Redis)  │ │   (SQLite)      │ 
+         + │                                                             
+      65 +│  └───────────┘ └───────────┘ └─────────┘ └─────────────────┘ 
+         + │                                                             
+      66 +└──────────────────────────────────────────────────────────────
+         +──┘                                                            
+      67 +                              │                                
+      68 +                              ▼                                
+      69 +┌──────────────────────────────────────────────────────────────
+         +──┐                                                            
+      70 +│                       Audit Layer                            
+         +  │                                                            
+      71 +│  ┌───────────────┐ ┌─────────────────┐ ┌─────────────────┐   
+         + │                                                             
+      72 +│  │  Event Log    │ │ Decision Ledger │ │  Replay Engine  │   
+         + │                                                             
+      73 +│  │ (Append-only) │ │ (JSONL + SHA256)│ │                 │   
+         + │                                                             
+      74 +│  └───────────────┘ └─────────────────┘ └─────────────────┘   
+         + │                                                             
+      75 +└──────────────────────────────────────────────────────────────
+         +──┘                                                            
+      76 +```                                                            
+      77  
+      32 -### Boundary 1: xnch ↔ Nexi (Control vs. Reasoning)            
+      33 -                                                               
+      34 -xnch does not reason. Nexi does not control. xnch enforces what
+         - is permitted; Nexi determines what is best within what is perm
+         -itted. If these collapse into each other — which happens in nai
+         -ve agent systems — you get policy bypass through reasoning, or 
+         -reasoning paralysis through over-enforcement. They must be inde
+         -pendently deployable, independently testable, and communicate o
+         -ver a defined contract (likely a structured decision request/re
+         -sponse schema).                                                
+      35 -                                                               
+      36 -### Boundary 2: Nexi ↔ Model Layer (Decision vs. Generation)   
+      37 -                                                               
+      38 -This is the most architecturally unusual and important boundary
+         -. In almost every production AI system, the model IS the decisi
+         -on engine. xnch explicitly rejects this. Nexi calls the model a
+         -s a subroutine — not as an oracle. The model cannot escalate, c
+         -annot self-direct, cannot persist state. Nexi receives model ou
+         -tput and applies deterministic evaluation logic before anything
+         - proceeds. This boundary is what makes the system auditable and
+         - reproducible.                                                 
+      39 -                                                               
+      40 -### Boundary 3: Execution Layer ↔ Everything Else (Effect Isola
+         -tion)                                                          
+      41 -                                                               
+      42 -No layer above the execution layer touches the real world. xnch
+         - doesn't execute. Nexi doesn't execute. Models definitely don't
+         - execute. This is a strict side-effect boundary. The execution 
+         -layer receives a fully-formed, approved, audited action specifi
+         -cation and carries it out. This maps directly to the command pa
+         -ttern — execution is decoupled from decision.                  
+      43 -                                                               
+      44 -### Boundary 4: Memory System ↔ Model Layer (Structured State v
+         -s. Context Window)                                             
+      45 -                                                               
+      46 -Memory does not flow directly into models as raw context. It fl
+         -ows into Nexi, which decides what to surface, how to frame it, 
+         -and what to withhold. This prevents model context pollution and
+         - ensures memory retrieval is a deliberate, governed act — not a
+         - dump of logs into a prompt.                                   
+      47 -                                                               
+      48 -### Boundary 5: Post-Execution Memory Update (Feedback Loop Clo
+         -sure)                                                          
+      49 -                                                               
+      50 -Memory is updated after execution, not after generation. This i
+         -s a subtle but critical distinction. The system learns from wha
+         -t happened in the world, not from what the model said. This is 
+         -what makes the feedback loop grounded.                         
+      51 -                                                               
+      78  ---
+      79  
+      54 -## 3. Why Separation of Concerns is Non-Negotiable Here        
+      80 +## Cross-Cutting Concerns                                      
+      81  
+      56 -Most AI systems fail in production for one of three reasons: un
+         -auditable decisions, uncontrolled side effects, or state drift.
+         - xnch's SoC directly addresses all three.                      
+      82 +| Concern | Implementation |                                   
+      83 +|---------|----------------|                                   
+      84 +| Error handling | Exception hierarchy, graceful degradation pe
+         +r component |                                                  
+      85 +| Logging | structlog (JSON output) throughout all layers |    
+      86 +| Tracing | `trace_id` propagated via headers across all servic
+         +e calls |                                                      
+      87 +| Metrics | Prometheus metrics per layer |                     
+      88 +| Configuration | YAML-based, environment variable override |  
+      89  
+      58 -**Auditability** requires a single source of decision authority
+         -. If reasoning and control are colocated, you cannot reconstruc
+         -t why a decision was made versus why it was permitted. In a pay
+         -ment-grade or compliance-sensitive context, that distinction is
+         - legally and operationally material. Nexi's decision log and xn
+         -ch's control log must be independently queryable and must tell 
+         -a coherent causal story together.                              
+      59 -                                                               
+      60 -**Determinism** requires isolation from probabilistic component
+         -s. The model layer is inherently non-deterministic. By quaranti
+         -ning it behind Nexi — which applies deterministic selection log
+         -ic — the system's observable behavior becomes reproducible even
+         - when the underlying generation varies. This is the difference 
+         -between a system you can test and a system you can only observe
+         -.                                                              
+      61 -                                                               
+      62 -**System improvement via feedback loops** (not model training) 
+         -requires clean signal. If memory is contaminated by model outpu
+         -t rather than grounded in execution outcomes, the feedback sign
+         -al is circular — the system learns what the model predicted, no
+         -t what the world returned. Keeping the memory update post-execu
+         -tion ensures the loop trains on reality.                       
+      63 -                                                               
+      64 -**Policy enforceability** requires a chokepoint. You cannot enf
+         -orce a policy that is distributed across layers. xnch is the si
+         -ngle enforcement point. Policies defined there apply regardless
+         - of what Nexi decides, regardless of what the model generates, 
+         -regardless of what the execution layer is capable of. This is t
+         -he architectural analog of a kernel boundary — user space canno
+         -t bypass it.                                                   
+      65 -                                                               
+      66 -**Cognitive separation** enables independent evolution. Nexi's 
+         -reasoning strategies can be upgraded without touching xnch's po
+         -licy engine. The model layer can be swapped (Claude → Gemini → 
+         -local) without changing decision logic. Memory schema can evolv
+         -e without breaking execution contracts. This is not just clean 
+         -design — it's the only way a system this complex stays maintain
+         -able across a multi-year build.                                
+      67 -                                                               
+      90  ---
+      91  
+      70 -Bottom line: xnch is architected the way a payment clearing sys
+         -tem or air traffic control system is architected — not the way 
+         -most AI products are. The complexity is justified by the guaran
+         -tee: every decision in the system has an owner, a boundary, an 
+         -audit trail, and a feedback path. That's not over-engineering. 
+         -That's the minimum viable architecture for a system that is exp
+         -ected to improve over time without becoming unpredictable.     
+      92   No newline at end of file
+      93 +For design principles and the rationale behind these boundaries
+         +, see [Principles](principles.md).                             
+
+⏺ Write(docs/architecture/principles.md)
+  ⎿  Wrote 67 lines to docs/architecture/principles.md
+      1 # Architectural Principles
+      2 
+      3 These are the load-bearing decisions of the system. Violating any
+         one of them collapses the design intent.
+      4 
+      5 ---
+      6 
+      7 ## Boundaries
+      8 
+      9 ### Boundary 1: xnch ↔ Nexi — Control vs. Reasoning
+     … +113 lines (ctrl+o to expand)
+
+⏺ Verify the final state:
+
+  Searched for 2 patterns (ctrl+o to expand)
+
+⏺ Zero ChromaDB/nomic references remaining. Final output:
+
+  ---
+  Output
+
+  1. Final directory structure
+
+  docs/
+  ├── index.md
+  ├── architecture/
+  │   ├── index.md
+  │   ├── overview.md
+  │   ├── principles.md              ← NEW
+  │   ├── xnch-control-plane.md
+  │   ├── nexi.md                    ← RENAMED
+  │   ├── memory-system.md           ← MERGED + REWRITTEN
+  │   ├── execution-flow.md
+  │   ├── tech-stack.md
+  │   └── infra.md
+  ├── components/
+  │   ├── index.md
+  │   ├── xnch.md                    ← NEW
+  │   ├── nexi-engine.md             ← REWRITTEN (usage-only)
+  │   ├── cli.md
+  │   ├── intent-parser.md
+  │   ├── execution-engine.md
+  │   ├── model-adapter.md
+  │   ├── audit.md                   ← MOVED + REWRITTEN
+  │   └── learning-loop.md           ← MOVED + REWRITTEN
+  ├── getting-started/
+  │   ├── index.md
+  │   ├── installation.md
+  │   ├── quickstart.md
+  │   ├── concepts.md
+  │   ├── configuration.md
+  │   └── glossary.md
+  ├── guides/
+  │   └── [unchanged except memory-config.md and scaling.md]
+  ├── reference/
+  │   └── [unchanged]
+  └── troubleshooting/
+      └── [unchanged except index.md]
+
+  2. Files deleted
+
+  ┌────────────────────────────────────┐
+  │                File                │
+  ├────────────────────────────────────┤
+  │ docs/README.md                     │
+  ├────────────────────────────────────┤
+  │ docs/architecture/nexi-engine.md   │
+  ├────────────────────────────────────┤
+  │ docs/architecture/data-flow.md     │
+  ├────────────────────────────────────┤
+  │ docs/architecture/layers.md        │
+  ├────────────────────────────────────┤
+  │ docs/architecture/memory-layer.md  │
+  ├────────────────────────────────────┤
+  │ docs/architecture/audit-layer.md   │
+  ├────────────────────────────────────┤
+  │ docs/architecture/learning-loop.md │
+  └────────────────────────────────────┘
+
+  3. Files renamed
+
+  ┌───────────────────────────────────────────┬───────────────────────────┐
+  │                   From                    │            To             │
+  ├───────────────────────────────────────────┼───────────────────────────┤
+  │ docs/architecture/nexi-decision-engine.md │ docs/architecture/nexi.md │
+  └───────────────────────────────────────────┴───────────────────────────┘
+
+  4. Files created
+
+  File: docs/architecture/principles.md
+  Content: Architectural boundaries and SoC rationale extracted from overview.md
+
+    sections 2+3
+  ────────────────────────────────────────
+  File: docs/components/xnch.md
+  Content: xnch interface surface: all 6 API endpoints, verdicts, execution
+    tokens, session lifecycle, policy enforcement, configuration
+  ────────────────────────────────────────
+  File: docs/components/audit.md
+  Content: Audit component usage: Event Log, Decision Ledger, Replay Engine —
+    rewritten from implementation to integration perspective
+  ────────────────────────────────────────
+  File: docs/components/learning-loop.md
+  Content: Learning Loop component usage: 4 sub-components with APIs,
+    configuration, data flow — rewritten from architecture to integration
+    perspective
+
+  5. Content merged
+
+  Source: architecture/memory-layer.md + architecture/memory-system.md
+  Destination: architecture/memory-system.md
+  What was kept: Conceptual store descriptions, learning layer, governance
+  model,
+    key principles
+  What was removed: SQL DDL schemas (belong in reference/schemas/), ChromaDB
+    configuration blocks, per-store operation method lists
+  ────────────────────────────────────────
+  Source: architecture/overview.md sections 2+3
+  Destination: architecture/principles.md
+  What was kept: Boundaries 1–5, SoC rationale, system classification
+  What was removed: Nothing — content was moved, not dropped
+  ────────────────────────────────────────
+  Source: architecture/overview.md
+  Destination: architecture/overview.md (trimmed) + layer diagram absorbed from
+    layers.md
+  What was kept: System restatement (section 1), layer diagram from layers.md,
+    cross-cutting concerns table
+  What was removed: Sections 2+3 (moved to principles.md)
+  ────────────────────────────────────────
+  Source: components/nexi-engine.md
+  Destination: components/nexi-engine.md (rewritten)
+  What was kept: Instantiation, API surface, configuration YAML, degraded mode,
+    escalation, monitoring
+  What was removed: Internal module re-descriptions (those belong in
+    architecture/nexi.md)
+
+  Technology contradiction resolved: All references to ChromaDB,
+  nomic-embed-text, and type: chroma config across getting-started/concepts.md,
+  getting-started/glossary.md, getting-started/configuration.md,
+  getting-started/installation.md, guides/memory-config.md, guides/scaling.md,
+  and troubleshooting/index.md replaced with sqlite-vec / sentence-transformers
+  (all-MiniLM-L6-v2).
+
+✻ Baked for 5m 22s

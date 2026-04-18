@@ -1,5 +1,11 @@
 # Dry Run Mode
 
+---
+tags:
+  - #guide
+  - #execution
+---
+
 Simulate execution without making changes.
 
 ## Overview

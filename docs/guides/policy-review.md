@@ -1,5 +1,11 @@
 # Reviewing Policy Candidates
 
+---
+tags:
+  - #guide
+  - #learning
+---
+
 Review and apply policy suggestions from the learning system.
 
 ## Overview

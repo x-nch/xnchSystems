@@ -1,5 +1,12 @@
 # ExecutionResult Schema
 
+---
+tags:
+  - #reference
+  - #contracts
+  - #execution
+---
+
 Outcome of plan execution.
 
 ## Definition

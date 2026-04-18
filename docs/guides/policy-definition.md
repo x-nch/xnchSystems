@@ -1,5 +1,11 @@
 # Policy Definition
 
+---
+tags:
+  - #guide
+  - #policy
+---
+
 Define policies for Nexi to enforce.
 
 ## Overview

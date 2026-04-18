@@ -1,0 +1,37 @@
+╭─── Claude Code v2.1.109 ─────────────────────────────────────────────────────╮
+│                                                    │ Tips for getting        │
+│                Welcome back ck-san!                │ started                 │
+│                                                    │ Run /init to create a … │
+│                       ▐▛███▜▌                      │ ─────────────────────── │
+│                      ▝▜█████▛▘                     │ Recent activity         │
+│                        ▘▘ ▝▝                       │ No recent activity      │
+│ Sonnet 4.6 · Claude Pro · xn.charlie@icloud.com's  │                         │
+│ Organization                                       │                         │
+│                   ~/xnchSystems                    │                         │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+✻ Conversation compacted (ctrl+o for history)
+
+  ⎿  Referenced file docs/architecture/system-loop.md
+  ⎿  Read docs/architecture/index.md (27 lines)
+  ⎿  Referenced file docs/architecture/decision-model.md
+  ⎿  Referenced file docs/reference/data-contracts.md
+  ⎿  Read docs/architecture/runtime.md (331 lines)
+
+⏺ Write(docs/reference/implementation-contracts.md)
+  ⎿  Wrote 694 lines to docs/reference/implementation-contracts.md
+      2 # Implementation Contracts
+      3 Boundary-level specifications for components that must interopera
+        l a component must implement. These are not architecture descript
+        ions — they are build targets.
+      4 
+        cts.md). For system-wide behavior, see [`../architecture/system-l
+        oop.md`](../architecture/system-loop.md).
+      7 ---
+      8 
+      9 ## Contract 1: Policy DSL
+     … +851 lines (ctrl+o to expand)
+  ⎿  You've hit your limit · resets 1:30pm (Asia/Calcutta)
+     /upgrade to increase your usage limit.
+
+✻ Brewed for 6m 42s

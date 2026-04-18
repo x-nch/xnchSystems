@@ -1,5 +1,11 @@
 # Basic Execution
 
+---
+tags:
+  - #guide
+  - #execution
+---
+
 Learn how to execute your first intent through xnch + Nexi.
 
 ## Quick Start

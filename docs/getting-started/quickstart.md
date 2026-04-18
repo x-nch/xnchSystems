@@ -1,5 +1,11 @@
 # Quick Start Guide
 
+---
+tags:
+  - #guide
+  - #reference
+---
+
 Get xnch + Nexi running in under 5 minutes.
 
 ## Prerequisites
