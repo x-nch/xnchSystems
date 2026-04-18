@@ -1,12 +1,17 @@
-## Complete Runtime Execution Pipeline
+---
+source: runtimeExecFlow.md
+merged: 2026-04-18
+---
 
-### 1. Step-by-Step Execution Flow
+# Runtime Execution Flow
+
+## 1. Step-by-Step Execution Flow
 
 ---
 
-**PHASE A: INGESTION**
+### PHASE A: INGESTION
 
-**Step 1 — Input Layer receives raw input** `[SYNC]`
+#### Step 1 — Input Layer receives raw input [SYNC]
 
 CLI/API gateway receives user input. Performs only transport-level validation: auth token present, payload size within limit, content-type valid. No semantic parsing here.
 
@@ -16,7 +21,7 @@ Caller: Input Layer → xnch `POST /session/init`
 
 ---
 
-**Step 2 — xnch: Session initialization + actor resolution** `[SYNC]`
+#### Step 2 — xnch: Session initialization + actor resolution [SYNC]
 
 xnch receives the session init request. Does three things in order, all blocking:
 
@@ -30,9 +35,9 @@ Caller: xnch → Nexi `POST /session/start`
 
 ---
 
-**PHASE B: INTENT + CONTEXT**
+### PHASE B: INTENT + CONTEXT
 
-**Step 3 — Nexi: Intent interpretation** `[SYNC]`
+#### Step 3 — Nexi: Intent interpretation [SYNC]
 
 Nexi receives raw input + session context. Intent Interpreter normalizes:
 - Classifies `intent_class`
@@ -45,7 +50,7 @@ If clear: proceed to Step 4.
 
 ---
 
-**Step 4 — Nexi → xnch: Context manifest request** `[SYNC]`
+#### Step 4 — Nexi → xnch: Context manifest request [SYNC]
 
 Nexi calls `POST /memory/read` on xnch with a targeted query. xnch evaluates read policy against actor capability, then queries all three memory stores in parallel:
 
@@ -57,9 +62,9 @@ xnch assembles and returns the context manifest. Nexi pins it. This snapshot is 
 
 ---
 
-**PHASE C: OPTION GENERATION**
+### PHASE C: OPTION GENERATION
 
-**Step 5 — Nexi → Model Layer: Constrained generation request** `[SYNC]`
+#### Step 5 — Nexi → Model Layer: Constrained generation request [SYNC]
 
 Nexi constructs a structured prompt. Not freeform. Template-driven, versioned. Contains:
 - Normalized intent object
@@ -71,7 +76,7 @@ Model layer returns raw option set. Nexi validates schema. If malformed: retry o
 
 ---
 
-**Step 6 — Nexi → xnch: Parallel policy dry-run** `[SYNC, parallel fanout]`
+#### Step 6 — Nexi → xnch: Parallel policy dry-run [SYNC, parallel fanout]
 
 Nexi fires `GET /policy/check` for all N options simultaneously. xnch evaluates each against active policy set.
 
@@ -86,9 +91,9 @@ If all options return `BLOCK`: Nexi escalates. Does not force selection. Returns
 
 ---
 
-**PHASE D: EVALUATION + SELECTION**
+### PHASE D: EVALUATION + SELECTION
 
-**Step 7 — Nexi: Option scoring** `[SYNC]`
+#### Step 7 — Nexi: Option scoring [SYNC]
 
 For each surviving option, Option Evaluator computes four scores in parallel:
 
@@ -101,7 +106,7 @@ Composite score computed with intent-class-specific weights (loaded from policy 
 
 ---
 
-**Step 8 — Nexi: Outcome simulation (conditional)** `[SYNC]`
+#### Step 8 — Nexi: Outcome simulation (conditional) [SYNC]
 
 Triggered if: any surviving option has `risk_score > 0.6`, OR `intent_class = EXECUTION` with irreversible flag, OR `actor.type = AGENT`.
 
@@ -113,7 +118,7 @@ If all projected states violate constraints: escalate, do not select.
 
 ---
 
-**Step 9 — Nexi: Decision selection + record assembly** `[SYNC]`
+#### Step 9 — Nexi: Decision selection + record assembly [SYNC]
 
 Highest composite score, non-blocked, non-escalated option is selected.
 
@@ -134,9 +139,9 @@ decision_record {
 
 ---
 
-**PHASE E: AUTHORIZATION**
+### PHASE E: AUTHORIZATION
 
-**Step 10 — Nexi → xnch: Final verdict submission** `[SYNC]`
+#### Step 10 — Nexi → xnch: Final verdict submission [SYNC]
 
 Nexi calls `POST /verdict` with the full decision record as payload.
 
@@ -151,9 +156,9 @@ Returns verdict response to Nexi including `execution_token`.
 
 ---
 
-**PHASE F: EXECUTION**
+### PHASE F: EXECUTION
 
-**Step 11 — Nexi → Execution Layer: Dispatch** `[SYNC handoff, ASYNC execution]`
+#### Step 11 — Nexi → Execution Layer: Dispatch [SYNC handoff, ASYNC execution]
 
 Nexi passes to execution layer:
 - `action_spec` (final, post-MODIFY if applicable)
@@ -166,7 +171,7 @@ Execution begins. This step is async — Nexi does not block waiting for executi
 
 ---
 
-**Step 12 — Nexi → Input Layer: Intermediate response** `[SYNC]`
+#### Step 12 — Nexi → Input Layer: Intermediate response [SYNC]
 
 While execution runs async, Nexi returns to the user:
 ```
@@ -181,7 +186,7 @@ While execution runs async, Nexi returns to the user:
 
 ---
 
-**Step 13 — Execution Layer → xnch: Outcome report** `[ASYNC]`
+#### Step 13 — Execution Layer → xnch: Outcome report [ASYNC]
 
 On completion (success or failure), execution layer posts outcome to xnch:
 ```
@@ -199,7 +204,7 @@ xnch validates token ref matches a known issued token. Writes outcome to episodi
 
 ---
 
-**Step 14 — xnch → Nexi: Outcome callback** `[ASYNC]`
+#### Step 14 — xnch → Nexi: Outcome callback [ASYNC]
 
 xnch fires callback to Nexi with outcome payload. Nexi:
 1. Calls `POST /memory/write` on xnch with outcome-enriched decision record
@@ -207,7 +212,7 @@ xnch fires callback to Nexi with outcome payload. Nexi:
 
 ---
 
-**Step 15 — xnch → Input Layer: Final response delivery** `[ASYNC]`
+#### Step 15 — xnch → Input Layer: Final response delivery [ASYNC]
 
 xnch pushes final outcome to input layer (via websocket/SSE/polling depending on transport). Input layer delivers to user:
 ```
@@ -222,7 +227,7 @@ xnch pushes final outcome to input layer (via websocket/SSE/polling depending on
 
 ---
 
-### 2. Example: "deploy model llama3-8b to inference cluster"
+## 2. Example: "deploy model llama3-8b to inference cluster"
 
 ```
 Step 1:  CLI receives: "deploy model llama3-8b to inference cluster"
@@ -315,7 +320,7 @@ Step 15: User receives: { status: COMPLETED, outcome_summary: "llama3-8b deploye
 
 ---
 
-### 3. Data Contracts Between Steps
+## 3. Data Contracts Between Steps
 
 ```javascript
 // Step 1 → Step 2: Input Layer → xnch /session/init
@@ -370,7 +375,7 @@ Step 15: User receives: { status: COMPLETED, outcome_summary: "llama3-8b deploye
   intent: { class: "EXECUTION", entity_id: "llama3-8b", entity_class: "ML_MODEL" },
   context_summary: { recent_outcomes: "6S/1P/1F", dominant_pattern: "0.75 success" },
   output_schema: { type: "array", items: { option_id, action_type, action_spec,
-                   stated_rationale, estimated_side_effects }, minItems: 3, maxItems: 7 },
+                stated_rationale, estimated_side_effects }, minItems: 3, maxItems: 7 },
   instruction: "Generate only. Do not evaluate. Do not select."
 }
 
@@ -460,7 +465,7 @@ Step 15: User receives: { status: COMPLETED, outcome_summary: "llama3-8b deploye
 
 ---
 
-### 4. Where Latency Occurs
+## 4. Where Latency Occurs
 
 ```
 Step 2   — xnch actor resolution         ~20–50ms      governance store lookup
@@ -483,7 +488,7 @@ Step 13  — Execution itself              ~5000–60000ms DOMINANT: real-world 
 
 ---
 
-### 5. Failure Modes and Handling
+## 5. Failure Modes and Handling
 
 ```
 Step 2 — Actor resolution failure
