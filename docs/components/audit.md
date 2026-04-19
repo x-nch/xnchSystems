@@ -92,10 +92,10 @@ audit:
     "plan_id": "plan_001",
     "score": 0.87,
     "dimension_scores": {
-      "safety": 0.95,
-      "efficiency": 0.82,
-      "compliance": 0.90,
-      "context_fit": 0.78
+      "policy_score": 0.95,
+      "outcome_score": 0.82,
+      "risk_score": 0.90,
+      "context_fit_score": 0.78
     }
   },
   "decision_token": "tok_xyz789",

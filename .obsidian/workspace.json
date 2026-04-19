@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "docs/architecture/tech-stack.md",
+                "file": "docs/architecture/system-loop.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "tech-stack"
+              "title": "system-loop"
             }
           }
         ]
@@ -53,7 +53,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "stack",
+                "query": "tag:#architecture",
                 "matchingCase": false,
                 "explainSearch": false,
                 "collapseAll": false,
@@ -79,7 +79,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300
+    "width": 300,
+    "collapsed": true
   },
   "right": {
     "id": "a5e131eb6968a986",
@@ -183,7 +184,21 @@
   },
   "active": "cd29b9b70debfb64",
   "lastOpenFiles": [
-    "ArchitecturalAuidtReport.txt",
+    "docs/architecture/tech-stack.md",
+    "xnch/dump.rdb",
+    "nexi/nexi/__pycache__/main.cpython-313.pyc",
+    "GEMINI.md",
+    "AGENTS.md",
+    "CLAUDE.md",
+    "xnch/xnch/routes/__pycache__/verdict.cpython-313.pyc",
+    "xnch/xnch/routes/__pycache__/session.cpython-313.pyc",
+    "xnch/xnch/routes/__pycache__/policy.cpython-313.pyc",
+    "xnch/xnch/routes/__pycache__/memory.cpython-313.pyc",
+    "xnch/xnch/routes/__pycache__/governance.cpython-313.pyc",
+    "xnch/xnch/routes/__pycache__/execution.cpython-313.pyc",
+    "xnch/xnch/routes/__pycache__/auth.cpython-313.pyc",
+    "xnch/xnch/routes/__pycache__/__init__.cpython-313.pyc",
+    "ArchitecturalAuidtReport.md",
     "docs/architecture/system-loop.md",
     "docs/architecture/_memory-map.md",
     "docs/architecture/_decision-map.md",

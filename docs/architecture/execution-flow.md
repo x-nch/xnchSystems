@@ -200,15 +200,15 @@ POST /execution/outcome {
 }
 ```
 
-xnch validates token ref matches a known issued token. Writes outcome to episodic store (completes the `PENDING` episode record). Triggers Nexi callback.
+xnch validates token ref matches a known issued token. Writes `outcome_status`, `observed_state_delta`, `side_effects_observed`, `duration_ms`, and `anomalies` to the episodic store, marking the episode `COMPLETE`. xnch is the sole writer of these fields. Triggers Nexi callback.
 
 ---
 
 #### Step 14 — xnch → Nexi: Outcome callback [ASYNC]
 
 xnch fires callback to Nexi with outcome payload. Nexi:
-1. Calls `POST /memory/write` on xnch with outcome-enriched decision record
-2. Checks if outcome diverges significantly from `outcome_score` prediction. If delta > 0.3: flags pattern for early re-extraction (doesn't wait for scheduled batch).
+1. Computes `prediction_delta` (`abs(outcome_score_predicted - actual_success_rate)`) and sets `early_reextraction_flag` if delta > 0.3.
+2. Calls `POST /memory/write` on xnch with `prediction_delta` and `early_reextraction_flag` only. xnch appends these two fields to the already-complete episode record. Nexi does not write outcome fields — those were written by xnch at Step 13. xnch is the single writer of the episode at all phases.
 
 ---
 
@@ -447,16 +447,13 @@ Step 15: User receives: { status: COMPLETED, outcome_summary: "llama3-8b deploye
 }
 
 // Step 14: Nexi → xnch /memory/write
+// Nexi sends prediction fields only. Outcome fields were already written by xnch at Step 13.
 {
   session_id: "sess_b31d",
   actor_id: "pavan",
-  write_type: "EPISODE_COMPLETION",
+  write_type: "EPISODE_PREDICTION_UPDATE",
   payload: {
     episode_id: "ep_5512",
-    execution_outcome: "SUCCESS",
-    outcome_delta: { pod: "llama3-8b-7f9d", status: "RUNNING", vram_allocated_gb: 18 },
-    side_effects: ["ingress_route_registered", "metrics_scrape_target_added"],
-    outcome_received_at: "2026-04-18T10:42:38.821Z",
     prediction_delta: 0.54,
     early_reextraction_flag: true
   }
@@ -557,8 +554,11 @@ Step 14 — Memory write failure (outcome registration)
   Cause:   xnch memory store unavailable at callback time
   Handle:  Nexi queues the write locally with exponential backoff retry (max 5 attempts).
            Execution already completed — this failure does not affect the user outcome.
-           If all retries fail: emit alert. Episode remains PENDING in episodic store.
-           Background reconciliation job detects stale PENDING episodes and flags for
-           manual resolution. This is the only step where eventual consistency is acceptable
-           because it affects future learning, not current execution.
+           The episode is already COMPLETE in the episodic store (written by xnch at Step 13);
+           only `prediction_delta` and `early_reextraction_flag` are missing.
+           If all retries fail: emit alert. Episode persists as COMPLETE but without prediction
+           fields; it is excluded from Score Adapter accuracy tracking until resolved.
+           Background reconciliation job detects episodes with null `prediction_delta` after
+           TTL and flags for manual resolution. This is the only step where eventual
+           consistency is acceptable because it affects future learning, not current execution.
 ```

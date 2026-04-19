@@ -41,7 +41,7 @@ Key properties:
 
 **Technology:** sqlite-vec + sentence-transformers (all-MiniLM-L6-v2, 22MB, CPU)
 
-Semantic retrieval for similar past decisions. Used when exact tuple matching on `(intent_class, entity_class, actor_role)` returns insufficient results. Embeddings are 384-dimensional, generated locally on CPU — no external model calls.
+Semantic retrieval for similar past decisions. Used when exact tuple matching on `(intent_class, action_type, entity_class, actor_role)` returns insufficient results. Embeddings are 384-dimensional, generated locally on CPU — no external model calls.
 
 ### KV Cache
 
@@ -71,7 +71,7 @@ Fields: `context_signature` (hash of intent + context tuple), `success_rate`, `c
 
 ### Pattern Extractor
 
-Runs every 6 hours via APScheduler. Groups episodes by `(action_type, entity_class)` tuple and computes `success_rate` and Bayesian-smoothed `confidence` per group. Minimum observation threshold: 10 episodes before a pattern is written.
+Runs every 6 hours via APScheduler. Groups episodes by `(intent_class, action_type, entity_class, actor_role)` tuple and computes `success_rate` and Bayesian-smoothed `confidence` per group. Minimum observation threshold: 10 episodes before a pattern is written.
 
 ### Score Adapter
 

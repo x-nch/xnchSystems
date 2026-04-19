@@ -110,18 +110,18 @@ Step 15 ─emit──▶ ┘
 │                      SELECTION + VERDICT                         │
 │  [9]  Nexi — Select highest composite, assemble Decision Record  │
 │                                                                  │
-│  [10a] Plan Compiler — compile action_spec → executable DAG      │
+│  [10a] Plan Compiler — validate action_spec (structure + params) │
 │                                                                  │
 │  [10] xnch — Final authoritative policy check                    │
 │              State version match, Decision Ledger write (sync)   │
 │              BLOCK → ESCALATE · ALLOW → execution_token issued   │
 └──────────────────────────────┬───────────────────────────────────┘
-                               │ execution_token + compiled DAG
+                               │ execution_token + validated action_spec
                                ▼
 ┌──────────────────────────────────────────────────────────────────┐
 │                       EXECUTION                                  │
 │  [11] execution-runner — Token validated independently           │
-│                          DAG walked in topological order         │
+│                          action_spec executed sequentially       │
 │  [12] Nexi → Actor — Intermediate: status EXECUTING              │
 │  [13] execution-runner → xnch — Outcome posted async            │
 └──────────────────────────────┬───────────────────────────────────┘
@@ -251,20 +251,19 @@ The Model Adapter is the abstraction layer between Nexi and any inference backen
 
 ---
 
-### Step 10a — Plan Compilation
+### Step 10a — Action Spec Validation
 
 **Component:** Plan Compiler (within nexi-engine process)
 **Input:** Selected option's `action_spec` from Decision Record
-**Output:** Executable DAG — ordered steps with resolved dependencies
-**Transformation:** The Plan Compiler transforms the selected `action_spec` — a structured description of what to do — into an ordered DAG of discrete executable steps. It:
+**Output:** Validated `action_spec` — confirmed structure, required fields present
+**Transformation:** The Plan Compiler validates the selected `action_spec` before it proceeds to the final verdict call. It:
 
-1. **Resolves step dependencies** — determines which steps can run in parallel and which must be sequenced
-2. **Validates the action sequence** — checks that the step graph is acyclic and that all required parameters are present
-3. **Annotates each step** with `step_type`, `timeout`, `retry_config`, and `on_error` policy
+1. **Confirms required fields are present** — `type`, `target`, and `params` must all be non-null
+2. **Validates field types and values** — `type` must be a known action type; `params` must conform to the schema for that type
 
-The compiled DAG (not the raw `action_spec`) is what the execution-runner receives. The runner walks it in topological order. Plan compilation happens after Decision Record assembly (Step 9) and before the final verdict call (Step 10) — the compiled DAG is included in the Execution Dispatch Payload issued after the token. If compilation fails (invalid step graph, missing parameters), the session returns an error without reaching Step 10; no execution token is issued and no episode is written.
+The validated `action_spec` is what the execution-runner receives. The runner executes it sequentially. Validation happens after Decision Record assembly (Step 9) and before the final verdict call (Step 10) — the validated `action_spec` is included in the Execution Dispatch Payload issued after the token. If validation fails (missing fields, unknown action type), the session returns an error without reaching Step 10; no execution token is issued and no episode is written.
 
-See [`components/execution-engine.md`](../components/execution-engine.md) for step types and DAG walking behaviour.
+> **Note:** Multi-step DAG execution (parallel steps, dependency resolution, per-step `retry_config`) is a future enhancement.
 
 ---
 
@@ -280,16 +279,16 @@ See [`components/execution-engine.md`](../components/execution-engine.md) for st
 ### Step 11 — Execution Dispatch
 
 **Component:** Nexi → execution-runner
-**Input:** [`Execution Dispatch Payload`](../reference/data-contracts.md#execution-dispatch-payload) — compiled DAG + execution_token
+**Input:** [`Execution Dispatch Payload`](../reference/data-contracts.md#execution-dispatch-payload) — validated `action_spec` + `execution_token`
 **Output:** `execution_ref` (acknowledgement)
-**Transformation:** Token validated independently by runner against xnch public key. TTL checked. DAG walked in topological order. Nexi receives `ACCEPTED` immediately; execution is async. → [`execution-flow.md — Step 11`](execution-flow.md#step-11--nexi--execution-layer-dispatch-sync-handoff-async-execution)
+**Transformation:** Token validated independently by runner against xnch public key. TTL checked. `action_spec` executed sequentially. Nexi receives `ACCEPTED` immediately; execution is async. → [`execution-flow.md — Step 11`](execution-flow.md#step-11--nexi--execution-layer-dispatch-sync-handoff-async-execution)
 
 ---
 
 ### Step 12–13 — Execution + Outcome Report
 
 **Component:** execution-runner → xnch-server
-**Input:** Completed or failed DAG execution
+**Input:** Completed or failed `action_spec` execution
 **Output:** [`Execution Outcome`](../reference/data-contracts.md#execution-outcome)
 **Transformation:** Outcome posted to xnch `/execution/outcome`. Token reference validated. Episode completed in Episodic Store. Nexi callback fired. → [`execution-flow.md — Steps 12–13`](execution-flow.md#step-13--execution-layer--xnch-outcome-report-async)
 
@@ -331,7 +330,7 @@ See [`components/execution-engine.md`](../components/execution-engine.md) for st
 | `Plan Option` | Step 5 (vLLM via Model Adapter) | Step 6 (MODIFY rewrites spec) | Steps 6, 7, 8 | End of session |
 | `Evaluated Option` | Step 7 (Nexi) | Step 8 (re-scored if simulated) | Step 9 | End of session |
 | `Decision Record` | Step 9 (Nexi) | — | Steps 10a, 10 (xnch verdict), Audit Logger | Persisted in audit ledger |
-| Compiled DAG | Step 10a (Plan Compiler) | — | Step 11 (execution-runner) | End of execution |
+| Validated `action_spec` | Step 10a (Plan Compiler) | — | Step 11 (execution-runner) | End of execution |
 | `Execution Outcome` | Step 13 (execution-runner) | — | Step 14 (xnch, Nexi) | Persisted in Episode |
 | `Episode` | Step 14 (xnch) | Step 14 (completed_at, outcome) | Pattern Extractor (6h cycle) | Retained indefinitely |
 | `Pattern` | Learning cycle | Every 6h or early extraction | Step 4 → Step 7 (via manifest) | Superseded by updated version |

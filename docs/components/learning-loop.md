@@ -48,7 +48,7 @@ Episodes start `PENDING` when the decision is made and are completed by this cal
 
 ## Pattern Extractor
 
-Analyzes episodic data on a 6-hour schedule. Groups episodes by `(intent_class, action_type, entity_class)` tuple. Requires a minimum of 10 observations before writing a pattern.
+Analyzes episodic data on a 6-hour schedule. Groups episodes by `(intent_class, action_type, entity_class, actor_role)` tuple. Requires a minimum of 10 observations before writing a pattern.
 
 **Configuration:**
 ```yaml
@@ -94,7 +94,7 @@ adapter = ScoreAdapter(episodic_store, weight_config)
 adapter.evaluate()               # checks all four dimensions
 ```
 
-Evaluation dimensions: `safety`, `efficiency`, `compliance`, `context_fit`
+Evaluation dimensions: `policy_score`, `outcome_score`, `risk_score`, `context_fit_score`
 
 ---
 
@@ -156,8 +156,8 @@ metrics:
     score_adaptations_total: true
     policy_candidates_generated_total: true
     dimension_accuracy:
-      safety: true
-      efficiency: true
-      compliance: true
-      context_fit: true
+      policy_score: true
+      outcome_score: true
+      risk_score: true
+      context_fit_score: true
 ```

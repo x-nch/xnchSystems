@@ -23,7 +23,7 @@ Consumed by: Nexi — Option Generator, Context Loader
   "intent_id": "uuid",
   "session_id": "uuid",
   "intent_class": "QUERY | DECISION | EXECUTION | ESCALATION",
-  "target_entity": "string",
+  "target_entity_id": "string",
   "target_entity_class": "string",
   "constraints_declared": ["string"],
   "urgency": "LOW | NORMAL | HIGH | CRITICAL",
@@ -37,7 +37,7 @@ Consumed by: Nexi — Option Generator, Context Loader
 | `intent_id` | UUID | Yes | Unique ID for this interpretation result |
 | `session_id` | UUID | Yes | Parent session reference |
 | `intent_class` | enum | Yes | Coarse classification; determines evaluation weight profile |
-| `target_entity` | string | Yes | Specific entity being acted upon (e.g., `llama3-8b`) |
+| `target_entity_id` | string | Yes | Specific entity being acted upon (e.g., `llama3-8b`) |
 | `target_entity_class` | string | Yes | Entity type (e.g., `ML_MODEL`, `SERVICE`, `DATABASE`) |
 | `constraints_declared` | string[] | No | Explicit constraints extracted from input |
 | `urgency` | enum | Yes | Affects risk weight profile in evaluation |
@@ -323,7 +323,10 @@ Consumed by: xnch — `/execution/outcome`
 
 ## Episode (Learning Record)
 
-Produced by: xnch — after outcome callback (Step 14)
+Written by: xnch (two-phase, single writer)
+- Phase 1 (Step 13): xnch writes `outcome_status`, `observed_state_delta`, `side_effects_observed`, `duration_ms`, `anomalies`; marks episode `COMPLETE`
+- Phase 2 (Step 14): xnch appends `prediction_delta` and `early_reextraction_flag` from Nexi callback payload (`EPISODE_PREDICTION_UPDATE`)
+
 Consumed by: Pattern Extractor (6h schedule)
 
 ```json
@@ -345,8 +348,8 @@ Consumed by: Pattern Extractor (6h schedule)
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `prediction_delta` | float | Yes | `abs(outcome_score_predicted - actual_success_rate)`; high delta (> 0.3) triggers early pattern extraction |
-| `early_reextraction_flag` | bool | Yes | When true, Pattern Extractor runs immediately rather than waiting for 6h schedule |
+| `prediction_delta` | float | Conditional | `abs(outcome_score_predicted - actual_success_rate)`; written by xnch at Step 14 from Nexi callback. Null if Step 14 write has not yet completed. High delta (> 0.3) triggers early pattern extraction |
+| `early_reextraction_flag` | bool | Conditional | Written by xnch at Step 14 from Nexi callback. Null if Step 14 write has not yet completed. When true, Pattern Extractor runs immediately rather than waiting for 6h schedule |
 | `context_snapshot` | object | Yes | System state at execution time; used to compute `context_signature` for pattern grouping |
 | `completed_at` | iso8601 | Conditional | Null until outcome received; episodes with null `completed_at` after TTL are flagged stale |
 

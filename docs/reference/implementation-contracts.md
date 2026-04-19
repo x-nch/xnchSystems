@@ -68,7 +68,7 @@ for each rule in ascending priority:
 return ALLOW   # default when no rule matches
 ```
 
-**No implicit DENY.** A policy that defines no matching rule returns `ALLOW`. To deny by default, add a catch-all rule at priority 999 with no conditions and `verdict: DENY`.
+**No implicit DENY.** A policy that defines no matching rule returns `ALLOW`. To deny by default, add a catch-all rule at priority 999 with no conditions and `verdict: BLOCK`.
 
 ### Conflict Resolution
 
@@ -93,7 +93,7 @@ Priority uniqueness is enforced across the merged ruleset (default + custom comb
     time_window:
       days: ["SAT", "SUN"]
   action:
-    verdict: DENY
+    verdict: BLOCK
     reason: "Deployments are restricted on weekends (policy: ops-safety)"
 ```
 
@@ -117,7 +117,7 @@ Priority uniqueness is enforced across the merged ruleset (default + custom comb
     action_type: "alter_schema"
     actor_capabilities: []
   action:
-    verdict: DENY
+    verdict: BLOCK
     reason: "Schema changes require admin capability"
 
 - rule_id: "allow-admin-schema-change"
