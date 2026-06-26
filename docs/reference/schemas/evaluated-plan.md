@@ -20,9 +20,9 @@ class EvaluatedPlan:
 
 
 class EvaluationDetails:
-    safety_score: float             # Safety dimension score
-    efficiency_score: float         # Efficiency dimension score
-    compliance_score: float        # Compliance dimension score
+    policy_score: float            # Policy dimension score
+    outcome_score: float           # Outcome dimension score
+    risk_score: float              # Risk dimension score
     context_fit_score: float       # Context fit dimension score
     reasoning: Dict[str, str]      # Explanation per dimension
 ```
@@ -41,10 +41,10 @@ class EvaluationDetails:
     "scores": {
       "type": "object",
       "properties": {
-        "safety": {"type": "number"},
-        "efficiency": {"type": "number"},
-        "compliance": {"type": "number"},
-        "context_fit": {"type": "number"}
+        "policy_score": {"type": "number"},
+        "outcome_score": {"type": "number"},
+        "risk_score": {"type": "number"},
+        "context_fit_score": {"type": "number"}
       }
     },
     "total_score": {
@@ -58,9 +58,9 @@ class EvaluationDetails:
         "reasoning": {
           "type": "object",
           "properties": {
-            "safety": {"type": "string"},
-            "efficiency": {"type": "string"},
-            "compliance": {"type": "string"},
+            "policy": {"type": "string"},
+            "outcome": {"type": "string"},
+            "risk": {"type": "string"},
             "context_fit": {"type": "string"}
           }
         }
@@ -79,17 +79,17 @@ class EvaluationDetails:
     "steps": [...]
   },
   "scores": {
-    "safety": 0.95,
-    "efficiency": 0.85,
-    "compliance": 0.90,
-    "context_fit": 0.80
+    "policy_score": 0.95,
+    "outcome_score": 0.85,
+    "risk_score": 0.90,
+    "context_fit_score": 0.80
   },
   "total_score": 0.875,
   "evaluation_details": {
     "reasoning": {
-      "safety": "No destructive operations detected",
-      "efficiency": "Optimal resource usage pattern",
-      "compliance": "No policy violations",
+      "policy": "No destructive operations detected",
+      "outcome": "Optimal resource usage pattern",
+      "risk": "No policy violations",
       "context_fit": "Matches recent successful backups"
     }
   }
@@ -100,19 +100,19 @@ class EvaluationDetails:
 
 | Dimension | Weight | Description |
 |-----------|--------|-------------|
-| Safety | 0.30 | Does the plan cause harm? |
-| Efficiency | 0.25 | Is resource usage optimal? |
-| Compliance | 0.25 | Does it follow policies? |
-| Context Fit | 0.20 | Does it match current context? |
+| Policy | 0.25 | Does the plan comply with active policies? |
+| Outcome | 0.30 | How likely is a successful outcome? |
+| Risk | 0.35 | What is the risk level of the action? |
+| Context Fit | 0.10 | Does the action fit current constraints? |
 
 ## Score Calculation
 
 ```python
 def calculate_total(scores, weights):
     return (
-        scores['safety'] * weights['safety'] +
-        scores['efficiency'] * weights['efficiency'] +
-        scores['compliance'] * weights['compliance'] +
-        scores['context_fit'] * weights['context_fit']
+        scores['policy_score'] * weights['policy_score'] +
+        scores['outcome_score'] * weights['outcome_score'] +
+        scores['risk_score'] * weights['risk_score'] +
+        scores['context_fit_score'] * weights['context_fit_score']
     )
 ```

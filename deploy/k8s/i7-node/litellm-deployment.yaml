@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: litellm
+  namespace: xnch-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: litellm
+  template:
+    metadata:
+      labels:
+        app: litellm
+    spec:
+      nodeSelector:
+        role: memory
+      containers:
+        - name: litellm
+          image: ghcr.io/berriai/litellm:main-latest
+          ports:
+            - containerPort: 4000
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: password
+            - name: DATABASE_URL
+              value: postgresql://xnch:$(POSTGRES_PASSWORD)@postgres-pgvector:5432/xnch
+            - name: LITELLM_MASTER_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: litellm-secret
+                  key: master_key
+          resources:
+            limits:
+              memory: "2Gi"
+              cpu: "1"
+            requests:
+              memory: "1Gi"
+              cpu: "500m"
+          volumeMounts:
+            - name: config
+              mountPath: /app/config
+      volumes:
+        - name: config
+          configMap:
+            name: litellm-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: litellm
+  namespace: xnch-system
+spec:
+  selector:
+    app: litellm
+  ports:
+    - port: 4000
+      targetPort: 4000

@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres-pgvector
+  namespace: xnch-system
+spec:
+  serviceName: postgres-pgvector
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres-pgvector
+  template:
+    metadata:
+      labels:
+        app: postgres-pgvector
+    spec:
+      nodeSelector:
+        role: memory
+      containers:
+        - name: postgres
+          image: pgvector/pgvector:pg16
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: xnch
+            - name: POSTGRES_USER
+              value: xnch
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: password
+          resources:
+            limits:
+              memory: "5Gi"
+              cpu: "2"
+            requests:
+              memory: "2Gi"
+              cpu: "1"
+          volumeMounts:
+            - name: pgdata
+              mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+    - metadata:
+        name: pgdata
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: local-path
+        resources:
+          requests:
+            storage: 50Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-pgvector
+  namespace: xnch-system
+spec:
+  selector:
+    app: postgres-pgvector
+  ports:
+    - port: 5432
+      targetPort: 5432

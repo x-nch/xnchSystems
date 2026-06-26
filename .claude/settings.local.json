@@ -5,5 +5,8 @@
       "Bash(python3 -m venv .venv)",
       "Bash(.venv/bin/pip install *)"
     ]
-  }
+  },
+  "enabledMcpjsonServers": [
+    "code-review-graph"
+  ]
 }

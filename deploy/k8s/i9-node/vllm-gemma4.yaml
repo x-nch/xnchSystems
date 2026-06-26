@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vllm-gemma4
+  namespace: xnch-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vllm-gemma4
+  template:
+    metadata:
+      labels:
+        app: vllm-gemma4
+    spec:
+      nodeSelector:
+        role: inference
+      volumes:
+        - name: model-cache
+          hostPath:
+            path: /home/x-nch/.cache/huggingface/hub
+            type: Directory
+      containers:
+        - name: vllm
+          image: vllm/vllm-openai:latest
+          ports:
+            - containerPort: 8000
+          env:
+            - name: MODEL
+              value: google/gemma-4-26b-a4b-it
+            - name: HUGGING_FACE_HUB_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: huggingface-secret
+                  key: token
+          args:
+            - "--model"
+            - "google/gemma-4-26b-a4b-it"
+            - "--max-model-len"
+            - "8192"
+            - "--gpu-memory-utilization"
+            - "0.95"
+            - "--tensor-parallel-size"
+            - "1"
+          resources:
+            limits:
+              memory: "24Gi"
+              cpu: "8"
+              nvidia.com/gpu: 1
+            requests:
+              memory: "20Gi"
+              cpu: "4"
+              nvidia.com/gpu: 1
+          volumeMounts:
+            - name: model-cache
+              mountPath: /root/.cache/huggingface/hub
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vllm-gemma4
+  namespace: xnch-system
+spec:
+  selector:
+    app: vllm-gemma4
+  ports:
+    - port: 8000
+      targetPort: 8000

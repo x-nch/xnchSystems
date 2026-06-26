@@ -1,0 +1,27 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: consolidation
+  namespace: xnch-system
+spec:
+  schedule: "0 2 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: consolidation
+              image: xnch/xnch-server:latest
+              command:
+                - python
+                - -c
+                - "import asyncio; from xnch.jobs.consolidation import run_consolidation; asyncio.run(run_consolidation())"
+              env:
+                - name: POSTGRES_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: xnch-secret
+                      key: postgres_password
+                - name: XNCH_POSTGRES_URL
+                  value: postgresql://xnch:$(POSTGRES_PASSWORD)@postgres-pgvector:5432/xnch
+          restartPolicy: OnFailure

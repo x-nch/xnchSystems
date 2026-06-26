@@ -43,14 +43,14 @@ Generated 5 candidate plans:
 
 Selected: Plan 1
 Reasoning:
-  - Highest safety score (0.95)
-  - Good efficiency (0.85)
+  - Highest policy score (0.95)
+  - Good outcome score (0.85)
   - Matches context (recent similar backups succeeded)
 
 Evaluation Dimensions:
-  - Safety: 0.95
-  - Efficiency: 0.85
-  - Compliance: 0.90
+  - Policy: 0.95
+  - Outcome: 0.85
+  - Risk: 0.90
   - Context Fit: 0.80
 
 ⚠️ This is a dry run. No changes will be made.

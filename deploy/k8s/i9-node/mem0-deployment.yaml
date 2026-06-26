@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mem0
+  namespace: xnch-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mem0
+  template:
+    metadata:
+      labels:
+        app: mem0
+    spec:
+      nodeSelector:
+        role: inference
+      containers:
+        - name: mem0
+          image: mem0/mem0-api-server:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8003
+          env:
+            - name: MEM0_CONFIG_PATH
+              value: /app/config/mem0.yaml
+          resources:
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+          volumeMounts:
+            - name: config
+              mountPath: /app/config
+      volumes:
+        - name: config
+          configMap:
+            name: mem0-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mem0
+  namespace: xnch-system
+spec:
+  selector:
+    app: mem0
+  ports:
+    - port: 8003
+      targetPort: 8003

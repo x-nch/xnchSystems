@@ -1,0 +1,18 @@
+model:
+  provider: custom
+  base_url: http://i7-node:4000
+  api_key_env: LITELLM_API_KEY
+  model: gemma4-local
+  timeout: 120
+  stream: true
+
+memory:
+  backend: mem0
+  mem0_url: http://i9-node:8888
+  user_id: ck-san
+  auto_recall: true
+  auto_store: true
+
+persona:
+  name: Nexi
+  system_prompt_source: http://i7-node:8000/nexi/system-prompt

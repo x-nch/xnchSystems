@@ -1,0 +1,47 @@
+%% Perception Pipeline — Multi-Modal Input Processing
+%% Three input streams converging into attention_filter
+
+flowchart TD
+
+  %% --- Voice Pipeline ---
+  subgraph Voice["Voice Pipeline"]
+    VOICE_MIC[Microphone input] --> SILERO[Silero VAD<br/>voice activity detection]
+    SILERO --> WHISPER[faster-whisper<br/>speech-to-text]
+    WHISPER --> L0_VOICE["Redis L0<br/>perception:voice:&#123;uuid&#125;"]
+  end
+
+  %% --- Vision Pipeline ---
+  subgraph Vision["Vision Pipeline"]
+    SCREEN[Screenshot bytes] --> MOONDREAM[Moondream2<br/>vision encoder]
+    MOONDREAM --> L0_VISION["Redis L0<br/>perception:vision:&#123;uuid&#125;"]
+  end
+
+  %% --- File Pipeline ---
+  subgraph File["File Pipeline"]
+    VAULT["~/.xnch/vault/<br/>file change"] --> DEBOUNCE[debounce 5s]
+    DEBOUNCE --> JOB[k8s vault-indexer Job]
+    JOB --> L0_FILE["Redis L0<br/>perception:file:&#123;uuid&#125;"]
+  end
+
+  %% --- Attention Filter ---
+  subgraph Filter["attention_filter — 4 rules"]
+    RULE1["rule 1: voice + silence > 1.5s<br/>→ forward to /nexi/chat"]
+    RULE2["rule 2: pixel diff > threshold<br/>→ store L2 episode"]
+    RULE3["rule 3: file saved in vault<br/>→ file_watcher trigger"]
+    RULE4["rule 4: idle > 10 min<br/>→ asyncio.create_task(run_consolidation())"]
+  end
+
+  %% Convergence
+  L0_VOICE --> FILTER_INPUT[attention_filter]
+  L0_VISION --> FILTER_INPUT
+  L0_FILE --> FILTER_INPUT
+  FILTER_INPUT --> RULE1
+  FILTER_INPUT --> RULE2
+  FILTER_INPUT --> RULE3
+  FILTER_INPUT --> RULE4
+
+  %% Output paths
+  RULE1 --> CHAT["→ POST /nexi/chat"]
+  RULE2 --> EPISODE["→ store_episode() in pgvector"]
+  RULE3 --> TRIGGER["→ file_watcher trigger()"]
+  RULE4 --> CONSOL["→ run_consolidation() async"]

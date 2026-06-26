@@ -68,7 +68,7 @@ for each rule in ascending priority:
 return ALLOW   # default when no rule matches
 ```
 
-**No implicit DENY.** A policy that defines no matching rule returns `ALLOW`. To deny by default, add a catch-all rule at priority 999 with no conditions and `verdict: BLOCK`.
+**No implicit BLOCK.** A policy that defines no matching rule returns `ALLOW`. To deny by default, add a catch-all rule at priority 999 with no conditions and `verdict: BLOCK`.
 
 ### Conflict Resolution
 

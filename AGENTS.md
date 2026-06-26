@@ -1,8 +1,10 @@
 ## Monorepo Structure
 
-- `nexi/` — Execution engine (Python 3.11+, FastAPI, decision/policy system)
-- `xnch/` — Control plane API (Python 3.13+, REST routes, auth, memory)
+- `nexi/` — Execution engine (FastAPI, decision/policy system)
+- `xnch/` — Control plane API (REST routes, auth, memory)
 - Root pyproject.toml requires Python 3.13+
+
+**Note:** Individual packages specify `>=3.11` but root requires `>=3.13`. Align to 3.13.
 
 **Entrypoints:**
 - `nexi/nexi/main.py` — Engine CLI
@@ -14,6 +16,7 @@
 pytest                  # Run all tests (auto-asyncio mode)
 pytest nexi/tests       # Run only nexi tests
 pytest xnch/tests     # Run only xnch tests
+pytest nexi/tests/test_evaluator.py  # Run single test file
 ```
 
 No dedicated lint/typecheck commands in this repo.

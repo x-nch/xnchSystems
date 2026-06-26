@@ -1,0 +1,47 @@
+%% Memory Layers — Multi-Tier Memory Architecture
+%% Four storage tiers with write and read paths
+
+flowchart TD
+
+  %% Input sources
+  subgraph Input["Input Sources"]
+    VOICE[voice_daemon]
+    VISION[vision_encoder]
+    FILEWATCH[file_watcher]
+  end
+
+  %% -- L0: Sensory Buffer --
+  subgraph L0["L0: Sensory Buffer (Redis, TTL 60s)"]
+    L0_REDIS["Redis perception:&#123;type&#125;:&#123;uuid&#125;<br/>raw voice chunks<br/>vision frames<br/>file events"]
+  end
+
+  %% -- L1: Working Memory --
+  subgraph L1["L1: Working Memory (Redis, TTL 1h)"]
+    L1_REDIS["Redis session:&#123;id&#125;<br/>last 20 conversation turns<br/>active context per session"]
+  end
+
+  %% -- L2: Episodic Store --
+  subgraph L2["L2: Episodic Store (PostgreSQL + pgvector)"]
+    L2_PG["episodes table<br/>- embedding (vector 768)<br/>- raw text<br/>- timestamp + decay_score<br/>- metadata (JSONB)"]
+    L2_DECAY["decay scoring cron<br/>reduces score over time<br/>archives below threshold"]
+  end
+
+  %% -- L3: Graph Store --
+  subgraph L3["L3: Graph Store (Kuzu + relationship_store)"]
+    L3_KUZU["Kuzu graph nodes<br/>- entities<br/>- relationships<br/>- confidence weights"]
+    L3_REL["relationship_store table<br/>subject → predicate → object<br/>temporal edges"]
+  end
+
+  %% Write path: perception → L0 → L1 → L2 → L3
+  VOICE -->|"perception:voice:&#123;uuid&#125;"| L0_REDIS
+  VISION -->|"perception:vision:&#123;uuid&#125;"| L0_REDIS
+  FILEWATCH -->|"perception:file:&#123;uuid&#125;"| L0_REDIS
+  L0_REDIS -->|"promoted on session activity"| L1_REDIS
+  L1_REDIS -->|"consolidation cron (every 6h)"| L2_PG
+  L2_PG -->|"graph_extractor job (nightly 2AM)"| L3_KUZU
+
+  %% Retrieve path: L3 → L2 → L1 → context_assembler
+  L3_KUZU -->|"entity resolution"| L2_PG
+  L2_PG -->|"top_k = 5 semantic recall"| L1_REDIS
+  L1_REDIS -->|"context_assembler aggregates"| CONTEXT[context_assembler]
+  L3_REL -.->|"relationship lookup"| L3_KUZU

@@ -1,0 +1,13 @@
+server:
+  port: 8001
+llm:
+  service: openai
+  model: gemma4-local
+  base_url: http://i7-node:4000/v1
+  api_key: ${LITELLM_API_KEY}
+store:
+  type: postgres
+  dsn: postgresql://xnch:xnch@i7-node:5432/xnch
+graph:
+  enabled: true
+  extraction_model: gemma4-local

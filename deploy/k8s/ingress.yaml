@@ -1,0 +1,55 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: xnch-route
+  namespace: xnch-system
+spec:
+  entryPoints: [web]
+  routes:
+    - match: Host(`xnch.local`)
+      kind: Rule
+      services:
+        - name: xnch
+          port: 8001
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: litellm-route
+  namespace: xnch-system
+spec:
+  entryPoints: [web]
+  routes:
+    - match: Host(`llm.local`)
+      kind: Rule
+      services:
+        - name: litellm
+          port: 4000
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: langfuse-route
+  namespace: xnch-system
+spec:
+  entryPoints: [web]
+  routes:
+    - match: Host(`langfuse.local`)
+      kind: Rule
+      services:
+        - name: langfuse
+          port: 3000
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: nexi-route
+  namespace: xnch-system
+spec:
+  entryPoints: [web]
+  routes:
+    - match: Host(`nexi.local`)
+      kind: Rule
+      services:
+        - name: nexi
+          port: 8000

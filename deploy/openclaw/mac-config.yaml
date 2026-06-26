@@ -1,0 +1,22 @@
+gateway:
+  bind: loopback
+  port: 19000
+
+model:
+  provider: custom
+  base_url: http://xnch.local:8080/v1
+  api_key_env: LITELLM_API_KEY
+  model: gemma4-local
+  timeout: 120
+  stream: true
+
+memory:
+  backend: mem0
+  mem0_url: http://localhost:31111
+  user_id: ck-san
+  auto_recall: true
+  auto_store: true
+
+persona:
+  name: Nexi
+  system_prompt_source: http://xnch.local:8080/nexi/system-prompt

@@ -1,0 +1,19 @@
+[Unit]
+Description=OpenClaw i7 — Always-On Gateway
+After=network.target k3s.service
+Requires=network.target
+Wants=k3s.service
+
+[Service]
+Type=simple
+User=x-nch
+WorkingDirectory=/home/x-nch
+EnvironmentFile=/home/x-nch/.openclaw/i7.env
+ExecStart=/usr/bin/bash /home/x-nch/i7-start.sh
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

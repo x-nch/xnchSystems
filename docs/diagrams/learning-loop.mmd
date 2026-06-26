@@ -1,0 +1,41 @@
+%% Learning Loop — Automated Pattern Discovery & Policy Adaptation
+%% Three 6-hour phases plus nightly consolidation
+
+flowchart TD
+
+  %% --- Phase 1: Pattern Extraction (every 6h) ---
+  subgraph Phase1["Phase 1: Pattern Extraction (every 6h)"]
+    EP1[pg_episodic_store] --> PE[pattern_extractor]
+    PE --> |"upsert by canonical tuple<br/>Bayesian confidence update"| PS[pattern_store<br/>- success_rate<br/>- confidence<br/>- sample_count]
+  end
+
+  %% --- Phase 2: Weight Adaptation (every 6h30m) ---
+  subgraph Phase2["Phase 2: Weight Adaptation (every 6h30m)"]
+    PS --> SA[score_adapter]
+    SA --> DRIFT{drift detection<br/>7-day vs 30-day<br/>success rate delta}
+    DRIFT -->|"delta > threshold"| PROPOSE[POST /governance/weights/propose<br/>adjusted policy weights]
+    DRIFT -->|"stable"| NOOP[no weight change]
+  end
+
+  %% --- Phase 3: Policy Candidates (every 6h) ---
+  subgraph Phase3["Phase 3: Policy Candidates (every 6h)"]
+    PS --> FILTER{success_rate<br/>< 0.4?}
+    FILTER -->|yes, low performers| LLM_CALL[LLM call<br/>claude-judgment<br/>analyze pattern]
+    LLM_CALL --> RULES[generate candidate rules]
+    RULES --> PENDING[pending_candidates table<br/>awaiting approval]
+    FILTER -->|no| SKIP[skip — above threshold]
+  end
+
+  %% --- Nightly Consolidation (2 AM) ---
+  subgraph Nightly["Nightly Consolidation (2 AM)"]
+    EP2[pg_episodic_store] --> ZEP[Zep summarization<br/>compress multi-turn episodes]
+    ZEP --> FACTS[compressed facts]
+    FACTS --> GE[graph_extractor]
+    GE --> KUZU[Kuzu + relationship_store<br/>entity extraction<br/>relationship linking]
+    KUZU --> DECAY[decay score recomputation<br/>reduce score for old episodes]
+    DECAY --> ARCHIVE[archive below threshold<br/>move to cold storage]
+  end
+
+  %% Phase connections
+  Phase1 --> Phase2
+  Phase1 --> Phase3

@@ -1,0 +1,13 @@
+version: v1.1
+vector_store:
+  provider: pgvector
+  config:
+    host: i7-node
+    port: 5432
+    dbname: xnch
+    collection_name: mem0_memories
+embedder:
+  provider: ollama
+  config:
+    model: nomic-embed-text
+    base_url: http://i7-node:11434

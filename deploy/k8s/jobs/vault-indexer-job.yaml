@@ -1,0 +1,34 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: vault-indexer
+  namespace: xnch-system
+  annotations:
+    description: "Triggered by file_watcher to index vault documents"
+spec:
+  template:
+    spec:
+      containers:
+        - name: indexer
+          image: xnch/xnch-server:latest
+          command:
+            - python
+            - -c
+            - "import asyncio; from xnch.perception.vision_encoder import index_vault; asyncio.run(index_vault())"
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: password
+            - name: XNCH_POSTGRES_URL
+              value: postgresql://xnch:$(POSTGRES_PASSWORD)@postgres-pgvector:5432/xnch
+          volumeMounts:
+            - name: vault
+              mountPath: /vault
+      volumes:
+        - name: vault
+          persistentVolumeClaim:
+            claimName: xnch-vault
+      restartPolicy: Never
+  backoffLimit: 2

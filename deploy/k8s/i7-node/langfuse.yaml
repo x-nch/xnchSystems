@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: langfuse
+  namespace: xnch-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: langfuse
+  template:
+    metadata:
+      labels:
+        app: langfuse
+    spec:
+      nodeSelector:
+        role: memory
+      containers:
+        - name: langfuse
+          image: langfuse/langfuse:latest
+          ports:
+            - containerPort: 3000
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: password
+            - name: DATABASE_URL
+              value: postgresql://xnch:$(POSTGRES_PASSWORD)@postgres-pgvector:5432/xnch
+            - name: NEXTAUTH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: langfuse-secret
+                  key: nextauth_secret
+            - name: SALT
+              valueFrom:
+                secretKeyRef:
+                  name: langfuse-secret
+                  key: salt
+          resources:
+            limits:
+              memory: "1.5Gi"
+              cpu: "1"
+            requests:
+              memory: "768Mi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: langfuse
+  namespace: xnch-system
+spec:
+  selector:
+    app: langfuse
+  ports:
+    - port: 3000
+      targetPort: 3000
