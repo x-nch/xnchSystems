@@ -25,6 +25,10 @@ spec:
           env:
             - name: XNCH_REDIS_URL
               value: redis://redis:6379/0
+            - name: XNCH_NEXI_BASE_URL
+              value: http://nexi:8000
+            - name: XNCH_BASE_DIR
+              value: /data
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:

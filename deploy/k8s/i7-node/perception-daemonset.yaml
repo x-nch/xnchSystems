@@ -3,6 +3,9 @@ kind: DaemonSet
 metadata:
   name: perception
   namespace: xnch-system
+  annotations:
+    xnch.io/status: "image-not-yet-built"
+    xnch.io/blocked-by: "perception service not yet implemented"
 spec:
   selector:
     matchLabels:
@@ -13,7 +16,7 @@ spec:
         app: perception
     spec:
       nodeSelector:
-        role: memory
+        role: memory # GTX 1650 present but no driver — no GPU scheduling
       containers:
         - name: perception
           image: xnch/perception:latest
@@ -23,7 +26,6 @@ spec:
             limits:
               memory: "3Gi"
               cpu: "2"
-              nvidia.com/gpu: 1
             requests:
               memory: "1.5Gi"
               cpu: "1"

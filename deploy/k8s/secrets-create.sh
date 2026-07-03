@@ -12,8 +12,6 @@ kubectl create secret generic langfuse-secret -n $NS --dry-run=client -o yaml   
 
 kubectl create secret generic litellm-secret -n $NS --dry-run=client -o yaml   --from-literal=master_key=df4d178833bb37cac13628dcf2ce970e5d98e298f1c53eed8baadfe8e505b91d | kubectl apply -f -
 
-kubectl create secret generic agentmemory-secret -n $NS --dry-run=client -o yaml   --from-literal=secret=8244db5525f0064abe0bd03eb7f73fea38408270dcfa991cffde1d66b72c4037   --from-literal=litellm_key=df4d178833bb37cac13628dcf2ce970e5d98e298f1c53eed8baadfe8e505b91d | kubectl apply -f -
-
 kubectl create secret generic huggingface-secret -n $NS --dry-run=client -o yaml   --from-literal=token=YOUR_HF_TOKEN_HERE | kubectl apply -f -
 
 kubectl create secret generic zep-secret -n $NS --dry-run=client -o yaml   --from-literal=openai_api_key=YOUR_OPENAI_API_KEY_HERE | kubectl apply -f -

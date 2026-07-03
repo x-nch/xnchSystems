@@ -1,0 +1,63 @@
+QA Fix → Agent Mapping Plan
+Workstream 1: Infra & K8s Config (1 agent)
+Best agent: kubernetes-specialist — pure YAML/manifest fixes
+Issue
+B6
+M3
+B4
+Workstream 2: Core Bugfixes (1-2 agents)
+Best agent: debugger — RCA + minimal fixes across 5 files
+Issue
+B2
+B3
+B5
+B7
+A5
+These are all small, targeted, isolated changes — ideal for one debugger pass.
+Workstream 3: New/Revised API Surface (1 agent)
+Best agent: api-architect — API design + route wiring
+Issue
+B1
+A1
+Workstream 4: Memory & Storage Architecture (1 agent)
+Best agent: database-architect — data model decisions + migration plan
+Issue
+M1
+M4
+M5
+M7
+Workstream 5: Code Wiring & Dead Code (1 agent)
+Best agent: refactoring-specialist — safe incremental changes, characterization tests first
+Issue
+A2
+A3
+A4
+M2
+Workstream 6: Orphaned Services / LLM Integration (1 agent)
+Best agent: llm-architect + database-architect — integration decisions
+Issue
+A6
+M6
+Workstream 7: Execution Runner (1 agent)
+Best agent: microservices-architect — design the missing service
+Issue
+B4
+---
+Summary: Up to 7 agents in parallel
+#
+1
+2
+3
+4
+5
+6
+7
+Key dependencies (these blocks must run first or in order):
+1. B6 (K8s env) must precede any nexi↔xnch integration tests
+2. B2 must precede anything that depends on episodes existing (M1, M7)
+3. M1 (canonical store decision) must precede M4, M5, M7 — these are all downstream of that decision
+So the optimal execution order is:
+1. Phase 0 (blockers): kubernetes-specialist + debugger — in parallel, no deps between them
+2. Phase 1 (design decision): database-architect — decide canonical store architecture
+3. Phase 2 (parallel after decisions): api-architect + refactoring-specialist + llm-architect + microservices-architect
+

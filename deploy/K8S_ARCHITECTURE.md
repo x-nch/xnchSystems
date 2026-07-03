@@ -3,8 +3,8 @@
 ## Cluster Overview
 
 **K3s 2-node cluster**
-- **i7 gate7** (192.168.1.11 / 192.168.50.1) — Master + Control Plane + Memory Layer
-- **i9 xnch-core** (192.168.1.2 / 192.168.50.2) — Worker + Inference + Always-on Services
+- **i7 gate7** (192.168.1.10 / 192.168.50.1) — Master + Control Plane + Memory Layer
+- **i9 xnch-core** (192.168.1.9 / 192.168.50.2) — Worker + Inference + Always-on Services
 - **Network:** Flannel overlay (10.42.0.0/16), isolated LAN (192.168.50.0/24)
 - **Ingress:** Traefik v2 (built-in with K3s)
 - **Storage:** K3s local-path provisioner (PVCs backed by host filesystem)
@@ -22,7 +22,7 @@
 | **xnch-deployment** | xnch/xnch-server:latest | 8001 | 1c | 1.5Gi | Deployment | XNCH gateway (routing, orchestration) |
 | **litellm-deployment** | ghcr.io/berriai/litellm:main | 4000 | 1c | 1Gi | Deployment | LLM router (Gemma4 local + Claude API) |
 | **langfuse** | langfuse/langfuse:latest | 3000 | 1c | 1.5Gi | Deployment | Observability (LLM trace logging) |
-| **agentmemory-deployment** | node:20-slim | 3111/3113 | 1c | 2Gi | Deployment | CodeAgent memory (Claude Code, OpenCode, OpenClaw) |
+| ~~agentmemory-deployment~~ | ~~node:20-slim~~ | ~~3111/3113~~ | ~~1c~~ | ~~2Gi~~ | ~~Deployment~~ | ~~CodeAgent memory — moved to bare metal~~ |
 | **perception-daemonset** | xnch/perception:latest | 8002 | 1c | 3Gi | DaemonSet | Voice + Vision perception (GTX 1650 4GB) |
 
 ### Services (ClusterIP + NodePort)
@@ -31,10 +31,9 @@
 |---------|-----------|----------|--------|-----|
 | xnch | 10.43.x.x | 30800 | xnch:8001 | Bare-metal OpenClaw on i7 |
 | mem0 | 10.43.x.x | 30803 | mem0:8003 | Bare-metal services on i7 |
-| agentmemory | 10.43.x.x | 31111/31113 | agentmemory:3111/3113 | Mac tunnel to agentmemory API + viewer |
 | postgres-pgvector | 10.43.x.x | — | postgres:5432 | Internal only (k8s pods) |
 | redis | 10.43.x.x | — | redis:6379 | Internal only |
-| litellm | 10.43.x.x | — | litellm:4000 | Internal + agentmemory LLM backend |
+| litellm | 10.43.x.x | — | litellm:4000 | Internal LLM backend |
 | langfuse | 10.43.x.x | — | langfuse:3000 | Internal observability |
 
 ### Storage (PVCs)
@@ -44,7 +43,6 @@
 | pgdata | 50Gi | /var/lib/postgresql/data | postgres-pgvector | StatefulSet template |
 | xnch-data | 20Gi | /data | xnch | Deployment |
 | xnch-vault | 100Gi | /vault | perception | DaemonSet |
-| agentmemory-pvc | 10Gi | /root/.agentmemory | agentmemory | Deployment |
 
 ### Ingress Routes (Traefik)
 
@@ -54,13 +52,13 @@
 | litellm-route | llm.local | litellm | 4000 | LLM model router |
 | langfuse-route | langfuse.local | langfuse | 3000 | Observability UI |
 | nexi-route | nexi.local | nexi | 8000 | Nexi product engine (routed to i9) |
-| memory-route | memory.local | agentmemory | 3113 | AgentMemory viewer |
 
 ### Bare-Metal Services (outside K8s)
 
 | Service | Process | Type | Port | Notes |
 |---------|---------|------|------|-------|
 | OpenClaw i7 | openclaw | systemd | 30800 (NodePort) | Always-on gateway (Telegram/WhatsApp) |
+| agentmemory | agentmemory | systemd | 3111/3113 | MCP memory for Claude Code, OpenCode, OpenClaw |
 
 ---
 
@@ -101,7 +99,7 @@ None (no persistent storage needed on i9 — model is on host OS at `/home/x-nch
 
 ---
 
-## Scheduled Jobs (xnch-system namespace)
+### Scheduled Jobs (xnch-system namespace)
 
 | Job | Schedule | Node | Command | Purpose |
 |-----|----------|------|---------|---------|
@@ -154,14 +152,13 @@ macbook
   │   ├─→ xnch.local → xnch:8001
   │   ├─→ llm.local → litellm:4000
   │   ├─→ nexi.local → nexi:8000 (K8s routes to i9 via Flannel overlay)
-  │   ├─→ langfuse.local → langfuse:3000
-  │   └─→ memory.local → agentmemory:3113 (viewer)
+  │   └─→ langfuse.local → langfuse:3000
   │
   ├─→ OpenClaw Mac (launchd) → http://i7:30800 (XNCH NodePort)
   │
-  ├─→ Claude Code → agentmemory (i7:31111) [project: xnch-build]
+  ├─→ Claude Code → agentmemory MCP → agentmemory (192.168.1.10:3111) [direct LAN]
   │
-  └─→ OpenCode → agentmemory MCP → agentmemory (i7:31111) [project: xnch-build]
+  └─→ OpenCode → agentmemory MCP → agentmemory (192.168.1.10:3111) [direct LAN]
 ```
 
 ---
@@ -224,7 +221,6 @@ hostAliases:
 | xnch | 1.5Gi | 1c | — |
 | litellm | 1Gi | 1c | — |
 | langfuse | 1.5Gi | 1c | — |
-| agentmemory | 2Gi | 1c | — |
 | perception | 3Gi | 1c | 4GB (GTX 1650) |
 | **Total Used** | **16.5Gi** | **9c** | 4GB |
 | **Available** | 15Gi | 12c | — |
@@ -263,7 +259,7 @@ Phase 7: Apply manifests to cluster ✅
     - pvcs.yaml ✅
     - postgres-pgvector ✅ (StatefulSet running)
     - redis ✅
-    - agentmemory-deployment ✅
+    - agentmemory ✅ (bare metal systemd on gate7 — migrated from K8s pod)
     - litellm ✅
     - xnch ✅ (fixed Docker image)
     - langfuse ✅
@@ -289,7 +285,7 @@ Phase 10: SSH tunnel + verification (PENDING)
 ✅ Gemma4 inference (RTX 3090, 135 tok/s)
 ✅ Memory layers (Redis + PostgreSQL + Kuzu)
 ✅ Observation (Langfuse tracing)
-✅ AgentMemory (Claude Code + OpenCode + OpenClaw memory)
+✅ AgentMemory (bare metal on gate7 — Claude Code + OpenCode + OpenClaw memory)
 ✅ Ingress routing (Traefik)
 ✅ Scheduled jobs (consolidation + bridge)
 
@@ -303,7 +299,4 @@ Phase 10: SSH tunnel + verification (PENDING)
 ## Next Steps
 
 1. **Fix Zep:** Pre-download tiktoken encoding or use local embedder
-2. **Phase 8:** Install OpenClaw on i7, wire systemd service for Telegram/WhatsApp
-3. **Phase 9:** Configure Mac OpenClaw + agentmemory MCP for Claude Code/OpenCode
-4. **Phase 10:** SSH tunnel, verify end-to-end path (Telegram → XNCH → Nexi → Gemma4 → response)
-5. **Test:** Send a message via Telegram, verify XnchMemory persistence, agentmemory capture
+2. **Test:** Send a message via Telegram, verify XnchMemory persistence, agentmemory capture

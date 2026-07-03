@@ -13,6 +13,21 @@ spec:
       labels:
         app: nexi
     spec:
+      hostAliases:
+        # DNS workaround: flannel VXLAN cross-node broken (i7 node-ip mismatch)
+        # Remove after CLUSTER-1 fix (K3s node-ip reconfigured to 192.168.50.1)
+        - ip: "10.43.100.18"
+          hostnames: ["xnch"]
+        - ip: "10.43.15.158"
+          hostnames: ["litellm"]
+        - ip: "10.43.2.230"
+          hostnames: ["mem0"]
+        - ip: "10.43.225.174"
+          hostnames: ["zep"]
+        - ip: "10.43.31.250"
+          hostnames: ["langfuse"]
+        - ip: "10.43.237.186"
+          hostnames: ["vllm-gemma4"]
       nodeSelector:
         role: inference
       tolerations:
@@ -34,6 +49,8 @@ spec:
               value: http://litellm:4000/v1
             - name: NEXI_REDIS_URL
               value: redis://redis:6379/0
+            - name: NEXI_EXECUTION_RUNNER_URL
+              value: http://execution-runner:8002
           resources:
             limits:
               memory: "2Gi"

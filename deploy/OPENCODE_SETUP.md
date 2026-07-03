@@ -14,7 +14,7 @@
 - postgres-pgvector (XnchMemory layers 2-3)
 - redis (layers 0-1)
 - litellm (LLM router)
-- agentmemory-deployment (Claude Code / OpenCode memory)
+- agentmemory (bare metal on gate7 — Claude Code / OpenCode memory)
 - langfuse (observability)
 - perception-daemonset (perception layer on i7)
 - Traefik ingress (routes via xnch.local / llm.local / etc.)
@@ -32,7 +32,7 @@
 **Services accessible:**
 - XNCH: ClusterIP 10.43.x.x:8001, NodePort 30800 (bare-metal)
 - Traefik: ingress via xnch.local / llm.local / nexi.local / memory.local
-- AgentMemory: ClusterIP 10.43.x.x:3111, NodePort 31111 (API) + 31113 (viewer)
+- AgentMemory: http://192.168.1.10:3111 (API) + http://192.168.1.10:3113 (viewer)
 
 ---
 
@@ -43,7 +43,7 @@ OpenClaw i7 runs as **systemd service** on bare metal — outside K8s. Connects 
 ### 8a — Install OpenClaw binary on i7
 
 ```bash
-sshpass -p xnch ssh -o StrictHostKeyChecking=no x-nch@192.168.1.11 "
+sshpass -p xnch ssh -o StrictHostKeyChecking=no x-nch@192.168.1.10 "
   curl -fsSL https://openclaw.ai/install.sh | bash
   which openclaw
 "
@@ -54,7 +54,7 @@ sshpass -p xnch ssh -o StrictHostKeyChecking=no x-nch@192.168.1.11 "
 On **i7**, create `/home/x-nch/.openclaw/i7.env`:
 
 ```bash
-sshpass -p xnch ssh -o StrictHostKeyChecking=no x-nch@192.168.1.11 "
+sshpass -p xnch ssh -o StrictHostKeyChecking=no x-nch@192.168.1.10 "
   mkdir -p ~/.openclaw
   cat > ~/.openclaw/i7.env << 'EOF'
 LITELLM_API_KEY=df4d178833bb37cac13628dcf2ce970e5d98e298f1c53eed8baadfe8e505b91d
@@ -70,7 +70,7 @@ EOF
 # Deploy openclaw/i7-config.yaml
 sshpass -p xnch scp -o StrictHostKeyChecking=no \
   /Users/xnch/xnchSystems/deploy/openclaw/i7-config.yaml \
-  x-nch@192.168.1.11:/home/x-nch/.openclaw/i7-config.yaml
+  x-nch@192.168.1.10:/home/x-nch/.openclaw/i7-config.yaml
 
 # Deploy openclaw/i7-start.sh
 mkdir -p /tmp/openclaw-deploy
@@ -79,7 +79,7 @@ chmod +x /tmp/openclaw-deploy/i7-start.sh
 
 sshpass -p xnch scp -o StrictHostKeyChecking=no \
   /tmp/openclaw-deploy/i7-start.sh \
-  x-nch@192.168.1.11:/home/x-nch/i7-start.sh
+  x-nch@192.168.1.10:/home/x-nch/i7-start.sh
 ```
 
 ### 8d — Install systemd service
@@ -88,10 +88,10 @@ sshpass -p xnch scp -o StrictHostKeyChecking=no \
 # Copy service unit
 sshpass -p xnch scp -o StrictHostKeyChecking=no \
   /Users/xnch/xnchSystems/deploy/openclaw/i7-systemd.service \
-  x-nch@192.168.1.11:/tmp/openclaw-i7.service
+  x-nch@192.168.1.10:/tmp/openclaw-i7.service
 
 # Install
-sshpass -p xnch ssh -o StrictHostKeyChecking=no x-nch@192.168.1.11 "
+sshpass -p xnch ssh -o StrictHostKeyChecking=no x-nch@192.168.1.10 "
   sudo cp /tmp/openclaw-i7.service /etc/systemd/system/openclaw-i7.service
   sudo systemctl daemon-reload
   sudo systemctl enable openclaw-i7
@@ -104,7 +104,7 @@ sshpass -p xnch ssh -o StrictHostKeyChecking=no x-nch@192.168.1.11 "
 ### 8e — Verify i7 OpenClaw is running
 
 ```bash
-sshpass -p xnch ssh -o StrictHostKeyChecking=no x-nch@192.168.1.11 "
+sshpass -p xnch ssh -o StrictHostKeyChecking=no x-nch@192.168.1.10 "
   sudo systemctl status openclaw-i7 --no-pager
   curl -s http://localhost:30800/health || echo 'XNCH not responding yet'
 "
@@ -114,7 +114,7 @@ sshpass -p xnch ssh -o StrictHostKeyChecking=no x-nch@192.168.1.11 "
 
 On **i7**, run:
 ```bash
-sshpass -p xnch ssh -o StrictHostKeyChecking=no x-nch@192.168.1.11 "
+sshpass -p xnch ssh -o StrictHostKeyChecking=no x-nch@192.168.1.10 "
   openclaw gateway setup
 "
 ```
@@ -145,7 +145,7 @@ mkdir -p ~/.openclaw
 ```bash
 cp /Users/xnch/xnchSystems/deploy/openclaw/mac-config.yaml ~/.openclaw/mac-config.yaml
 
-# Verify the config points to i7 (192.168.1.11:30800)
+# Verify the config points to i7 (192.168.1.10:30800)
 cat ~/.openclaw/mac-config.yaml | grep base_url
 ```
 
@@ -174,73 +174,61 @@ echo $LITELLM_API_KEY
 
 Find your OpenCode config file (usually `~/.config/opencode/config.json` or similar).
 
-Add the agentmemory MCP server block:
+The current config (already applied) in `~/.config/opencode/opencode.json`:
 ```json
-{
-  "mcpServers": {
-    "agentmemory": {
-      "command": "npx",
-      "args": ["-y", "@agentmemory/mcp"],
-      "env": {
-        "AGENTMEMORY_URL": "http://192.168.1.11:31111",
-        "AGENTMEMORY_SECRET": "8244db5525f0064abe0bd03eb7f73fea38408270dcfa991cffde1d66b72c4037",
-        "AGENTMEMORY_PROJECT": "xnch-build"
-      }
-    }
-  }
+"agentmemory": {
+  "type": "local",
+  "command": ["npx", "-y", "@agentmemory/mcp"],
+  "env": {
+    "AGENTMEMORY_URL": "http://192.168.1.10:3111",
+    "AGENTMEMORY_SECRET": "xnch-agentmemory-secret"
+  },
+  "enabled": true
 }
 ```
 
-Restart OpenCode to load the new MCP server.
+The `@agentmemory/mcp` MCP shim translates MCP tool calls into REST API calls to the agentmemory server on gate7.
 
 ### 9e — Test connections
 
 ```bash
 # Test agentmemory API reachability
-curl -H "Authorization: Bearer $AGENTMEMORY_SECRET" \
-  http://192.168.1.11:31111/health
+curl -s http://192.168.1.10:3111/health
 # Expected: 200 OK
 
-# Test XNCH via i7 (should be reachable via SSH tunnel or direct LAN)
-curl -s http://192.168.1.11:30800/health | head -20
+# Test XNCH via i7
+curl -s http://192.168.1.10:30800/health | head -20
 ```
 
 ---
 
-## Phase 10 — SSH Tunnel + End-to-End Verification
+## Phase 10 — End-to-End Verification
 
-### 10a — Configure SSH tunnel on Mac
-
-Add to `~/.ssh/config`:
-```
-Host gate7
-  HostName 192.168.1.11
-  User x-nch
-  LocalForward 8080 localhost:80
-  LocalForward 31111 localhost:31111
-  LocalForward 31113 localhost:31113
-  ServerAliveInterval 60
-  ServerAliveCountMax 3
-```
-
-### 10b — Start tunnel
+### 10a — Create SSH config (optional, for XNCH gateway only)
 
 ```bash
-ssh -N gate7 &
-# Runs in background. Keep this session alive.
+# agentmemory no longer needs a tunnel — direct LAN at 192.168.1.10:3111
+# XNCH gateway uses NodePort 30800 — also direct LAN
+cat >> ~/.ssh/config << 'EOF'
+Host gate7
+  HostName 192.168.1.10
+  User x-nch
+  ServerAliveInterval 60
+  ServerAliveCountMax 3
+EOF
 ```
 
-### 10c — Add local /etc/hosts
+### 10b — Add local /etc/hosts (optional)
 
 ```bash
 sudo cat >> /etc/hosts << 'EOF'
-127.0.0.1  xnch.local llm.local langfuse.local nexi.local memory.local
+127.0.0.1  xnch.local llm.local langfuse.local nexi.local
 EOF
 
 cat /etc/hosts | grep local
 ```
 
-### 10d — Test services via tunnel
+### 10c — Test services
 
 ```bash
 # XNCH gateway
@@ -253,7 +241,10 @@ curl -H "Host: llm.local" http://localhost:8080/health
 curl -H "Host: nexi.local" http://localhost:8080/health
 
 # AgentMemory viewer
-open http://localhost:31113/
+open http://192.168.1.10:3113/
+
+# AgentMemory API (no tunnel needed)
+curl -s http://192.168.1.10:3111/
 ```
 
 ### 10e — Test Claude Code + agentmemory
@@ -268,14 +259,14 @@ claude
 # Should return memories from your xnch-build namespace
 ```
 
-### 10f — Test OpenCode MCP
+### 10e — Test OpenCode MCP
 
 ```bash
 # Start OpenCode
 opencode
 
 # Try an MCP tool:
-#   Use the agentmemory MCP — should list 51 tools
+#   Use the agentmemory MCP — should list tools for memory_save, memory_recall etc.
 ```
 
 ### 10g — Test end-to-end with Telegram
@@ -291,11 +282,11 @@ opencode
    - Response flows back → Telegram
 4. Check agentmemory captured it:
    ```bash
-   curl -s http://192.168.1.11:31111/agentmemory/search?q=your+name | python3 -m json.tool
+   curl -s http://192.168.1.10:3111/agentmemory/search?q=your+name | python3 -m json.tool
    ```
 5. Check XnchMemory wrote it:
    ```bash
-   sshpass -p xnch ssh -o StrictHostKeyChecking=no x-nch@192.168.1.11 \
+   sshpass -p xnch ssh -o StrictHostKeyChecking=no x-nch@192.168.1.10 \
      "export KUBECONFIG=/etc/rancher/k3s/k3s.yaml && \
       kubectl logs -n xnch-system -l app=xnch --tail=50 | grep -i 'episode\|store'"
    ```
@@ -309,13 +300,13 @@ opencode
 | K3s cluster | `kubectl get nodes` | gate7 (Ready) + xnch-core (Ready) |
 | XNCH pod | `kubectl get pods -n xnch-system -l app=xnch` | Running |
 | Nexi pod | `kubectl get pods -n xnch-system -l app=nexi` | Running |
-| Gemma4 service | `sshpass -p xnch ssh x-nch@192.168.1.2 "curl -s http://localhost:8080/v1/models"` | Model list |
-| OpenClaw i7 | `sshpass -p xnch ssh x-nch@192.168.1.11 "sudo systemctl status openclaw-i7"` | active (running) |
-| AgentMemory | `curl -H "Authorization: Bearer $AGENTMEMORY_SECRET" http://192.168.1.11:31111/health` | 200 |
+| Gemma4 service | `sshpass -p xnch ssh x-nch@192.168.1.9 "curl -s http://localhost:8080/v1/models"` | Model list |
+| OpenClaw i7 | `sshpass -p xnch ssh x-nch@192.168.1.10 "sudo systemctl status openclaw-i7"` | active (running) |
+| AgentMemory API | `curl -s http://192.168.1.10:3111/health` | 200 |
 | Traefik routes | `curl -H "Host: xnch.local" http://localhost:8080/health` | 200 |
-| SSH tunnel | `curl -H "Host: memory.local" http://localhost:31113/` | AgentMemory viewer loads |
+| AgentMemory viewer | `open http://192.168.1.10:3113/` | Viewer loads |
 | Telegram | Send message to bot | Response in < 10 seconds |
-| Memory | `curl -s http://192.168.1.11:31111/agentmemory/search?q=test` | Returns memories |
+| Memory | `curl -s http://192.168.1.10:3111/agentmemory/search?q=test` | Returns memories |
 
 ---
 
@@ -349,14 +340,15 @@ kubectl logs -n xnch-system -l app=nexi --tail=50
 kubectl logs -n xnch-system -l app=xnch --tail=50
 
 # Check OpenClaw i7 logs
-sshpass -p xnch ssh -o StrictHostKeyChecking=no x-nch@192.168.1.11 \
+sshpass -p xnch ssh -o StrictHostKeyChecking=no x-nch@192.168.1.10 \
   "sudo journalctl -u openclaw-i7 -n 50 --no-pager"
 
 # Check agentmemory logs
-kubectl logs -n xnch-system -l app=agentmemory --tail=50
+sshpass -p xnch ssh -o StrictHostKeyChecking=no x-nch@192.168.1.10 \
+  "sudo journalctl -u agentmemory -n 50 --no-pager"
 
 # Check Gemma4 service on i9
-sshpass -p xnch ssh -o StrictHostKeyChecking=no x-nch@192.168.1.2 \
+sshpass -p xnch ssh -o StrictHostKeyChecking=no x-nch@192.168.1.9 \
   "sudo systemctl status gemma4-llama --no-pager && \
    nvidia-smi"
 ```
