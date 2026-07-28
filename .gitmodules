@@ -1,0 +1,6 @@
+[submodule "xnch"]
+	path = xnch
+	url = https://github.com/x-nch/xnch.git
+[submodule "nexi"]
+	path = nexi
+	url = https://github.com/x-nch/nexi.git
