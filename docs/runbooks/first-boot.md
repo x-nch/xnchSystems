@@ -16,7 +16,7 @@ kubectl label node <i9-hostname> role=inference
 ### 2. Create Namespace
 
 ```bash
-kubectl apply -f deploy/k8s/namespaces.yaml
+kubectl apply -f infra/k8s/namespaces.yaml
 ```
 
 **Expected:**
@@ -32,28 +32,28 @@ Apply in order. Wait for `rollout status` before proceeding to the next.
 
 ```bash
 # Database layer
-kubectl apply -f deploy/k8s/i7-node/redis.yaml
+kubectl apply -f infra/k8s/i7-node/redis.yaml
 kubectl rollout status -n xnch-system deploy/redis
 
-kubectl apply -f deploy/k8s/i7-node/postgres-pgvector.yaml
+kubectl apply -f infra/k8s/i7-node/postgres-pgvector.yaml
 kubectl rollout status -n xnch-system statefulset/postgres-pgvector
 
 # Graph store (not yet wired, but needed for schema)
-kubectl apply -f deploy/k8s/i7-node/kuzu.yaml
+kubectl apply -f infra/k8s/i7-node/kuzu.yaml
 kubectl rollout status -n xnch-system deploy/kuzu
 
 # Services
-kubectl apply -f deploy/k8s/i7-node/litellm-deployment.yaml
+kubectl apply -f infra/k8s/i7-node/litellm-deployment.yaml
 kubectl rollout status -n xnch-system deploy/litellm
 
-kubectl apply -f deploy/k8s/i7-node/xnch-deployment.yaml
+kubectl apply -f infra/k8s/i7-node/xnch-deployment.yaml
 kubectl rollout status -n xnch-system deploy/xnch
 
-kubectl apply -f deploy/k8s/i7-node/langfuse.yaml
+kubectl apply -f infra/k8s/i7-node/langfuse.yaml
 kubectl rollout status -n xnch-system deploy/langfuse
 
 # Perception (GPU, last)
-kubectl apply -f deploy/k8s/i7-node/perception-daemonset.yaml
+kubectl apply -f infra/k8s/i7-node/perception-daemonset.yaml
 kubectl rollout status -n xnch-system daemonset/perception
 ```
 
@@ -63,17 +63,17 @@ kubectl rollout status -n xnch-system daemonset/perception
 
 ```bash
 # Inference (GPU required)
-kubectl apply -f deploy/k8s/i9-node/vllm-gemma4.yaml
+kubectl apply -f infra/k8s/i9-node/vllm-gemma4.yaml
 kubectl rollout status -n xnch-system deploy/vllm-gemma4
 
 # Engine + supporting services
-kubectl apply -f deploy/k8s/i9-node/nexi-deployment.yaml
+kubectl apply -f infra/k8s/i9-node/nexi-deployment.yaml
 kubectl rollout status -n xnch-system deploy/nexi
 
-kubectl apply -f deploy/k8s/i9-node/mem0-deployment.yaml
+kubectl apply -f infra/k8s/i9-node/mem0-deployment.yaml
 kubectl rollout status -n xnch-system deploy/mem0
 
-kubectl apply -f deploy/k8s/i9-node/zep-deployment.yaml
+kubectl apply -f infra/k8s/i9-node/zep-deployment.yaml
 kubectl rollout status -n xnch-system deploy/zep
 ```
 
@@ -145,7 +145,7 @@ curl http://i7-node:8001/nexi/system-prompt
 
 ```bash
 # From the i9 node or a machine with openclaw installed
-bash deploy/openclaw/start_nexi.sh
+bash infra/openclaw/start_nexi.sh
 ```
 
 Also test the chat endpoint directly:

@@ -15,7 +15,7 @@ Operational procedures for the XNCH/Nexi private AI orchestration platform. Inte
 
 ## Daily Consolidation Job
 
-Every night at 2 AM, a Kubernetes CronJob (`deploy/k8s/jobs/consolidation-cronjob.yaml`) runs `run_consolidation()` from `xnch/jobs/consolidation.py`. The job performs three operations in sequence.
+Every night at 2 AM, a Kubernetes CronJob (`infra/k8s/jobs/consolidation-cronjob.yaml`) runs `run_consolidation()` from `xnch/jobs/consolidation.py`. The job performs three operations in sequence.
 
 **Summarization.** The 100 most recent episodes are fetched from agentmemory and forwarded to Zep, which handles LLM summarization internally. The system treats Zep as a black box â€” no prompt tuning or model selection is exposed at this layer.
 
@@ -159,7 +159,7 @@ These versions are useful for correlating behaviour against deployment history â
 
 ## Langfuse Traces
 
-LLM call tracing is wired through the `LangfuseClient` in `xnch/observability/langfuse_client.py`. The client POSTs to `/api/public/ingestion` on the configured Langfuse host (defaults to `https://cloud.langfuse.com`). A local Langfuse instance can be deployed via `deploy/k8s/i7-node/langfuse.yaml`.
+LLM call tracing is wired through the `LangfuseClient` in `xnch/observability/langfuse_client.py`. The client POSTs to `/api/public/ingestion` on the configured Langfuse host (defaults to `https://cloud.langfuse.com`). A local Langfuse instance can be deployed via `infra/k8s/i7-node/langfuse.yaml`.
 
 ### Authentication
 

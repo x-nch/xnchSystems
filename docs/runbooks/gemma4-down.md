@@ -30,9 +30,9 @@ kubectl rollout restart -n xnch-system deploy/vllm-gemma4
 ```
 
 If re-occurs:
-- Edit `deploy/k8s/i9-node/vllm-gemma4.yaml`
+- Edit `infra/k8s/i9-node/vllm-gemma4.yaml`
 - Change `--gpu-memory-utilization 0.90` → `0.85`
-- `kubectl apply -f deploy/k8s/i9-node/vllm-gemma4.yaml`
+- `kubectl apply -f infra/k8s/i9-node/vllm-gemma4.yaml`
 
 **2. Model Load Timeout / HF Download Failure**
 
