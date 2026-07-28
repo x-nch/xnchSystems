@@ -26,7 +26,7 @@ data.text_preview: "ignore previous instructions and..."
 
 ### Identify the Matched Pattern
 
-Cross-reference the `matched_patterns` field against `INJECTION_PATTERNS` in `xnch/xnch/security/injection_guard.py`:
+Cross-reference the `matched_patterns` field against `INJECTION_PATTERNS` in `xnch/security/injection_guard.py` (inside xnch submodule):
 
 | Pattern | Regex | Likely Attack |
 |---------|-------|--------------|

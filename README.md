@@ -10,9 +10,9 @@ The codebase is a Python monorepo with two FastAPI services (Python 3.13+), Kube
 
 ## Platform vs Product
 
-**XNCH** (`xnch/`) is the platform layer: governance, memory, authorization, policy enforcement, perception, audit, and learning. It runs on the i7-memory node. Entrypoint is `xnch/xnch/main.py`. It owns the data, the secrets, the policies, and the historical record. Configuration is driven by environment variables prefixed `XNCH_*`.
+**XNCH** (`xnch/`) is the platform layer: governance, memory, authorization, policy enforcement, perception, audit, and learning. It runs on the i7-memory node. Entrypoint is `xnch/main.py` (inside submodule). It owns the data, the secrets, the policies, and the historical record. Configuration is driven by environment variables prefixed `XNCH_*`.
 
-**Nexi** (`nexi/`) is the product layer: decision engine, character and persona, LLM orchestration, proactivity, and context assembly. It runs on the i9-inference node. Entrypoint is `nexi/nexi/main.py`. It owns the model calls, the plan options, the execution pipeline. Configuration is driven by environment variables prefixed `NEXI_*`.
+**Nexi** (`nexi/`) is the product layer: decision engine, character and persona, LLM orchestration, proactivity, and context assembly. It runs on the i9-inference node. Entrypoint is `nexi/main.py` (inside submodule). It owns the model calls, the plan options, the execution pipeline. Configuration is driven by environment variables prefixed `NEXI_*`.
 
 The two services communicate over HTTP:
 - Nexi calls xnch at `NEXI_XNCH_BASE_URL` (default `http://localhost:8001`) for policy checks, memory reads, and verdicts.
@@ -75,10 +75,10 @@ kubectl create secret generic huggingface-secret -n xnch-system \
   --from-literal=token='<hf-token>'
 
 # Deploy in dependency order
-kubectl apply -f deploy/k8s/namespaces.yaml
-kubectl apply -f deploy/k8s/i7-node/
-kubectl apply -f deploy/k8s/i9-node/
-kubectl apply -f deploy/k8s/jobs/
+kubectl apply -f infra/k8s/namespaces.yaml
+kubectl apply -f infra/k8s/i7-node/
+kubectl apply -f infra/k8s/i9-node/
+kubectl apply -f infra/k8s/jobs/
 
 # Verify everything is running
 kubectl get all -n xnch-system
@@ -118,42 +118,42 @@ Persistent volume claims are created automatically: `xnch-data` for the xnch ser
 ## Repository Layout
 
 ```
-nexi/                              Execution engine — FastAPI, decision pipeline, LLM orchestration
-  nexi/main.py                     App entrypoint, /session/start, /callback/outcome
-  nexi/config.py                   NEXI_* environment variable definitions
-  nexi/character/                  Nexi persona YAML, cold start seeder, system prompt loader
-  nexi/pipeline/                   Intent interpreter, context assembler, option generator,
-                                   policy filter, evaluator, selector, plan compiler, dispatch
-  nexi/models/                     Pydantic models: intent, session, DAG, options, outcomes
-  nexi/adapters/                   ModelAdapter (LiteLLM + vLLM + llama.cpp fallback), XnchClient
-  nexi/proactivity/                ProactivityEngine — pattern/consolidation/inference/learning alerts
-  nexi/utils/                      Audit helper, context signature
-xnch/                              Control plane — FastAPI, governance, memory, auth, policy, learning
-  xnch/main.py                     App entrypoint, lifespan wiring, scheduler registration
-  xnch/config.py                   XNCH_* environment variable definitions
-  xnch/routes/                     Session, memory, policy, verdict, execution, governance, auth, nexi_gateway
-  xnch/auth/                       RSA key pair generation, TokenSigner/Verifier, GovernanceStore
-  xnch/security/                   Trust model, injection guard, actor sandbox, memory write guard
-  xnch/memory/                     Sensory buffer (Redis), working memory (Redis), episodic store
+xnch/                              Git submodule → github.com/x-nch/xnch
+  main.py                          App entrypoint, lifespan wiring, scheduler registration
+  config.py                        XNCH_* environment variable definitions
+  routes/                          Session, memory, policy, verdict, execution, governance, auth, nexi_gateway
+  auth/                            RSA key pair generation, TokenSigner/Verifier, GovernanceStore
+  security/                        Trust model, injection guard, actor sandbox, memory write guard
+  memory/                          Sensory buffer (Redis), working memory (Redis), episodic store
                                    (pgvector), pattern store (SQLite), graph store (agentmemory),
                                    relationship store (PG), quarantine store (PG), KV cache (Redis),
                                    database migrations
-  xnch/policy/                     YAML policy loader, policy engine (first-match-wins)
-  xnch/learning/                   Pattern extractor, score adapter, policy candidate generator
-  xnch/perception/                 Voice daemon, vision encoder, file watcher, attention filter
-  xnch/routing/                    Model classifier — routes to gemma4-local or claude-judgment
-  xnch/audit/                      EventLog (append-only JSONL), DecisionLedger (SHA-256 chain)
-  xnch/observability/              Langfuse client for LLM call tracing
-  xnch/jobs/                       Consolidation job (daily CronJob)
-deploy/                            K8s manifests, Dockerfiles, infrastructure configuration
+  policy/                          YAML policy loader, policy engine (first-match-wins)
+  learning/                        Pattern extractor, score adapter, policy candidate generator
+  perception/                      Voice daemon, vision encoder, file watcher, attention filter
+  routing/                         Model classifier — routes to gemma4-local or claude-judgment
+  audit/                           EventLog (append-only JSONL), DecisionLedger (SHA-256 chain)
+  observability/                   Langfuse client for LLM call tracing
+  jobs/                            Consolidation job (daily CronJob)
+nexi/                              Git submodule → github.com/x-nch/nexi
+  main.py                          App entrypoint, /session/start, /callback/outcome
+  config.py                        NEXI_* environment variable definitions
+  character/                       Nexi persona YAML, cold start seeder, system prompt loader
+  pipeline/                        Intent interpreter, context assembler, option generator,
+                                   policy filter, evaluator, selector, plan compiler, dispatch
+  models/                          Pydantic models: intent, session, DAG, options, outcomes
+  adapters/                        ModelAdapter (LiteLLM + vLLM + llama.cpp fallback), XnchClient
+  proactivity/                     ProactivityEngine — pattern/consolidation/inference/learning alerts
+  utils/                           Audit helper, context signature
+infra/                             K8s manifests, Dockerfiles, infrastructure configuration
   k8s/i7-node/                     PostgreSQL, Redis, Langfuse, LiteLLM, xnch, perception daemonset
   k8s/i9-node/                     vLLM, Nexi, mem0, Zep
   k8s/jobs/                        Consolidation CronJob, vault indexer
   docker/                          xnch.Dockerfile, nexi.Dockerfile
   openclaw/                        OpenClaw client config, start_nexi.sh
-policies/                          YAML policy definitions (default.yaml, custom.yaml)
-weights/                           Scoring weight configs per intent class
 docs/                              Architecture docs, operations guide, security reference
+scripts/                           Helper scripts, migration agent
+misc/                              Historical records, conversations, reports
 ```
 
 ---
@@ -162,7 +162,7 @@ docs/                              Architecture docs, operations guide, security
 
 ### XNCH_* — Control Plane Configuration (20 vars)
 
-Defined in `xnch/xnch/config.py`.
+Defined in `xnch/config.py` (inside xnch submodule).
 
 | Variable | Default | Description |
 |---|---|---|
@@ -189,7 +189,7 @@ Defined in `xnch/xnch/config.py`.
 
 ### NEXI_* — Execution Engine Configuration (18 vars)
 
-Defined in `nexi/nexi/config.py`.
+Defined in `nexi/config.py` (inside nexi submodule).
 
 | Variable | Default | Description |
 |---|---|---|
@@ -226,10 +226,11 @@ Used by the nexi_gateway route in xnch for LiteLLM relay.
 ## Running Tests
 
 ```bash
-pytest                      # All tests (auto-asyncio mode)
-pytest nexi/tests           # Nexi tests only
-pytest xnch/tests           # xnch tests only
-pytest nexi/tests/test_evaluator.py  # Single test file
+git submodule update --init --recursive  # Clone submodules first
+pytest                                    # All tests (auto-asyncio mode)
+cd nexi && pytest tests                  # Nexi tests only
+cd xnch && pytest tests                  # xnch tests only
+cd nexi && pytest tests/test_evaluator.py  # Single test file
 ```
 
 No dedicated lint or typecheck commands exist in this repository.

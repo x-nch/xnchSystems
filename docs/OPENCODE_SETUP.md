@@ -69,12 +69,12 @@ EOF
 ```bash
 # Deploy openclaw/i7-config.yaml
 sshpass -p xnch scp -o StrictHostKeyChecking=no \
-  /Users/xnch/xnchSystems/deploy/openclaw/i7-config.yaml \
+  /Users/xnch/xnchSystems/infra/openclaw/i7-config.yaml \
   x-nch@192.168.1.10:/home/x-nch/.openclaw/i7-config.yaml
 
 # Deploy openclaw/i7-start.sh
 mkdir -p /tmp/openclaw-deploy
-cp /Users/xnch/xnchSystems/deploy/openclaw/i7-start.sh /tmp/openclaw-deploy/
+cp /Users/xnch/xnchSystems/infra/openclaw/i7-start.sh /tmp/openclaw-deploy/
 chmod +x /tmp/openclaw-deploy/i7-start.sh
 
 sshpass -p xnch scp -o StrictHostKeyChecking=no \
@@ -87,7 +87,7 @@ sshpass -p xnch scp -o StrictHostKeyChecking=no \
 ```bash
 # Copy service unit
 sshpass -p xnch scp -o StrictHostKeyChecking=no \
-  /Users/xnch/xnchSystems/deploy/openclaw/i7-systemd.service \
+  /Users/xnch/xnchSystems/infra/openclaw/i7-systemd.service \
   x-nch@192.168.1.10:/tmp/openclaw-i7.service
 
 # Install
@@ -143,7 +143,7 @@ mkdir -p ~/.openclaw
 ### 9b — Copy Mac config
 
 ```bash
-cp /Users/xnch/xnchSystems/deploy/openclaw/mac-config.yaml ~/.openclaw/mac-config.yaml
+cp /Users/xnch/xnchSystems/infra/openclaw/mac-config.yaml ~/.openclaw/mac-config.yaml
 
 # Verify the config points to i7 (192.168.1.10:30800)
 cat ~/.openclaw/mac-config.yaml | grep base_url
@@ -153,7 +153,7 @@ cat ~/.openclaw/mac-config.yaml | grep base_url
 
 ```bash
 # Copy env template
-cp /Users/xnch/xnchSystems/deploy/openclaw/claude-code-agentmemory.env ~/.openclaw/claude-code-agentmemory.env
+cp /Users/xnch/xnchSystems/infra/openclaw/claude-code-agentmemory.env ~/.openclaw/claude-code-agentmemory.env
 
 # Source it before running Claude Code / OpenCode
 cat >> ~/.zshrc << 'EOF'

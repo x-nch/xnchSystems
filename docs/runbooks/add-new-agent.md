@@ -6,7 +6,7 @@ Lowercase, underscore-separated. Examples: `code_reviewer`, `research_agent`, `m
 
 ### 2. Add to Trust Model
 
-Edit `xnch/xnch/security/trust_model.py`:
+Edit `xnch/security/trust_model.py` (inside xnch submodule):
 
 ```python
 ACTOR_TRUST_MAP: dict[str, TrustLevel] = {
@@ -17,7 +17,7 @@ ACTOR_TRUST_MAP: dict[str, TrustLevel] = {
 
 ### 3. Add Capabilities (Optional)
 
-If the agent needs custom capabilities beyond the trust level default, edit `xnch/xnch/security/actor_sandbox.py`.
+If the agent needs custom capabilities beyond the trust level default, edit `xnch/security/actor_sandbox.py` (inside xnch submodule).
 
 Trusted agent defaults (`CAPABILITY_MAP[TrustLevel.TRUSTED_AGENT]`):
 
@@ -75,7 +75,7 @@ auth_token: eyJhbGciOiJIUzI1NiIs...
 
 ### 5. Configure Rate Limits (Optional)
 
-Rate limits are defined per trust level in `xnch/xnch/memory/kv_cache.py`:
+Rate limits are defined per trust level in `xnch/memory/kv_cache.py` (inside xnch submodule):
 
 | Trust Level | Requests/min |
 |------------|-------------|
