@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "flock -n /tmp/crg-update.lock code-review-graph update --skip-flows || true",
+            "command": "code-review-graph update --skip-flows",
             "timeout": 5000
           }
         ]
@@ -14,12 +14,23 @@
     ],
     "SessionStart": [
       {
-        "matcher": "",
         "hooks": [
           {
             "type": "command",
             "command": "code-review-graph status",
             "timeout": 3000
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "input=$(cat); cmd=$(echo \"$input\" | jq -r '.tool_input.command // empty'); if [[ \"$cmd\" == *\"git commit\"* ]]; then code-review-graph detect-changes --brief; fi",
+            "timeout": 10000
           }
         ]
       }

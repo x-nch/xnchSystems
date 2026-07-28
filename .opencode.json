@@ -8,6 +8,11 @@
       ],
       "type": "stdio",
       "env": []
+    },
+    "langchain-docs": {
+      "type": "remote",
+      "url": "https://docs.langchain.com/mcp",
+      "enabled": true
     }
   }
 }

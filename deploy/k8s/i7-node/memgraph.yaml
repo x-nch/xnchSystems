@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: memgraph
+  namespace: xnch-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: memgraph
+  serviceName: memgraph
+  template:
+    metadata:
+      labels:
+        app: memgraph
+    spec:
+      nodeSelector:
+        role: memory
+      containers:
+      - name: memgraph
+        image: memgraph/memgraph:latest
+        ports:
+        - containerPort: 7687
+          name: bolt
+        - containerPort: 7444
+          name: http
+        env:
+        - name: MEMGRAPH_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: memgraph-secret
+              key: password
+              optional: true
+        volumeMounts:
+        - name: memgraph-data
+          mountPath: /var/lib/memgraph
+  volumeClaimTemplates:
+  - metadata:
+      name: memgraph-data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 10Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: memgraph
+  namespace: xnch-system
+spec:
+  selector:
+    app: memgraph
+  ports:
+  - port: 7687
+    targetPort: 7687
+    name: bolt
+  - port: 7444
+    targetPort: 7444
+    name: http
+  clusterIP: None
