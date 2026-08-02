@@ -93,8 +93,8 @@ Every actor that touches the system carries a trust level. Five levels exist, fr
 |---|---|---|
 | UNTRUSTED | 1 | Unknown or explicitly external actors. Default for any unmapped role. |
 | EXTERNAL_AGENT | 2 | Third-party agent integrations (future). No writes or job triggers. |
-| TRUSTED_AGENT | 3 | Known system agents: opencode, claude_code, perception_daemon, consolidation_job. |
-| OWNER | 4 | The human operator (openclaw). |
+| TRUSTED_AGENT | 3 | Known system agents: opencode, perception_daemon, consolidation_job. |
+| OWNER | 4 | The human operator. |
 | SYSTEM | 5 | The nexi engine itself. Full capabilities. |
 
 ### Actor-to-Trust Mapping
@@ -102,8 +102,10 @@ Every actor that touches the system carries a trust level. Five levels exist, fr
 | Actor | Level |
 |---|---|
 | nexi | SYSTEM (5) |
-| openclaw | OWNER (4) |
-| claude_code | TRUSTED_AGENT (3) |
+| admin | OWNER (4) |
+| operator | OWNER (4) |
+| agent | TRUSTED_AGENT (3) |
+| viewer | EXTERNAL_AGENT (2) |
 | opencode | TRUSTED_AGENT (3) |
 | perception_daemon | TRUSTED_AGENT (3) |
 | consolidation_job | TRUSTED_AGENT (3) |

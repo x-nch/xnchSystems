@@ -84,8 +84,10 @@ UNTRUSTED (1) < EXTERNAL_AGENT (2) < TRUSTED_AGENT (3) < OWNER (4) < SYSTEM (5)
 | Actor Role | Trust Level | Description |
 |---|---|---|
 | `nexi` | SYSTEM (5) | The decision engine itself |
-| `openclaw` | OWNER (4) | Primary human operator |
-| `claude_code` | TRUSTED_AGENT (3) | Authorized AI coding agent |
+| `admin` | OWNER (4) | Administrator |
+| `operator` | OWNER (4) | Human operator |
+| `agent` | TRUSTED_AGENT (3) | Automated agent |
+| `viewer` | EXTERNAL_AGENT (2) | Read-only viewer |
 | `opencode` | TRUSTED_AGENT (3) | Authorized AI coding agent |
 | `perception_daemon` | TRUSTED_AGENT (3) | Perception pipeline service |
 | `consolidation_job` | TRUSTED_AGENT (3) | Memory consolidation job |
@@ -138,7 +140,7 @@ Bootstrapped actors in the governance store:
 Use the plaintext format for local development:
 
 ```
-actor:openclaw
+actor:operator
 ```
 
 **2. Call the health endpoint:**
@@ -158,7 +160,7 @@ curl -X GET http://localhost:8001/health
 curl -X POST http://localhost:8001/session/init \
   -H "Content-Type: application/json" \
   -d '{
-    "auth_token": "actor:openclaw",
+    "auth_token": "actor:operator",
     "raw_input": "analyze the current memory usage",
     "input_type": "TEXT",
     "priority": "NORMAL"
@@ -172,7 +174,7 @@ import requests
 resp = requests.post(
     "http://localhost:8001/session/init",
     json={
-        "auth_token": "actor:openclaw",
+        "auth_token": "actor:operator",
         "raw_input": "analyze the current memory usage",
         "input_type": "TEXT",
         "priority": "NORMAL"
@@ -445,7 +447,7 @@ public_key = key_data["public_key pem"]
 
 ```json
 {
-  "auth_token": "actor:openclaw",
+  "auth_token": "actor:operator",
   "raw_input": "schedule memory consolidation for all high-importance episodes",
   "input_type": "COMMAND",
   "priority": "HIGH",
@@ -486,7 +488,7 @@ public_key = key_data["public_key pem"]
 curl -X POST http://localhost:8001/session/init \
   -H "Content-Type: application/json" \
   -d '{
-    "auth_token": "actor:openclaw",
+    "auth_token": "actor:operator",
     "raw_input": "schedule memory consolidation for all high-importance episodes",
     "input_type": "COMMAND",
     "priority": "HIGH",
@@ -501,7 +503,7 @@ import requests
 resp = requests.post(
     "http://localhost:8001/session/init",
     json={
-        "auth_token": "actor:openclaw",
+        "auth_token": "actor:operator",
         "raw_input": "analyze anomaly patterns in recent perception data",
         "input_type": "TEXT",
         "priority": "NORMAL",
@@ -638,7 +640,7 @@ curl -X POST http://localhost:8001/ses_abc123/clarify \
 |---|---|---|---|---|
 | `session_id` | string | **yes** | — | Active session identifier |
 | `message` | string | **yes** | — | The message to process |
-| `actor_role` | string | no | `"openclaw"` | Actor role for context and memory scoping |
+| `actor_role` | string | no | `"operator"` | Actor role for context and memory scoping |
 
 **Response:**
 
@@ -665,7 +667,7 @@ curl -X POST http://localhost:8001/nexi/chat \
   -d '{
     "session_id": "ses_abc123",
     "message": "Summarize recent anomaly patterns",
-    "actor_role": "openclaw"
+    "actor_role": "operator"
   }'
 ```
 
@@ -678,7 +680,7 @@ resp = requests.post(
     json={
         "session_id": "ses_abc123",
         "message": "Summarize recent anomaly patterns",
-        "actor_role": "openclaw"
+        "actor_role": "operator"
     }
 )
 resp.raise_for_status()
@@ -701,7 +703,7 @@ print(f"Response: {result['response']}")
 |---|---|---|---|---|
 | `session_id` | string | **yes** | — | Active session identifier |
 | `message` | string | **yes** | — | The message to process |
-| `actor_role` | string | no | `"openclaw"` | Actor role for context and memory scoping |
+| `actor_role` | string | no | `"operator"` | Actor role for context and memory scoping |
 
 **Response:** `text/event-stream`
 
@@ -767,7 +769,7 @@ Your role is to interpret intent, assemble context, evaluate options, and dispat
 execution with full policy compliance...
 
 Current system state: v_abc123def
-Active actors: [openclaw, claude_code, nexi]
+Active actors: [operator, nexi]
 ...
 ```
 
@@ -841,12 +843,12 @@ curl -X GET http://localhost:8001/nexi/memory/surface
     "id": "ep_abc123",
     "type": "episode",
     "timestamp": "2026-06-27T03:00:00Z",
-    "content": "Actor openclaw requested memory consolidation. Decision: ALLOW. Outcome: SUCCESS.",
+    "content": "Actor operator requested memory consolidation. Decision: ALLOW. Outcome: SUCCESS.",
     "similarity": 0.89,
     "importance": 0.75,
     "relationships": [
       {
-        "entity_a": "openclaw",
+        "entity_a": "operator",
         "entity_b": "consolidation_job",
         "type": "TRIGGERED",
         "strength": 0.9

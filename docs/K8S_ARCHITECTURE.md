@@ -57,8 +57,7 @@
 
 | Service | Process | Type | Port | Notes |
 |---------|---------|------|------|-------|
-| OpenClaw i7 | openclaw | systemd | 30800 (NodePort) | Always-on gateway (Telegram/WhatsApp) |
-| agentmemory | agentmemory | systemd | 3111/3113 | MCP memory for Claude Code, OpenCode, OpenClaw |
+| agentmemory | agentmemory | systemd | 3111/3113 | MCP memory for Claude Code, OpenCode |
 
 ---
 

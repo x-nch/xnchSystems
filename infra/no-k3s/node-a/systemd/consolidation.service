@@ -8,6 +8,7 @@ Type=oneshot
 User=x-nch
 WorkingDirectory=/home/x-nch/xnchSystems
 EnvironmentFile=/home/x-nch/.xnch/xnch.env
-ExecStart=/usr/bin/python3 -c "import asyncio; from xnch.jobs.consolidation import run_consolidation; asyncio.run(run_consolidation())"
+Environment=PYTHONPATH=/home/x-nch/xnchSystems/xnch
+ExecStart=/home/x-nch/xnchSystems/xnch/.venv/bin/python -c "import asyncio; from xnch.jobs.consolidation import run_consolidation; asyncio.run(run_consolidation())"
 StandardOutput=journal
 StandardError=journal

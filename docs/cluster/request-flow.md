@@ -6,7 +6,7 @@
 ```bash
 curl -X POST http://10.42.1.63:8000/nexi/chat \
   -H 'Content-Type: application/json' \
-  -H 'X-Actor-Role: openclaw' \
+  -H 'X-Actor-Role: operator' \
   -d '{"session_id":"review-test-001","message":"what is your current memory state"}'
 ```
 

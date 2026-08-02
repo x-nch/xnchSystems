@@ -152,7 +152,7 @@ Also test the chat endpoint directly:
 ```bash
 curl -X POST http://i7-node:8001/nexi/chat \
   -H "Content-Type: application/json" \
-  -d '{"session_id":"smoke-test-1","message":"hello","actor_role":"openclaw"}'
+  -d '{"session_id":"smoke-test-1","message":"hello","actor_role":"operator"}'
 ```
 
 **Expected:** Nexi responds. If streaming, `chat/stream` returns SSE events.

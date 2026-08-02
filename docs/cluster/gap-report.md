@@ -46,7 +46,6 @@
 | **agentmemory revision history** | 2 revisions in 15 minutes — image config thrashing |
 | **langfuse revision history** | 12 revisions — excessive rolling updates during setup |
 | **nexi revision history** | 5 revisions in 5 hours |
-| **openclaw on gate7** | Port 18789 — OpenClaw agent process |
 | **gemma4-llama service** | systemd service on xnch-core, NOT in K8s |
 
 ## Production Readiness Recommendations

@@ -6,21 +6,24 @@ services:
     container_name: litellm
     ports:
       - "4000:4000"
+    command: ["--config", "/app/config/config.yaml", "--port", "4000"]
     volumes:
       - ./litellm-config:/app/config
     env_file:
-      - ../shared/.env.example
+      - .env
+    environment:
+      - LITELLM_MASTER_KEY=${LITELLM_MASTER_KEY}
     restart: unless-stopped
     networks:
       - xnch-net
     healthcheck:
-      test: ["CMD", "curl", "-sf", "http://localhost:4000/health"]
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:4000/health/liveliness')\""]
       interval: 30s
       timeout: 10s
       retries: 3
 
   langfuse:
-    image: langfuse/langfuse:latest
+    image: langfuse/langfuse:2
     container_name: langfuse
     ports:
       - "3000:3000"
@@ -28,6 +31,7 @@ services:
       - DATABASE_URL=postgresql://xnch:${LANGFUSE_POSTGRES_PASSWORD}@langfuse-postgres:5432/langfuse
       - NEXTAUTH_SECRET=${LANGFUSE_NEXTAUTH_SECRET}
       - SALT=${LANGFUSE_SALT}
+      - NEXTAUTH_URL=http://192.168.1.10:3000
       - LANGFUSE_HOST=http://langfuse:3000
     depends_on:
       langfuse-postgres:
@@ -36,7 +40,7 @@ services:
     networks:
       - xnch-net
     healthcheck:
-      test: ["CMD", "curl", "-sf", "http://localhost:3000/api/auth/verify"]
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://$(hostname):3000/api/public/health"]
       interval: 30s
       timeout: 10s
       retries: 3

@@ -82,7 +82,6 @@ External → NodePort(192.168.1.11:30800)
 | 22 | sshd | SSH access |
 | 6443 | k3s server | Kubernetes API |
 | 10250 | kubelet | kubelet API |
-| 18789 | openclaw | OpenClaw agent service |
 
 ### Listener Ports on i9-node (xnch-core)
 | Port | Process | Purpose |

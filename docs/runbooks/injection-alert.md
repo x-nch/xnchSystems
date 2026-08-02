@@ -70,9 +70,9 @@ Cross-reference the `matched_patterns` field against `INJECTION_PATTERNS` in `xn
 **If TRUSTED_AGENT (trust=3):**
 More concerning — a trusted component was hijacked or is sending malicious input.
 
-1. Identify which agent: `claude_code`, `perception_daemon`, `consolidation_job`, or `opencode`
+1. Identify which agent: `perception_daemon`, `consolidation_job`, or `opencode`
 2. Check the agent's input source:
-   - **claude_code/opencode**: Review the user prompt that was given to it
+   - **opencode**: Review the user prompt that was given to it
    - **perception_daemon**: Check if voice transcription was manipulated (see `perception:voice:*` keys in Redis)
    - **consolidation_job**: Check `graph_extractor` output for LLM hallucination
 3. Quarantine affected episodes:
@@ -83,9 +83,9 @@ More concerning — a trusted component was hijacked or is sending malicious inp
 **If OWNER/SYSTEM (trust=4-5):**
 - `scan_input()` runs before the trust check in `validate_memory_write()`
 - The request was already blocked — no action needed
-- `X-Actor-Role` was likely spoofed. Investigate who sent a claim of `openclaw` or `nexi`:
+- `X-Actor-Role` was likely spoofed. Investigate who sent a claim of `operator` or `nexi`:
   ```bash
-  kubectl logs -n xnch-system deploy/xnch --tail=500 | grep "X-Actor-Role: openclaw"
+  kubectl logs -n xnch-system deploy/xnch --tail=500 | grep "X-Actor-Role: operator"
   ```
 
 ### Post-Incident

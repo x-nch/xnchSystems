@@ -30,8 +30,8 @@ Trust levels are integer-valued constants defined in `xnch/security/trust_model.
 |---|---|---|
 | UNTRUSTED | 1 | Unknown or explicitly external actors. Default for any unmapped role. |
 | EXTERNAL_AGENT | 2 | Third-party agent integrations (future). Read-only — no writes or job triggers. |
-| TRUSTED_AGENT | 3 | Known system agents: opencode, claude_code, perception_daemon, consolidation_job. Can write memory and trigger jobs. |
-| OWNER | 4 | The human operator (openclaw). Can write and read all memory, trigger jobs, and access perception. |
+| TRUSTED_AGENT | 3 | Known system agents: opencode, perception_daemon, consolidation_job. Can write memory and trigger jobs. |
+| OWNER | 4 | The human operator. Can write and read all memory, trigger jobs, and access perception. |
 | SYSTEM | 5 | The nexi engine itself. Full capabilities including policy modification. |
 
 ### Actor-to-Trust Mapping
@@ -41,8 +41,10 @@ Every actor identity resolves to exactly one trust level via `ACTOR_TRUST_MAP`. 
 | Actor | Trust Level |
 |---|---|
 | nexi | SYSTEM (5) |
-| openclaw | OWNER (4) |
-| claude_code | TRUSTED_AGENT (3) |
+| admin | OWNER (4) |
+| operator | OWNER (4) |
+| agent | TRUSTED_AGENT (3) |
+| viewer | EXTERNAL_AGENT (2) |
 | opencode | TRUSTED_AGENT (3) |
 | perception_daemon | TRUSTED_AGENT (3) |
 | consolidation_job | TRUSTED_AGENT (3) |

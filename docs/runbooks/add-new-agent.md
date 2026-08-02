@@ -135,7 +135,7 @@ curl -X POST http://i7-node:8001/nexi/chat \
 ```bash
 curl -X POST http://i7-node:8001/governance/actors \
   -H "Authorization: Bearer $TOKEN" \
-  -H "X-Actor-Role: openclaw" \
+  -H "X-Actor-Role: operator" \
   -H "Content-Type: application/json" \
   -d '{"actor_id":"your_new_agent","role":"TRUSTED_AGENT","capability_set":["memory:write","jobs:trigger"]}'
 ```
@@ -150,7 +150,7 @@ kubectl rollout restart -n xnch-system deploy/xnch
 
 # Remove governance actor
 curl -X DELETE http://i7-node:8001/governance/actors \
-  -H "X-Actor-Role: openclaw" \
+  -H "X-Actor-Role: operator" \
   -H "Content-Type: application/json" \
   -d '{"actor_id":"your_new_agent"}'
 ```

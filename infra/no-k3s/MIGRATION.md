@@ -4,6 +4,11 @@
 
 Migrate xnchSystems from a k3s cluster to direct service management across two physical nodes.
 
+> **Why this migration:** the k3s control plane pods crash-looped (api-server
+> instability, image-not-built perception service, GPU scheduling issues on the
+> GTX 1650). k3s is left running on Node A for the system pods only; all xnch
+> workloads moved to docker compose + systemd per this doc.
+
 | Node | Hardware | Role |
 |------|----------|------|
 | Node A (i7-node) | Intel i7 + GTX 1650 | Control plane, memory layer, observability |
@@ -75,26 +80,54 @@ docker compose up -d
 Verify services are healthy:
 ```bash
 docker compose ps
-curl -sf http://localhost:4000/health   # litellm
-curl -sf http://localhost:3000/api/auth/verify  # langfuse
+curl -sf http://localhost:4000/health/liveliness  # litellm (unauth; /health needs master key)
+curl -sf http://localhost:3000/api/public/health  # langfuse
 curl -sf http://localhost:6379/ping      # redis
 curl -sf http://localhost:5432           # postgres-pgvector
+curl -sf http://localhost:8001/health    # xnch
 ```
+
+> **Deployment notes (Aug 2026):**
+> - `langfuse/langfuse:latest` is now **v3**, which requires ClickHouse. Pin to
+>   `langfuse/langfuse:2` (Postgres-only) in `docker-compose.yml`.
+> - langfuse v2 also needs `NEXTAUTH_URL` (valid URL, e.g. `http://NODE_A_IP:3000`)
+>   or startup fails with "Invalid environment variables".
+> - langfuse v2 health endpoint is `/api/public/health` (not `/api/auth/verify`).
+> - The langfuse and litellm images contain no `curl`; healthchecks must use
+>   `wget`/`python` and target the container hostname (`$(hostname)`) or the
+>   unauth `/health/liveliness` endpoint respectively.
+> - litellm `/health` requires the master key (401 without it) and reports
+>   upstream models as unhealthy until they are deployed (vLLM, Anthropic key,
+>   Ollama) — that is expected, not a proxy failure.
 
 ### 1.4 Enable and start systemd services on Node A
 
 ```bash
-sudo cp infra/no-k3s/node-a/systemd/*.service /etc/systemd/system/
-sudo cp infra/no-k3s/node-a/systemd/*.timer /etc/systemd/system/
+sudo cp infra/no-k3s/node-a/systemd/xnch.service /etc/systemd/system/
+sudo cp infra/no-k3s/node-a/systemd/consolidation.service /etc/systemd/system/
+sudo cp infra/no-k3s/node-a/systemd/consolidation.timer /etc/systemd/system/
 sudo systemctl daemon-reload
-sudo systemctl enable xnch.service perception.service consolidation.timer
-sudo systemctl start xnch.service perception.service
-sudo systemctl start consolidation.timer
+sudo systemctl enable --now xnch.service consolidation.timer
 ```
+
+> **Not yet implemented (deferred):**
+> - `perception.service` (port 8002) — no HTTP server entrypoint exists in
+>   `xnch/perception/` (only library classes: `VisionEncoder`, `VoiceDaemon`,
+>   `FileWatcher`, `AttentionFilter`). Original k3s DaemonSet confirms
+>   `blocked-by: "perception service not yet implemented"`. Skip until an entrypoint is written.
+> - `vault-indexer.service` — references `vision_encoder.index_vault()`, which
+>   does not exist. Skip until implemented.
+> - Both units also use `/usr/bin/python3` with no `PYTHONPATH`; they would need
+>   the venv + `PYTHONPATH` fix applied to `consolidation.service` if re-enabled.
+> - `nexiUI` — placeholder, deferred.
 
 ### 1.5 Update LiteLLM routing config
 
 Replace `NODE_B_IP` in `litellm-routing.yaml` with the actual Node B IP (`192.168.50.2`).
+
+> The `litellm_params.model` must be the **vLLM served name** (`openai/ornith-1.0-35b`),
+> not the litellm alias (`openai/qwen3-xml`). vLLM rejects unknown model names; the
+> `qwen3-xml` name is the public alias only.
 
 ### 1.6 Validate Node A
 
@@ -104,8 +137,8 @@ Replace `NODE_B_IP` in `litellm-routing.yaml` with the actual Node B IP (`192.16
 - [ ] redis responds on `localhost:6379`
 - [ ] postgres-pgvector responds on `localhost:5432`
 - [ ] langfuse-postgres responds on `localhost:5433`
-- [ ] perception service responds on `localhost:8002`
-- [ ] consolidation timer is active (`systemctl list-timers`)
+- [x] consolidation timer is active (`systemctl list-timers`)
+- [ ] perception service responds on `localhost:8002` — **deferred** (not implemented)
 
 ## Phase 2 — Deploy Node B Services
 
@@ -135,6 +168,16 @@ sudo systemctl daemon-reload
 sudo systemctl enable vllm-ornith.service nexi.service
 sudo systemctl start vllm-ornith.service nexi.service
 ```
+
+> **Deployment notes (Aug 2026):**
+> - **No Docker on Node B.** Both services are bare venv + systemd
+>   (`~/.xnch/nexi.env` + `nexi/.venv`; `~/venvs/vllm-ornith` + `~/models/ornith-gptq-pro`).
+> - vLLM 0.24.0 needs `--quantization gptq_marlin` for GPTQ models and `VLLM_ATTENTION_BACKEND=FLASH_ATTN`.
+> - The RTX 3090 (24 GiB) must be idle before start; the 26G model uses ~22 GiB.
+> - nexi imports xnch modules (`xnch.observability.langfuse_client`, `xnch.routing.classifier`);
+>   `PYTHONPATH` must include both `nexi` and `xnch` dirs.
+> - E2E test: `POST /session/start` with bootstrap actor `operator`, `system_state_version`/`policy_version`
+>   matching xnch's `/system/state` (else 409), returns 200 `EXECUTING`.
 
 ### 2.4 Validate Node B
 
@@ -187,8 +230,8 @@ sudo systemctl disable nexi.service vllm-ornith.service
 ```bash
 cd ~/xnchSystems/infra/no-k3s/node-a
 docker compose down
-sudo systemctl stop xnch.service perception.service consolidation.timer
-sudo systemctl disable xnch.service perception.service consolidation.timer
+sudo systemctl stop xnch.service consolidation.timer consolidation.service
+sudo systemctl disable xnch.service consolidation.timer consolidation.service
 ```
 
 ### 3.3 Restore k3s
