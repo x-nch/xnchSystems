@@ -41,7 +41,7 @@ async def app_state(fake_redis):
     # Real WorkingMemory backed by fake Redis
     state.working_memory = WorkingMemory(redis_client=fake_redis)
 
-    # Real PgEpisodicStore (backed by agentmemory/ChromaDB)
+    # Real PgEpisodicStore (backed by Postgres/pgvector)
     state.pg_episodic = PgEpisodicStore()
     await state.pg_episodic.connect()
 

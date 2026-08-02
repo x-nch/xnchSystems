@@ -52,6 +52,7 @@ def mock_state():
     state.graph_store = MagicMock()
     state.graph_store.get_entity_by_name = MagicMock(return_value=None)
     state.graph_store.query_entity_connections = MagicMock(return_value=[])
+    state.graph_store.fetch_entities = MagicMock(return_value=[])
 
     state.sensory_buffer = MagicMock()
     state.sensory_buffer.read_recent = AsyncMock(return_value=[])
@@ -73,11 +74,10 @@ def app_state(mock_state):
 
 
 @pytest.mark.asyncio
-@patch("agentmemory.get_memories")
-async def test_get_system_prompt_builds_and_caches(get_memories, app_state):
-    get_memories.return_value = [
+async def test_get_system_prompt_builds_and_caches(app_state):
+    app_state.graph_store.fetch_entities = MagicMock(return_value=[
         {"document": "Alice"}, {"document": "Bob"}
-    ]
+    ])
 
     with patch("xnch.routes.nexi_gateway.build_system_prompt") as mock_build:
         mock_build.return_value = "You are Nexi. Known entities: Alice, Bob."

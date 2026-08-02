@@ -22,8 +22,6 @@ spec:
           hostnames: ["litellm"]
         - ip: "10.43.2.230"
           hostnames: ["mem0"]
-        - ip: "10.43.225.174"
-          hostnames: ["zep"]
         - ip: "10.43.31.250"
           hostnames: ["langfuse"]
         - ip: "10.43.237.186"

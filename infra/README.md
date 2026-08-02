@@ -46,7 +46,6 @@ Required secrets (create before deploying):
 | `litellm-secret` | `master_key` |
 | `langfuse-secret` | `nextauth_secret`, `salt` |
 | `huggingface-secret` | `token` |
-| `zep-secret` | `openai_api_key` |
 
 Example:
 

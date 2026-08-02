@@ -3,18 +3,14 @@ name = "xnchsystems"
 version = "0.1.0"
 requires-python = ">=3.13"
 dependencies = [
-    "agentmemory>=0.4.8",
     "aiosqlite>=0.22.1",
     "asyncpg>=0.31.0",
-    "deepagents>=0.6.12",
     "httpx>=0.28.1",
     "kuzu>=0.11.3",
-    "langchain-memgraph>=0.1.14",
     "langchain-openai>=1.4.1",
     "langgraph>=1.2.9",
     "langgraph-checkpoint-postgres>=3.1.0",
     "litellm>=1.89.4",
-    "memgraph>=0.0.1",
 ]
 
 [tool.pytest.ini_options]
