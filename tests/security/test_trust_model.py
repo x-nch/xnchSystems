@@ -24,13 +24,19 @@ def test_trust_level_values():
 
 def test_get_trust_level_known():
     assert get_trust_level("nexi") == TrustLevel.SYSTEM
-    assert get_trust_level("openclaw") == TrustLevel.OWNER
+    assert get_trust_level("admin") == TrustLevel.OWNER
+    assert get_trust_level("operator") == TrustLevel.OWNER
     assert get_trust_level("opencode") == TrustLevel.TRUSTED_AGENT
+    assert get_trust_level("agent") == TrustLevel.TRUSTED_AGENT
     assert get_trust_level("perception_daemon") == TrustLevel.TRUSTED_AGENT
+    assert get_trust_level("consolidation_job") == TrustLevel.TRUSTED_AGENT
+    assert get_trust_level("viewer") == TrustLevel.EXTERNAL_AGENT
 
 
 def test_get_trust_level_unknown():
     assert get_trust_level("unknown_actor") == TrustLevel.UNTRUSTED
+    assert get_trust_level("openclaw") == TrustLevel.UNTRUSTED
+    assert get_trust_level("claude_code") == TrustLevel.UNTRUSTED
 
 
 def test_get_trust_level_external():
@@ -38,8 +44,8 @@ def test_get_trust_level_external():
 
 
 def test_actor_trust_map_completeness():
-    expected = {"nexi", "openclaw", "claude_code", "opencode",
-                "perception_daemon", "consolidation_job", "external"}
+    expected = {"nexi", "admin", "operator", "agent", "viewer",
+                "opencode", "perception_daemon", "consolidation_job", "external"}
     assert set(ACTOR_TRUST_MAP.keys()) == expected
 
 
@@ -84,7 +90,7 @@ async def test_requires_trust_no_request():
 @pytest.mark.asyncio
 async def test_requires_trust_kwargs():
     mock_request = MagicMock(spec=Request)
-    mock_request.headers = {"X-Actor-Role": "openclaw"}
+    mock_request.headers = {"X-Actor-Role": "admin"}
 
     @requires_trust(TrustLevel.OWNER)
     async def my_handler(request):

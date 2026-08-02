@@ -14,12 +14,18 @@ def test_system_capabilities():
 
 
 def test_owner_capabilities():
-    caps = get_capabilities("openclaw")
+    caps = get_capabilities("operator")
     assert caps.can_write_memory is True
     assert caps.can_read_all_memory is True
     assert caps.can_trigger_jobs is True
     assert caps.can_modify_policies is False
     assert caps.can_access_perception is True
+
+
+def test_removed_actor_is_untrusted():
+    caps = get_capabilities("openclaw")
+    assert caps.can_write_memory is False
+    assert caps.can_read_all_memory is False
 
 
 def test_trusted_agent_capabilities():
