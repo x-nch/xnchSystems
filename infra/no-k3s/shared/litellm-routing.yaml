@@ -1,0 +1,20 @@
+model_list:
+  - model_name: qwen3-xml
+    litellm_params:
+      model: openai/qwen3-xml
+      api_base: http://NODE_B_IP:8082/v1
+      api_key: xnch-vllm-key
+  - model_name: claude-judgment
+    litellm_params:
+      model: anthropic/claude-sonnet-4-6
+  - model_name: phi3-encoder
+    litellm_params:
+      model: ollama/phi3:mini
+      api_base: http://localhost:11434
+
+router_settings:
+  routing_strategy: usage-based-routing
+  fallbacks:
+    - "qwen3-xml": ["claude-judgment"]
+  allowed_fails: 3
+  num_retries: 2

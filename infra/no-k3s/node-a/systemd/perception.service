@@ -1,0 +1,18 @@
+[Unit]
+Description=XNCH Perception Service — Voice + Vision
+After=network.target docker.service
+Wants=docker.service
+
+[Service]
+Type=simple
+User=x-nch
+WorkingDirectory=/home/x-nch/xnchSystems
+EnvironmentFile=/home/x-nch/.xnch/perception.env
+ExecStart=/usr/bin/python3 -m xnch.perception.vision_encoder --host 0.0.0.0 --port 8002
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

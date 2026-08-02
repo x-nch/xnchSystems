@@ -13,6 +13,18 @@
       "type": "remote",
       "url": "https://docs.langchain.com/mcp",
       "enabled": true
+    },
+    "agentmemory": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@agentmemory/mcp"
+      ],
+      "type": "stdio",
+      "env": {
+        "AGENTMEMORY_URL": "http://localhost:3111",
+        "AGENTMEMORY_SECRET": "xnch-agentmemory-secret"
+      }
     }
   }
 }

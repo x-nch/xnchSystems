@@ -1,0 +1,18 @@
+[Unit]
+Description=vLLM Ornith — Qwen3-XML Inference Server
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=x-nch
+WorkingDirectory=/home/x-nch/xnchSystems
+EnvironmentFile=/home/x-nch/.xnch/vllm.env
+ExecStart=/usr/bin/python3 -m vllm.entrypoints.openai.api_server --model /home/x-nch/models/Ornith-1.0-35B --host 0.0.0.0 --port 8082 --api-key xnch-vllm-key --max-model-len 32768 --gpu-memory-utilization 0.9
+Restart=on-failure
+RestartSec=15
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

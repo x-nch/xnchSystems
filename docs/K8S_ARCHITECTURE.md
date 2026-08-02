@@ -3,7 +3,7 @@
 ## Cluster Overview
 
 **K3s 2-node cluster**
-- **i7 gate7** (192.168.1.10 / 192.168.50.1) — Master + Control Plane + Memory Layer
+- **i7 gate7** (localhost / 192.168.50.1) — Master + Control Plane + Memory Layer
 - **i9 xnch-core** (192.168.1.9 / 192.168.50.2) — Worker + Inference + Always-on Services
 - **Network:** Flannel overlay (10.42.0.0/16), isolated LAN (192.168.50.0/24)
 - **Ingress:** Traefik v2 (built-in with K3s)
@@ -156,9 +156,9 @@ macbook
   │
   ├─→ OpenClaw Mac (launchd) → http://i7:30800 (XNCH NodePort)
   │
-  ├─→ Claude Code → agentmemory MCP → agentmemory (192.168.1.10:3111) [direct LAN]
+  ├─→ Claude Code → agentmemory MCP → agentmemory (localhost:3111) [direct LAN]
   │
-  └─→ OpenCode → agentmemory MCP → agentmemory (192.168.1.10:3111) [direct LAN]
+  └─→ OpenCode → agentmemory MCP → agentmemory (localhost:3111) [direct LAN]
 ```
 
 ---

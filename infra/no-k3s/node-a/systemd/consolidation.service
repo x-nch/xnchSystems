@@ -1,0 +1,13 @@
+[Unit]
+Description=XNCH Consolidation Job — Summarization, Graph Extraction, Decay
+After=network.target docker.service
+Wants=docker.service
+
+[Service]
+Type=oneshot
+User=x-nch
+WorkingDirectory=/home/x-nch/xnchSystems
+EnvironmentFile=/home/x-nch/.xnch/xnch.env
+ExecStart=/usr/bin/python3 -c "import asyncio; from xnch.jobs.consolidation import run_consolidation; asyncio.run(run_consolidation())"
+StandardOutput=journal
+StandardError=journal

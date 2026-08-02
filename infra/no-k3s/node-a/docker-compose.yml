@@ -1,0 +1,117 @@
+version: "3.8"
+
+services:
+  litellm:
+    image: ghcr.io/berriai/litellm:main-latest
+    container_name: litellm
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./litellm-config:/app/config
+    env_file:
+      - ../shared/.env.example
+    restart: unless-stopped
+    networks:
+      - xnch-net
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:4000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  langfuse:
+    image: langfuse/langfuse:latest
+    container_name: langfuse
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://xnch:${LANGFUSE_POSTGRES_PASSWORD}@langfuse-postgres:5432/langfuse
+      - NEXTAUTH_SECRET=${LANGFUSE_NEXTAUTH_SECRET}
+      - SALT=${LANGFUSE_SALT}
+      - LANGFUSE_HOST=http://langfuse:3000
+    depends_on:
+      langfuse-postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - xnch-net
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:3000/api/auth/verify"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+    networks:
+      - xnch-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  postgres-pgvector:
+    image: pgvector/pgvector:pg16
+    container_name: postgres-pgvector
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=xnch
+      - POSTGRES_USER=xnch
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - xnch-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U xnch -d xnch"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  langfuse-postgres:
+    image: pgvector/pgvector:pg16
+    container_name: langfuse-postgres
+    ports:
+      - "5433:5432"
+    environment:
+      - POSTGRES_DB=langfuse
+      - POSTGRES_USER=xnch
+      - POSTGRES_PASSWORD=${LANGFUSE_POSTGRES_PASSWORD}
+    volumes:
+      - langfuse-pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - xnch-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U xnch -d langfuse"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # nexiUI: placeholder — component not yet in codebase; add image/config when implemented
+  # nexiui:
+  #   image: xnch/nexiui:latest
+  #   container_name: nexiui
+  #   ports:
+  #     - "3001:3001"
+  #   restart: unless-stopped
+  #   networks:
+  #     - xnch-net
+
+volumes:
+  redis-data:
+  pgdata:
+  langfuse-pgdata:
+
+networks:
+  xnch-net:
+    driver: bridge
