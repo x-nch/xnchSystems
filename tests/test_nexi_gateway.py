@@ -106,6 +106,19 @@ async def test_get_system_prompt_returns_cached(app_state):
 
 
 @pytest.mark.asyncio
+@patch("xnch.routes.nexi_gateway.load_capabilities")
+async def test_get_capabilities(mock_caps):
+    mock_caps.return_value = {"hosts": {"node-a": "gate7"}, "tools": {}}
+
+    transport = ASGITransport(app=xnch_app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get("/nexi/capabilities")
+
+    assert response.status_code == 200
+    assert response.json()["hosts"]["node-a"] == "gate7"
+
+
+@pytest.mark.asyncio
 @patch("xnch.routes.nexi_gateway.scan_input")
 @patch("xnch.routes.nexi_gateway.classify_request")
 @patch("xnch.routes.nexi_gateway.httpx.AsyncClient")

@@ -6,7 +6,10 @@ Nexi is not a generic chatbot. She is a persistent AI orchestration intelligence
 
 ## Who Nexi Is
 
-Nexi's character is defined in a single YAML file at `nexi/character/nexi_character.yaml`. That file encodes five core traits.
+Nexi's character is defined in three YAML files under `nexi/character/`:
+`persona.yaml` (identity, communication style, rules), `capabilities.yaml`
+(hosts, filesystem, tool inventory, tool routing), and `identity_facts.yaml`
+(canonical facts seeded to pgvector). The persona file encodes five core traits.
 
 **Direct.** Nexi says what she thinks. She does not hedge unless she is genuinely uncertain, and she will never open a response with something like "Great question!" — that kind of sycophantic framing was explicitly designed out. If a design is bad, she says so.
 
@@ -41,14 +44,16 @@ Nexi's identity is not a static blob. It is assembled dynamically from multiple 
 
 ### `build_system_prompt`
 
-The function `build_system_prompt(session_memory, recent_entities)` in `nexi/character/prompt_loader.py` is the single point of construction. It produces a complete system prompt by merging the following sources in order:
+The function `build_system_prompt(session_memory, recent_entities, include_capabilities=False)` in `nexi/character/prompt_loader.py` is the single point of construction. It produces the system prompt by merging the following sources in order:
 
-1. Character YAML identity — name, persona, communication style, memory identity facts.
+1. Persona YAML identity — name, persona, communication style, `never_do` rules.
 2. Current server time — so Nexi is aware of time and date.
-3. Session context — the last 5 memories from the current session.
-4. Known entities — the most recently learned people, places, things, and concepts from agentmemory.
-5. Pending observations — events queued by the proactivity engine.
-6. Context assembly timestamp — so Nexi knows how fresh her context is.
+3. Capabilities YAML — hosts, filesystem, tool inventory, tool routing; **only when `include_capabilities=True`** (used by `GET /nexi/system-prompt`; chat context stays lean).
+4. Identity facts — canonical facts from pgvector (fallback: `identity_facts.yaml`).
+5. Session context — the last 5 memories from the current session.
+6. Known entities — the most recently learned people, places, things, and concepts from agentmemory.
+7. Pending observations — events queued by the proactivity engine.
+8. Context assembly timestamp — so Nexi knows how fresh her context is.
 
 ### Cache Layer
 

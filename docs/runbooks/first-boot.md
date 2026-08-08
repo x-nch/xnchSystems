@@ -137,7 +137,7 @@ Or externally:
 curl http://i7-node:8001/nexi/system-prompt
 ```
 
-**Expected:** Returns Nexi persona as plaintext — starts with `You are Nexi...`, includes identity and communication style from `nexi_character.yaml`.
+**Expected:** Returns Nexi persona as plaintext — starts with `You are Nexi...`, includes identity and communication style from `nexi/character/persona.yaml` plus the capabilities section.
 
 **Failure:** `connection refused` → xnch not running. `404` → route not registered (check `nexi_gateway.py`).
 
