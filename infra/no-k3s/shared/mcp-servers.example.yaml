@@ -1,0 +1,109 @@
+servers:
+  code-review-graph:
+    enabled: true
+    actors:
+      - nexi
+      - operator
+    tier: T0_READ
+    tool_prefix: crg_
+    command: /home/x-nch/.local/bin/uvx
+    args:
+      - code-review-graph
+      - serve
+      - --repo
+      - /home/x-nch/xnchSystems
+    env: {}
+    allow_tools:
+      - query_graph_tool
+      - semantic_search_nodes_tool
+      - get_architecture_overview_tool
+      - get_impact_radius_tool
+      - get_review_context_tool
+      - get_affected_flows_tool
+      - list_communities_tool
+      - get_community_tool
+      - list_flows_tool
+      - get_flow_tool
+      - detect_changes_tool
+      - list_graph_stats_tool
+      - get_knowledge_gaps_tool
+      - find_large_functions_tool
+    deny_tools:
+      - build_or_update_graph_tool
+      - run_postprocess_tool
+      - embed_graph_tool
+      - apply_refactor_tool
+      - refactor_tool
+
+  agentmemory:
+    enabled: true
+    actors:
+      - nexi
+      - operator
+    tier: T1_WRITE
+    tool_prefix: am_
+    command: /usr/bin/npx
+    args:
+      - -y
+      - "@agentmemory/mcp"
+    env:
+      AGENTMEMORY_URL: http://127.0.0.1:3111
+      AGENTMEMORY_SECRET: xnch-agentmemory-secret
+    allow_tools:
+      - memory_recall
+      - memory_save
+      - memory_lesson_save
+      - memory_lesson_recall
+      - memory_smart_search
+      - memory_action_create
+      - memory_action_update
+      - memory_sessions
+      - memory_profile
+      - memory_next
+      - memory_frontier
+    deny_tools:
+      - memory_governance_delete
+      - memory_heal
+      - memory_export
+      - memory_consolidate
+      - memory_crystallize
+      - memory_mesh_sync
+      - memory_obsidian_export
+      - memory_snapshot_create
+      - memory_compress_file
+
+  docs-test:
+    enabled: true
+    actors:
+      - nexi
+      - operator
+    tier: T0_READ
+    tool_prefix: doc_
+    command: /home/x-nch/xnchSystems/xnch/.venv/bin/python
+    args:
+      - -m
+      - docs_test_mcp
+    env:
+      PYTHONPATH: /home/x-nch/xnchSystems
+    allow_tools:
+      - resolve-library-id
+      - query-docs
+    deny_tools: []
+
+  context7:
+    enabled: false
+    actors:
+      - nexi
+      - operator
+    tier: T0_READ
+    tool_prefix: c7_
+    command: /usr/bin/npx
+    args:
+      - -y
+      - "@upstash/context7-mcp"
+    env:
+      CONTEXT7_API_KEY: ""
+    allow_tools:
+      - resolve-library-id
+      - query-docs
+    deny_tools: []

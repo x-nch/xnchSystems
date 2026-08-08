@@ -1,6 +1,8 @@
 [Unit]
 Description=vLLM — Ornith-1.0-35B (GPTQ-Pro, Qwen3-MoE, agentic coding)
-After=network.target
+After=network-online.target nvidia-ready.service
+Wants=network-online.target nvidia-ready.service
+ConditionPathExists=/usr/bin/nvidia-smi
 
 [Service]
 Type=simple

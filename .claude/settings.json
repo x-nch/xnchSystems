@@ -49,7 +49,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "input=$(cat); cmd=$(echo \"$input\" | jq -r '.tool_input.command // empty'); if [[ \"$cmd\" == *\"git commit\"* ]]; then code-review-graph detect-changes --brief; fi",
+            "command": ".cursor/hooks/crg-pre-commit.sh",
             "timeout": 10000
           }
         ]

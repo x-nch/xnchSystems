@@ -1,0 +1,24 @@
+# Read-only filesystem policy for Nexi (xnch MCP fs tools + fs-read-agent).
+# Deploy: cp to ~/.xnch/fs-policy.yaml on both node-a and node-b.
+
+hosts:
+  node-a:
+    roots:
+      - /home/x-nch
+      - /etc/systemd/system
+  node-b:
+    roots:
+      - /home/x-nch
+      - /etc/systemd/system
+
+deny_globs:
+  - "**/.ssh/**"
+  - "**/keys/**"
+  - "**/*.pem"
+  - "**/id_rsa*"
+  - "**/.gnupg/**"
+  - "**/.env"
+  - "**/.env.*"
+  - "**/xnch.env"
+  - "**/nexi.env"
+  - "**/credentials*"

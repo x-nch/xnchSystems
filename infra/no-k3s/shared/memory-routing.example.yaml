@@ -1,0 +1,17 @@
+# Memory routing policy — xnch episodic (pgvector) vs agentmemory (am_*)
+# Copy to ~/.xnch/memory-routing.yaml
+
+primary: xnch_episodic
+curated: agentmemory
+
+rules:
+  conversation_recall: xnch_memory_recall
+  conversation_write: auto
+  curated_fact: am_memory_save
+  deploy_lesson: am_memory_lesson_save
+  lesson_recall: am_memory_lesson_recall
+  work_item: am_memory_action_create
+
+# Actors blocked from xnch_memory_store_note (use am_* instead)
+deprecate_store_note_for:
+  - nexi

@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "hooks": {
+    "beforeShellExecution": [
+      {
+        "command": ".cursor/hooks/crg-pre-commit.sh",
+        "matcher": "git commit"
+      }
+    ]
+  }
+}

@@ -1,0 +1,14 @@
+enabled: true
+backend: searxng
+searxng_url: http://127.0.0.1:8888
+max_results: 5
+max_results_cap: 10
+timeout_s: 15
+safesearch: 1
+engines:
+  - duckduckgo
+  - brave
+  - wikipedia
+allowed_actors:
+  - nexi
+  - operator

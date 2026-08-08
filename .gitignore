@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg
+
+# Local runtime data
+memory/
+.data/
+.env
+.env.*
+
+# Code review graph
+.code-review-graph/

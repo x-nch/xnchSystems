@@ -88,9 +88,16 @@ if (( INSTALL )); then
 fi
 
 if (( ! SKIP_VLLM )); then
+  step "GPU driver"
+  if ! nvidia-smi --query-gpu=name --format=csv,noheader &>/dev/null; then
+    echo "  NVIDIA driver not loaded. Run once: sudo $REPO_ROOT/infra/no-k3s/node-b/setup-gpu-driver.sh && sudo reboot" >&2
+    fail "nvidia-smi unavailable — see setup-gpu-driver.sh"
+  fi
+  ok "nvidia-smi"
+
   step "vLLM Ornith"
-  sudo systemctl enable vllm-ornith.service
-  sudo systemctl start vllm-ornith.service
+  sudo systemctl enable nvidia-ready.service vllm-ornith.service
+  sudo systemctl start nvidia-ready.service vllm-ornith.service
   wait_http "http://localhost:8082/health" "vllm-ornith :8082" 300
 fi
 

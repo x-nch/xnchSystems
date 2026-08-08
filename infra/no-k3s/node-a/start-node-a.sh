@@ -13,6 +13,7 @@ NODE_B_IP="${NODE_B_IP:-192.168.50.2}"
 INSTALL=0
 SKIP_DOCKER=0
 WAIT_NODE_B=0
+WAKE_NODE_B=0
 RESTART_LITELLM=1
 
 usage() {
@@ -24,6 +25,7 @@ Start the xnch control-plane stack on Node A.
 Options:
   --install       Copy systemd units to /etc/systemd/system and daemon-reload
   --skip-docker   Only restart xnch + consolidation timer (skip docker compose)
+  --wake-node-b   Send WoL to xnch-core (Node B) and wait for ping (gate7 only)
   --wait-node-b   Wait for Node B vLLM (:8082) before finishing
   --no-litellm-restart  Skip 'docker compose restart litellm' after compose up
   -h, --help      Show this help
@@ -39,6 +41,7 @@ while [[ $# -gt 0 ]]; do
     --install) INSTALL=1 ;;
     --skip-docker) SKIP_DOCKER=1 ;;
     --wait-node-b) WAIT_NODE_B=1 ;;
+    --wake-node-b) WAKE_NODE_B=1 ;;
     --no-litellm-restart) RESTART_LITELLM=0 ;;
     -h|--help) usage; exit 0 ;;
     *) echo "Unknown option: $1" >&2; usage; exit 1 ;;
@@ -104,6 +107,11 @@ sudo systemctl enable xnch.service consolidation.timer
 sudo systemctl start xnch.service consolidation.timer
 wait_http "http://localhost:8001/health" "xnch :8001" 60
 systemctl is-active --quiet consolidation.timer && ok "consolidation.timer" || fail "consolidation.timer"
+
+if (( WAKE_NODE_B )); then
+  step "Wake Node B (xnch-core)"
+  "$SCRIPT_DIR/wake-node-b.sh"
+fi
 
 if (( WAIT_NODE_B )); then
   step "Wait for Node B vLLM"

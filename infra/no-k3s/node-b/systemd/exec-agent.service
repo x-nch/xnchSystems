@@ -1,0 +1,21 @@
+[Unit]
+Description=Exec Agent — governed commands for Nexi (node-b)
+After=network.target
+
+[Service]
+Type=simple
+User=x-nch
+WorkingDirectory=/home/x-nch/xnchSystems
+EnvironmentFile=/home/x-nch/.xnch/nexi.env
+Environment=PYTHONPATH=/home/x-nch/xnchSystems:/home/x-nch/xnchSystems/xnch
+Environment=XNCH_EXEC_LOCAL_HOST=node-b
+Environment=XNCH_EXEC_AGENT_BIND=0.0.0.0
+Environment=XNCH_EXEC_AGENT_PORT=8004
+ExecStart=/home/x-nch/xnchSystems/nexi/.venv/bin/python -m exec_agent
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

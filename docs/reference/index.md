@@ -1,35 +1,32 @@
-# Reference
+# Reference — xnch MCP
 
----
-tags:
-  - #reference
-  - #data
----
+HTTP API, tool catalog, and configuration for the xnch MCP layer on gate7 (`:8001`).
 
-API, CLI, schema, and data contract reference documentation.
+## MCP
 
-## Data Contracts
+| Doc | Contents |
+|-----|----------|
+| [mcp-tools.md](mcp-tools.md) | Native + bridged tool catalog, actor matrix, routing |
+| [mcp-http-api.md](mcp-http-api.md) | `/mcp/*` endpoints, headers, curl examples |
+| [mcp-config.md](mcp-config.md) | Env vars (`XNCH_*`) and YAML policy files |
+| [memory-routing.md](../guides/memory-routing.md) | Episodic vs agentmemory tool routing |
 
-- [Data Contracts](data-contracts.md) — All inter-component data structures with field descriptions and examples
-- [Implementation Contracts](implementation-contracts.md) — Build-target specifications: Policy DSL, JWT schema, context signature, intent classification, rule-based fallback, weight storage, session lifecycle
+## Related guides
 
-## API Reference
+| Doc | Contents |
+|-----|----------|
+| [MCP bridge architecture](../guides/mcp-bridge.md) | Request flow, server inventory, tiers |
+| [MCP CLI](../guides/mcp-cli.md) | `python -m cli mcp servers\|tools\|call\|test` |
+| [Nexi test prompts](../guides/nexi-test-prompts.md) | Copy-paste chat prompts for tool routing |
+| [MCP bridge deploy](../runbooks/mcp-bridge-deploy.md) | Gate7 bridge + CRG graph rebuild |
+| [Memory routing deploy](../runbooks/memory-routing-deploy.md) | Episodic vs agentmemory verify |
+| [Web search deploy](../runbooks/web-search-deploy.md) | SearXNG + `xnch_web_search` |
 
-- [Endpoints](api/endpoints.md) — REST API endpoints
-- [Authentication](api/auth.md) — API authentication
-- [Error Codes](api/errors.md) — Error code reference
+## Architecture
 
-## CLI Reference
+- [Architecture diagram suite](../architecture-suite.md) — system, infra, memory, MCP bridge
+- [mcp-bridge.mmd](../diagrams/mcp-bridge.mmd) — Nexi tool-loop sequence
 
-- [Commands](cli/commands.md) — CLI command reference
-- [Flags](cli/flags.md) — CLI flags and options
+## OpenCode handoff
 
-## Schemas
-
-- [Data Models](schemas/index.md) — Data model reference
-- [Intent Schema](schemas/intent.md) — Intent object schema
-- [Plan Schema](schemas/plan.md) — Plan object schema
-- [EvaluatedPlan Schema](schemas/evaluated-plan.md) — Scored plan schema
-- [ExecutionResult Schema](schemas/execution-result.md) — Execution outcome schema
-- [Episode Schema](schemas/episode.md) — Learning episode schema
-- [Pattern Schema](schemas/pattern.md) — Extracted pattern schema
+- [misc/opencode/xnch-mcp-handoff.md](../../misc/opencode/xnch-mcp-handoff.md) — stdio MCP setup for editors

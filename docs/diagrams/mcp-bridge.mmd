@@ -1,0 +1,39 @@
+flowchart TB
+    REQ["POST /nexi/chat<br/>actor=nexi"]
+    CWT["chat_with_tools<br/>LiteLLM tool loop (rounds 3→5)"]
+    TOOLS["list_openai_tools<br/>native ∪ bridged"]
+    LLM["LiteLLM → vLLM Ornith"]
+    PARSE{"parse tool_calls<br/>OpenAI JSON / <tool_call> XML"}
+    INVOKE["invoke_tool"]
+    GUARD{"actor may use?<br/>tier ≤ max · allowed_actors"}
+    DENY["PermissionError<br/>→ error result"]
+    NATIVE["native handler<br/>xnch_*"]
+    META{"bridged?<br/>pool.get_meta(name)"}
+    POOL["McpBridgePool.invoke<br/>prefixed → original name"]
+    CLIENT["McpServerClient.call_tool<br/>stdio session (lock)"]
+    CHILD["stdio child<br/>crg_ · am_ · doc_ · c7_"]
+    SER["serialize_call_result<br/>JSON-friendly payload"]
+    AUDIT["audit TOOL_CALL<br/>bridge · mcp_server · original_tool"]
+    RESULT["tool_result_message<br/>append to messages"]
+    DONE["text returned / rounds exhausted"]
+
+    REQ --> CWT
+    CWT --> TOOLS
+    TOOLS --> LLM
+    LLM --> PARSE
+    PARSE -->|"no tool_calls"| DONE
+    PARSE -->|"tool_calls"| INVOKE
+    INVOKE --> GUARD
+    GUARD -->|"deny"| DENY
+    DENY --> RESULT
+    GUARD -->|"allow"| META
+    META -->|"native"| NATIVE
+    META -->|"bridged"| POOL
+    NATIVE --> SER
+    POOL --> CLIENT
+    CLIENT --> CHILD
+    CHILD --> SER
+    SER --> AUDIT
+    AUDIT --> RESULT
+    RESULT -->|"next round"| CWT
+    RESULT -->|"rounds exhausted"| DONE

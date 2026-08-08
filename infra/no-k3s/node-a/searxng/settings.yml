@@ -1,0 +1,30 @@
+# SearXNG settings for xnch private metasearch (gate7 node-a)
+# Docs: https://docs.searxng.org/admin/settings/settings.html
+
+use_default_settings: true
+
+general:
+  instance_name: "xnch-private"
+  debug: false
+  privacypolicy_url: false
+  donation_url: false
+
+server:
+  secret_key: "xnch-change-me-generate-with-openssl-rand-hex-32"
+  bind_address: "0.0.0.0"
+  port: 8080
+  limiter: false
+  image_proxy: false
+
+search:
+  safe_search: 1
+  autocomplete: ""
+  formats:
+    - html
+    - json
+
+engines:
+  - name: google
+    disabled: true
+  - name: bing
+    disabled: true

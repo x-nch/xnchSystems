@@ -1,0 +1,173 @@
+# Governed command execution for Nexi (xnch MCP xnch_exec_run + exec-agent).
+# Deploy: cp to ~/.xnch/exec-policy.yaml on both nodes.
+
+defaults:
+  timeout_seconds: 60
+  max_output_bytes: 65536
+  working_dir: /home/x-nch/xnchSystems
+
+denied_substrings:
+  - ";"
+  - "|"
+  - "&"
+  - "`"
+  - "$("
+  - ">>"
+  - ">"
+  - "<"
+  - "sudo "
+  - "sudo\t"
+  - " rm "
+  - " rm-"
+  - "chmod "
+  - "chown "
+  - "kubectl apply"
+  - "kubectl delete"
+  - "kubectl patch"
+  - "terraform apply"
+  - "terraform destroy"
+  - "systemctl start"
+  - "systemctl stop"
+  - "systemctl restart"
+  - "systemctl enable"
+  - "systemctl disable"
+  - "shutdown"
+  - "reboot"
+  - "mkfs"
+  - "dd "
+  - "docker compose up"
+  - "docker compose down"
+  - "docker compose restart"
+  - "docker run"
+  - "docker exec"
+  - "docker rm"
+  - "docker kill"
+  - "pip install"
+  - "apt install"
+  - "apt-get install"
+
+hosts:
+  node-a:
+    allowed_prefixes:
+      # systemd
+      - systemctl status
+      - systemctl is-active
+      - systemctl is-failed
+      - systemctl list-timers
+      - systemctl list-units
+      - systemctl show
+      # logs
+      - journalctl
+      # http probes (stack health)
+      - curl -sf
+      - curl -s
+      - curl http://127.0.0.1:8001
+      - curl http://127.0.0.1:4000
+      - curl http://127.0.0.1:3000
+      - curl http://192.168.50.2:8000
+      - curl http://192.168.50.2:8082
+      - curl http://192.168.50.2:8003
+      - curl http://192.168.50.2:8004
+      # docker (read-only)
+      - docker compose ps
+      - docker compose -f /home/x-nch/xnchSystems/infra/no-k3s/node-a/docker-compose.yml ps
+      - docker compose -f /home/x-nch/xnchSystems/infra/no-k3s/node-a/docker-compose.yml logs --tail
+      - docker compose logs --tail
+      - docker compose top
+      - docker compose config
+      - docker ps
+      - docker ps -a
+      - docker inspect
+      - docker stats --no-stream
+      # git (read-only)
+      - git status
+      - git log
+      - git diff
+      - git branch
+      - git rev-parse
+      - git show
+      # python / tests / cli
+      - pytest
+      - python -m pytest
+      - python -m cli health
+      - python -m cli status
+      - python -m cli memory surface
+      - python -m cli memory recall
+      - python -m cli consolidate status
+      - /home/x-nch/xnchSystems/.venv/bin/python -m cli
+      - /home/x-nch/xnchSystems/.venv/bin/python -m pytest
+      - python --version
+      - python3 --version
+      # datastores
+      - pg_isready
+      - redis-cli ping
+      - redis-cli info memory
+      - redis-cli info stats
+      - redis-cli info replication
+      - redis-cli info server
+      # system introspection
+      - hostname
+      - whoami
+      - id
+      - uptime
+      - date
+      - timedatectl status
+      - free -h
+      - df -h
+      - du -sh
+      - du -h
+      - lsblk
+      - ss -tln
+      - ip -4 addr
+      - ls
+  node-b:
+    allowed_prefixes:
+      # systemd
+      - systemctl status
+      - systemctl is-active
+      - systemctl is-failed
+      - systemctl list-timers
+      - systemctl list-units
+      - systemctl show
+      # logs
+      - journalctl
+      # http probes
+      - curl -sf
+      - curl -s
+      - curl http://127.0.0.1:8000
+      - curl http://127.0.0.1:8082
+      - curl http://127.0.0.1:8003
+      - curl http://127.0.0.1:8004
+      - curl http://192.168.50.1:8001
+      - curl http://192.168.50.1:4000
+      # gpu
+      - nvidia-smi
+      # git (read-only)
+      - git status
+      - git log
+      - git diff
+      - git branch
+      - git rev-parse
+      - git show
+      # python / tests
+      - pytest
+      - python -m pytest
+      - /home/x-nch/xnchSystems/nexi/.venv/bin/python -m pytest
+      - /home/x-nch/xnchSystems/nexi/.venv/bin/python --version
+      - python --version
+      - python3 --version
+      # system introspection
+      - hostname
+      - whoami
+      - id
+      - uptime
+      - date
+      - timedatectl status
+      - free -h
+      - df -h
+      - du -sh
+      - du -h
+      - lsblk
+      - ss -tln
+      - ip -4 addr
+      - ls
