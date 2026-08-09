@@ -243,6 +243,47 @@ Response shape:
 
 ---
 
+## Nexi voice (STT + TTS)
+
+`POST /nexi/voice/chat` — full loop: audio upload → STT → `/nexi/chat` tool loop → TTS.
+
+| Endpoint | Description |
+|----------|-------------|
+| `POST /nexi/voice/transcribe` | STT only (multipart `audio`) |
+| `POST /nexi/voice/speak` | TTS only (`{"text": "..."}` → `audio/wav`) |
+| `POST /nexi/voice/chat` | Full voice loop (returns `transcript`, `response`, `audio_base64`) |
+
+CLI on gate7:
+
+```bash
+python -m cli voice talk          # push-to-talk REPL
+python -m cli voice listen        # STT only
+python -m cli voice speak "hi"    # TTS only
+```
+
+See [Nexi voice architecture](../guides/nexi-voice-architecture.md) and
+`scripts/install-voice-models.sh` for Piper model setup.
+
+---
+
+## Nexi system prompt and capabilities
+
+`GET /nexi/system-prompt` returns the full assembled plaintext prompt (persona +
+capabilities + identity facts). Cached in Redis for 60 seconds.
+
+`GET /nexi/capabilities` returns the operational capabilities document from
+`nexi/character/capabilities.yaml` as JSON (hosts, filesystem, tools,
+`tool_routing`). Use this for on-demand tool/topology context without loading the
+full system prompt. Chat turns use a lean prompt with the capabilities `summary`
+only; call this endpoint when the model or operator needs the full inventory.
+
+```bash
+curl -s http://127.0.0.1:8001/nexi/system-prompt | head
+curl -s http://127.0.0.1:8001/nexi/capabilities | jq '.tool_routing'
+```
+
+---
+
 ## Nexi chat tool loop
 
 `POST /nexi/chat` (and `/nexi/chat/stream`) run `chat_with_tools` with actor `nexi`.

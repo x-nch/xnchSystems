@@ -166,7 +166,7 @@ Notes:
 
 ## Tool routing decision matrix
 
-From `nexi/character/nexi_character.yaml` `tool_routing` — which tool family to reach
+From `nexi/character/capabilities.yaml` `tool_routing` — which tool family to reach
 for which need.
 
 | Need | Tool family | Example |

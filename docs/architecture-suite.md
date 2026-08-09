@@ -149,7 +149,7 @@ flowchart TB
         VER["POST /verdict"]
         EXEC["/execution/execute<br/>/execution/outcome"]
         GOV["/governance/*<br/>/auth/public-key"]
-        GW["/nexi/chat<br/>/nexi/memory/recall<br/>/nexi/system-prompt"]
+        GW["/nexi/chat<br/>/nexi/memory/recall<br/>/nexi/system-prompt<br/>/nexi/capabilities<br/>/nexi/voice/*"]
         MCP["/mcp/tools · /mcp/call<br/>bridge + native tools"]
         WS["xnch_web_search<br/>→ SearXNG :8888"]
         CHAT["POST /v1/chat/completions"]

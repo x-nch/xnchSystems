@@ -236,11 +236,17 @@ failure of one server does not take down the bridge).
 
 ## Nexi character integration
 
-`nexi/character/nexi_character.yaml` encodes how the model should use the bridged
-tools:
+`nexi/character/` splits persona config into three YAML files:
+
+- `persona.yaml` — identity, communication style, `never_do` rules
+- `capabilities.yaml` — hosts, filesystem, tool inventory, `tool_routing`
+- `identity_facts.yaml` — canonical facts seeded to pgvector
+
+How the model should use bridged tools:
 
 - `capabilities.summary` names the bridged groups (`crg_*`, `am_*`, `doc_*`) and notes
-  the 5-round cap when the bridge is active.
+  the 5-round cap when the bridge is active. Chat prompts include this summary only;
+  `GET /nexi/capabilities` returns the full document.
 - `tools.code_graph` — `crg_*` for structure/callers/tests/impact.
 - `tools.agent_memory` — `am_*` for cross-session notes, lessons, actions.
 - `tools.library_docs` — `doc_*` (offline) / `c7_*` (live, when enabled).

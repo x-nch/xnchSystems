@@ -13,6 +13,7 @@ import typer
 from .client import XnchCliClient
 from .mcp_tests import CHAT_TESTS, MCP_TOOL_TESTS
 from .util import dedupe_memory_results, join_args, parse_recall_intent, parse_timer_line
+from .voice import voice_app
 
 app = typer.Typer(
     name="xnch-cli",
@@ -29,6 +30,7 @@ app.add_typer(memory_app, name="memory")
 app.add_typer(session_app, name="session")
 app.add_typer(consolidate_app, name="consolidate")
 app.add_typer(mcp_app, name="mcp")
+app.add_typer(voice_app, name="voice")
 
 
 def _client() -> XnchCliClient:

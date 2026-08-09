@@ -69,26 +69,17 @@ async def app_state(fake_redis):
 @pytest.mark.asyncio
 @patch("xnch.routes.nexi_gateway.scan_input")
 @patch("xnch.routes.nexi_gateway.classify_request")
-@patch("xnch.routes.nexi_gateway.httpx.AsyncClient")
+@patch("xnch_mcp.chat_tools.chat_with_tools", new_callable=AsyncMock)
 async def test_chat_roundtrip(
-    mock_httpx, mock_classify, mock_scan, app_state
+    mock_chat_with_tools, mock_classify, mock_scan, app_state
 ):
-    """Full chat roundtrip: input -> LiteLLM mock -> memory persistence."""
+    """Full chat roundtrip: input -> tool-loop mock -> memory persistence."""
     mock_scan.return_value = MagicMock(is_clean=True, matched_patterns=[])
     mock_route = MagicMock()
     mock_route.model_name = "gemma4-local"
     mock_classify.return_value = mock_route
-
-    mock_response = MagicMock()
-    mock_response.status_code = 200
-    mock_response.json.return_value = {
-        "choices": [{"message": {"content": "Hello! I'm Nexi, your local AI assistant."}}]
-    }
-    mock_client_instance = MagicMock()
-    mock_client_instance.__aenter__ = AsyncMock(return_value=mock_client_instance)
-    mock_client_instance.__aexit__ = AsyncMock(return_value=None)
-    mock_client_instance.post = AsyncMock(return_value=mock_response)
-    mock_httpx.return_value = mock_client_instance
+    mock_chat_with_tools.return_value = "Hello! I'm Nexi, your local AI assistant."
+    app_state.pg_episodic.has_identical_recent = AsyncMock(return_value=False)
 
     transport = ASGITransport(app=xnch_app)
     payload = {"session_id": "e2e-sess-1", "message": "Hello Nexi"}
@@ -119,36 +110,17 @@ async def test_chat_roundtrip(
 @pytest.mark.asyncio
 @patch("xnch.routes.nexi_gateway.scan_input")
 @patch("xnch.routes.nexi_gateway.classify_request")
-@patch("xnch.routes.nexi_gateway.httpx.AsyncClient")
+@patch("xnch_mcp.chat_tools.chat_with_tools", new_callable=AsyncMock)
 async def test_chat_stream_persists_memory(
-    mock_httpx, mock_classify, mock_scan, app_state
+    mock_chat_with_tools, mock_classify, mock_scan, app_state
 ):
     """Streaming chat should persist full response text after stream completes."""
     mock_scan.return_value = MagicMock(is_clean=True, matched_patterns=[])
     mock_route = MagicMock()
     mock_route.model_name = "gemma4-local"
     mock_classify.return_value = mock_route
-
-    chunks = [
-        json.dumps({"choices": [{"delta": {"content": "Building"}}]}),
-        json.dumps({"choices": [{"delta": {"content": " the answer"}}]}),
-        json.dumps({"choices": [{"delta": {"content": " now..."}}]}),
-    ]
-
-    async def _iter_lines():
-        for c in chunks:
-            yield f"data: {c}"
-        yield "data: [DONE]"
-
-    mock_stream_resp = MagicMock()
-    mock_stream_resp.status_code = 200
-    mock_stream_resp.aiter_lines = _iter_lines
-
-    mock_client_instance = MagicMock()
-    mock_client_instance.__aenter__ = AsyncMock(return_value=mock_client_instance)
-    mock_client_instance.__aexit__ = AsyncMock(return_value=None)
-    mock_client_instance.stream.return_value.__aenter__ = AsyncMock(return_value=mock_stream_resp)
-    mock_httpx.return_value = mock_client_instance
+    mock_chat_with_tools.return_value = "Building the answer now..."
+    app_state.pg_episodic.has_identical_recent = AsyncMock(return_value=False)
 
     transport = ASGITransport(app=xnch_app)
     payload = {"session_id": "e2e-sess-stream", "message": "Build something"}
@@ -195,26 +167,17 @@ async def test_chat_injection_guard_rejects(mock_scan, app_state):
 @pytest.mark.asyncio
 @patch("xnch.routes.nexi_gateway.scan_input")
 @patch("xnch.routes.nexi_gateway.classify_request")
-@patch("xnch.routes.nexi_gateway.httpx.AsyncClient")
+@patch("xnch_mcp.chat_tools.chat_with_tools", new_callable=AsyncMock)
 async def test_memory_recall_after_chat(
-    mock_httpx, mock_classify, mock_scan, app_state
+    mock_chat_with_tools, mock_classify, mock_scan, app_state
 ):
     """Episodic recall should find content from prior chats."""
     mock_scan.return_value = MagicMock(is_clean=True, matched_patterns=[])
     mock_route = MagicMock()
     mock_route.model_name = "gemma4-local"
     mock_classify.return_value = mock_route
-
-    mock_response = MagicMock()
-    mock_response.status_code = 200
-    mock_response.json.return_value = {
-        "choices": [{"message": {"content": "Nexi response"}}]
-    }
-    mock_client_instance = MagicMock()
-    mock_client_instance.__aenter__ = AsyncMock(return_value=mock_client_instance)
-    mock_client_instance.__aexit__ = AsyncMock(return_value=None)
-    mock_client_instance.post = AsyncMock(return_value=mock_response)
-    mock_httpx.return_value = mock_client_instance
+    mock_chat_with_tools.return_value = "Nexi response"
+    app_state.pg_episodic.has_identical_recent = AsyncMock(return_value=False)
 
     # Seed a prior episode via chat
     transport = ASGITransport(app=xnch_app)

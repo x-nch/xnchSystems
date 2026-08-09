@@ -36,3 +36,12 @@ dev = [
     "pytest>=9.1.1",
     "pytest-asyncio>=1.4.0",
 ]
+voice = [
+    "faster-whisper>=1.0",
+    "numpy>=1.26",
+    "sounddevice>=0.5",
+]
+voice-client = [
+    "numpy>=1.26",
+    "sounddevice>=0.5",
+]

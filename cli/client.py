@@ -140,6 +140,45 @@ class XnchCliClient:
         resp.raise_for_status()
         return resp.json()
 
+    def voice_transcribe(self, wav_bytes: bytes) -> dict[str, Any]:
+        resp = self._client.post(
+            "/nexi/voice/transcribe",
+            files={"audio": ("audio.wav", wav_bytes, "audio/wav")},
+            data={"format": "wav", "sample_rate": "16000"},
+        )
+        resp.raise_for_status()
+        return resp.json()
+
+    def voice_speak(self, text: str) -> bytes:
+        resp = self._client.post("/nexi/voice/speak", json={"text": text})
+        resp.raise_for_status()
+        return resp.content
+
+    def voice_chat(
+        self,
+        wav_bytes: bytes,
+        *,
+        session_id: str | None = None,
+        actor_role: str | None = None,
+        return_audio: bool = True,
+    ) -> dict[str, Any]:
+        sid = session_id or self._load_session_id()
+        resp = self._client.post(
+            "/nexi/voice/chat",
+            files={"audio": ("audio.wav", wav_bytes, "audio/wav")},
+            data={
+                "session_id": sid,
+                "actor_role": actor_role or self.config.actor,
+                "return_audio": "true" if return_audio else "false",
+            },
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        if "response" in data:
+            data["response"] = strip_thinking(data["response"])
+        self._save_session_id(data.get("session_id", sid))
+        return data
+
     def mcp_headers(self, *, actor_role: str | None = None) -> dict[str, str]:
         return {"X-Actor-Role": actor_role or self.config.actor}
 
