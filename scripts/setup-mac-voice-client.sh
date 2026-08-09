@@ -46,8 +46,8 @@ ENV_FILE="${HOME}/.xnch/xnch.env"
 if [[ ! -f "$ENV_FILE" ]]; then
   cat >"$ENV_FILE" <<'EOF'
 # Nexi Mac client — edit XNCH_AUTH_SECRET from gate7
-export XNCH_BASE_URL=http://192.168.50.1:8001
-export NEXI_BASE_URL=http://192.168.50.2:8000
+# Use gate7 home-LAN IP (not 192.168.50.1 node link)
+export XNCH_BASE_URL=http://192.168.1.10:8001
 export XNCH_ACTOR=operator
 export XNCH_AUTH_SECRET=CHANGE_ME
 export XNCH_VOICE_SAMPLE_RATE=16000

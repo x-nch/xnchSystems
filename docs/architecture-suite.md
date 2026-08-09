@@ -3,6 +3,12 @@
 Mermaid diagrams derived from the live **no-k3s** codebase (Aug 2026).  
 Node A = `192.168.50.1` (gate7/i7). Node B = `192.168.50.2` (xnch-core/i9).
 
+**Operator LAN:** Mac/gate7/xnch-core also share a home network (e.g.
+`192.168.1.11` / `.10` / `.9`). The `192.168.50.x` addresses are the **direct
+node-to-node link**; clients like the Mac voice CLI use gate7's home-LAN IP
+(`192.168.1.10:8001`), not `50.1`. See
+[nexi-voice-mac-client.md](guides/nexi-voice-mac-client.md).
+
 ---
 
 ## 1. System Architecture
