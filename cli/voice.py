@@ -13,6 +13,7 @@ from .client import XnchCliClient
 from .util import format_http_error
 from .voice_io import (
     describe_input_device,
+    describe_output_device,
     is_silent_pcm,
     list_devices,
     pcm_stats,
@@ -76,6 +77,7 @@ def devices(json_out: bool = typer.Option(False, "--json", help="Output raw JSON
         return
 
     typer.echo(f"Active input: {describe_input_device()}")
+    typer.echo(f"Active output: {describe_output_device()}")
     for dev in devs:
         typer.echo(
             f"[{dev['index']}] {dev['name']} "
@@ -140,6 +142,23 @@ def listen(
     typer.echo(data.get("transcript", ""))
 
 
+@voice_app.command("speaker-test")
+def speaker_test(
+    text: str = typer.Option("Speaker test.", "--text", "-t", help="Phrase to synthesize"),
+) -> None:
+    """Fetch TTS from gate7 and play on the resolved output device."""
+    typer.echo(f"Output: {describe_output_device()}")
+    try:
+        with _client() as client:
+            wav = client.voice_speak(text)
+    except Exception as exc:
+        _fail(exc)
+
+    typer.echo("♪ playing…")
+    play_wav(wav)
+    typer.secho("OK: playback finished", fg=typer.colors.GREEN)
+
+
 @voice_app.command("speak")
 def speak(
     text: str = typer.Argument(..., help="Text to synthesize"),
@@ -157,6 +176,7 @@ def speak(
             f.write(wav)
         typer.echo(f"Wrote {save}")
         return
+    typer.echo(f"Output: {describe_output_device()}")
     play_wav(wav)
 
 
@@ -222,7 +242,7 @@ def talk(
                 if not _mute():
                     audio_b64 = data.get("audio_base64")
                     if audio_b64:
-                        typer.echo("♪ playing reply…")
+                        typer.echo(f"♪ playing reply on {describe_output_device()}…")
                         play_wav(base64.b64decode(audio_b64))
 
                 if once:

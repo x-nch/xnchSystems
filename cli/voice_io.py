@@ -83,11 +83,64 @@ def describe_input_device() -> str:
     return f"[{device}] {info.get('name', device)}"
 
 
-def _output_device() -> int | None:
+def _output_device() -> int | str | None:
     raw = os.environ.get("XNCH_VOICE_OUTPUT_DEVICE", "").strip()
     if not raw:
         return None
-    return int(raw) if raw.isdigit() else raw  # type: ignore[return-value]
+    return int(raw) if raw.isdigit() else raw
+
+
+def _is_bluetooth_output(name: str) -> bool:
+    lowered = name.lower()
+    return "bt-" in lowered or "bluetooth" in lowered or "airpods" in lowered
+
+
+def _is_builtin_speaker(name: str) -> bool:
+    lowered = name.lower()
+    if "microphone" in lowered or " mic" in lowered:
+        return False
+    return "speaker" in lowered or "built-in" in lowered or "macbook" in lowered
+
+
+def resolve_output_device() -> int | str | None:
+    """Pick speaker: env override, else avoid stale BT default on macOS."""
+    import sounddevice as sd
+
+    explicit = _output_device()
+    if explicit is not None:
+        return explicit
+
+    devices = sd.query_devices()
+    default_idx = sd.default.device[1]
+    if default_idx is not None:
+        default_info = devices[default_idx]
+        default_name = str(default_info.get("name", ""))
+        if (
+            default_info.get("max_output_channels", 0) > 0
+            and _is_bluetooth_output(default_name)
+        ):
+            for idx, dev in enumerate(devices):
+                name = str(dev.get("name", ""))
+                if dev.get("max_output_channels", 0) > 0 and _is_builtin_speaker(name):
+                    return idx
+
+        if default_info.get("max_output_channels", 0) > 0:
+            return default_idx
+
+    for idx, dev in enumerate(devices):
+        if dev.get("max_output_channels", 0) > 0:
+            return idx
+    return None
+
+
+def describe_output_device() -> str:
+    import sounddevice as sd
+
+    device = resolve_output_device()
+    if device is None:
+        return "no output device"
+    info = sd.query_devices(device, "output")
+    return f"[{device}] {info.get('name', device)}"
 
 
 def record_seconds(duration_s: float) -> bytes:
@@ -206,7 +259,7 @@ def play_wav(wav_bytes: bytes) -> None:
     audio = np.frombuffer(pcm, dtype=np.int16)
     if channels > 1:
         audio = audio.reshape(-1, channels)
-    device = _output_device()
+    device = resolve_output_device()
     target_sr = _effective_playback_rate(device, sr)
     if target_sr != sr:
         if audio.ndim > 1:
