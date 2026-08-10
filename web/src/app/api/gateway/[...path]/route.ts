@@ -2,6 +2,9 @@ import { NextResponse, type NextRequest } from "next/server";
 
 const DEFAULT_GATEWAY = "http://192.168.1.10:8001";
 
+/** Vercel Pro — long enough for SSE chat/graph through the tunnel proxy. */
+export const maxDuration = 300;
+
 const HOP_BY_HOP_HEADERS = new Set([
   "connection",
   "keep-alive",
@@ -30,12 +33,7 @@ export async function proxyGateway(
   const upstream = new URL(`/${path.join("/")}`, gateway);
   upstream.search = request.nextUrl.search;
 
-  const headers = new Headers();
-  for (const [key, value] of request.headers.entries()) {
-    if (HOP_BY_HOP_HEADERS.has(key.toLowerCase())) continue;
-    if (key.toLowerCase() === "host") continue;
-    headers.set(key, value);
-  }
+  const headers = buildUpstreamHeaders(request);
 
   let body: BodyInit | null = null;
   const method = request.method.toUpperCase();
@@ -73,6 +71,25 @@ export async function proxyGateway(
       { status: 502 }
     );
   }
+}
+
+function buildUpstreamHeaders(request: NextRequest): Headers {
+  const headers = new Headers();
+  for (const [key, value] of request.headers.entries()) {
+    if (HOP_BY_HOP_HEADERS.has(key.toLowerCase())) continue;
+    if (key.toLowerCase() === "host") continue;
+    headers.set(key, value);
+  }
+
+  // Cloudflare Access service token (Vercel → api.x-nch.com behind Access).
+  const cfClientId = process.env.CF_ACCESS_CLIENT_ID;
+  const cfClientSecret = process.env.CF_ACCESS_CLIENT_SECRET;
+  if (cfClientId && cfClientSecret) {
+    headers.set("CF-Access-Client-Id", cfClientId);
+    headers.set("CF-Access-Client-Secret", cfClientSecret);
+  }
+
+  return headers;
 }
 
 export const GET = proxyGateway;

@@ -24,6 +24,7 @@ HTTP API, tool catalog, and configuration for the xnch MCP layer on gate7 (`:800
 | [MCP bridge deploy](../runbooks/mcp-bridge-deploy.md) | Gate7 bridge + CRG graph rebuild |
 | [Memory routing deploy](../runbooks/memory-routing-deploy.md) | Episodic vs agentmemory verify |
 | [Web search deploy](../runbooks/web-search-deploy.md) | SearXNG + `xnch_web_search` |
+| [Vercel tunnel deploy](../runbooks/vercel-tunnel-deploy.md) | Cloudflare Tunnel / Tailscale Funnel → Vercel `XNCH_GATEWAY_URL` |
 
 ## Architecture
 

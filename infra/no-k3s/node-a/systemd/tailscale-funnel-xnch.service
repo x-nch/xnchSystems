@@ -1,0 +1,17 @@
+[Unit]
+Description=Tailscale Funnel — public HTTPS to xnch :8001
+After=network-online.target tailscaled.service xnch.service
+Wants=network-online.target
+Requires=tailscaled.service xnch.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+# Serve local xnch, then publish port 443 on the tailnet node to the public internet.
+ExecStart=/usr/bin/tailscale serve --bg --https=443 http://127.0.0.1:8001
+ExecStart=/usr/bin/tailscale funnel --bg 443 on
+ExecStop=/usr/bin/tailscale funnel --bg 443 off
+ExecStop=/usr/bin/tailscale serve reset
+
+[Install]
+WantedBy=multi-user.target

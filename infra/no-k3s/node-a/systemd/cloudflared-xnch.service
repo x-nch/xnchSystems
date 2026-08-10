@@ -1,0 +1,17 @@
+[Unit]
+Description=Cloudflare Tunnel — xnch API (api.x-nch.com → :8001)
+After=network-online.target xnch.service
+Wants=network-online.target
+Requires=xnch.service
+
+[Service]
+Type=simple
+User=x-nch
+ExecStart=/usr/bin/cloudflared tunnel --config /home/x-nch/.cloudflared/config.yml run
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
