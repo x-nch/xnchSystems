@@ -91,14 +91,17 @@ git checkout v0.1          # or branch with voice client docs
 git pull
 git submodule update --init --recursive
 
-# Repo venv — CLI + mic/playback only (no faster-whisper on Mac)
+# Repo venv — Mac voice client only (no full monorepo editable install)
 uv venv --python 3.13 .venv
 source .venv/bin/activate
-uv pip install -e .
-uv pip install sounddevice numpy   # voice-client deps (see pyproject voice-client group)
+uv pip install -r requirements-mac-voice-client.txt
+export PYTHONPATH="$PWD:$PWD/xnch"
 ```
 
-If `uv sync` is preferred:
+`pip install -e .` on the repo root is for gate7/full dev; on Mac use
+`requirements-mac-voice-client.txt` instead (avoids setuptools multi-package error).
+
+If `uv sync` is preferred on gate7:
 
 ```bash
 uv sync --group voice-client
@@ -131,6 +134,9 @@ export XNCH_VOICE_SAMPLE_RATE=16000
 Load before each session:
 
 ```bash
+cd ~/xnchSystems
+source .venv/bin/activate
+export PYTHONPATH="$PWD:$PWD/xnch"
 set -a && source ~/.xnch/xnch.env && set +a
 ```
 

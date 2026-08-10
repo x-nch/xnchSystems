@@ -31,15 +31,13 @@ if command -v uv >/dev/null 2>&1; then
   uv venv --python "$PY" .venv
   # shellcheck disable=SC1091
   source .venv/bin/activate
-  uv pip install -e .
-  uv pip install sounddevice numpy
+  uv pip install -r requirements-mac-voice-client.txt
 else
   "$PY" -m venv .venv
   # shellcheck disable=SC1091
   source .venv/bin/activate
   pip install -U pip
-  pip install -e .
-  pip install sounddevice numpy
+  pip install -r requirements-mac-voice-client.txt
 fi
 
 ENV_FILE="${HOME}/.xnch/xnch.env"
@@ -59,7 +57,9 @@ fi
 
 echo ""
 echo "Next:"
+echo "  cd $REPO_ROOT"
 echo "  source .venv/bin/activate"
+echo "  export PYTHONPATH=\"\$PWD:\$PWD/xnch\""
 echo "  set -a && source ~/.xnch/xnch.env && set +a"
 echo "  curl -sf \"\$XNCH_BASE_URL/health\""
 echo "  python -m cli voice devices"
