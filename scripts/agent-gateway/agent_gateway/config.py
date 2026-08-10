@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     default_backend: str = "claude-code"
     cwd: Path | None = None
     timeout_seconds: int = 600
+    max_prompt_chars: int = 100_000
 
     claude_cli: str = "claude"
     opencode_cli: str = "opencode"

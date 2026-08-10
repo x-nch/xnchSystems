@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+import secrets
 import time
 import uuid
 from collections.abc import AsyncIterator
@@ -41,7 +42,8 @@ def _verify_api_key(authorization: str | None = Header(default=None)) -> None:
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Missing bearer token")
     token = authorization.removeprefix("Bearer ").strip()
-    if token != settings.api_key:
+    assert settings.api_key is not None
+    if not secrets.compare_digest(token.encode(), settings.api_key.encode()):
         raise HTTPException(status_code=401, detail="Invalid API key")
 
 
@@ -82,6 +84,11 @@ async def chat_completions(
     prompt, system_prompt = messages_to_prompt(body.messages)
     if not prompt.strip():
         raise HTTPException(status_code=400, detail="No user prompt found in messages")
+    if len(prompt) > settings.max_prompt_chars:
+        raise HTTPException(
+            status_code=413,
+            detail=f"Prompt too long: {len(prompt)} chars (max {settings.max_prompt_chars})",
+        )
 
     request = AgentRequest(
         prompt=prompt,
@@ -112,6 +119,9 @@ async def chat_completions(
         raise HTTPException(status_code=504, detail=str(exc)) from exc
     except RuntimeError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+    if result.is_error:
+        raise HTTPException(status_code=502, detail=result.content)
 
     usage = UsageInfo(
         prompt_tokens=result.usage.get("prompt_tokens", 0),

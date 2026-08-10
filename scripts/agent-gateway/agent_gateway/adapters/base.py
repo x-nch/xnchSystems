@@ -111,11 +111,31 @@ class AgentAdapter(ABC):
             cwd=cwd,
         )
 
+        stderr_buf = bytearray()
+
+        async def _drain_stderr() -> None:
+            assert proc.stderr is not None
+            while True:
+                chunk = await proc.stderr.read(65536)
+                if not chunk:
+                    break
+                stderr_buf.extend(chunk)
+
+        stderr_task = asyncio.create_task(_drain_stderr())
+        loop = asyncio.get_running_loop()
+        deadline = loop.time() + timeout_seconds
+
+        def _remaining() -> float:
+            remaining = deadline - loop.time()
+            if remaining <= 0:
+                raise TimeoutError(f"{self.backend} stream timed out after {timeout_seconds}s")
+            return remaining
+
         try:
             assert proc.stdout is not None
             while True:
                 try:
-                    raw = await asyncio.wait_for(proc.stdout.readline(), timeout=timeout_seconds)
+                    raw = await asyncio.wait_for(proc.stdout.readline(), timeout=_remaining())
                 except TimeoutError:
                     proc.kill()
                     await proc.wait()
@@ -133,13 +153,12 @@ class AgentAdapter(ABC):
                     yield chunk
 
             await proc.wait()
+            await stderr_task
             if proc.returncode not in (0, None):
-                stderr = b""
-                if proc.stderr is not None:
-                    stderr = await proc.stderr.read()
-                err = stderr.decode("utf-8", errors="replace").strip()
+                err = stderr_buf.decode("utf-8", errors="replace").strip()
                 raise RuntimeError(err or f"{self.backend} exited with code {proc.returncode}")
         finally:
+            stderr_task.cancel()
             if proc.returncode is None:
                 proc.kill()
                 await proc.wait()
