@@ -1,0 +1,119 @@
+@import "tailwindcss";
+
+:root {
+  /* Dark-first palette (default, always on) */
+  --background: #0a0a0b;
+  --foreground: #ededed;
+  --card: #101013;
+  --card-foreground: #e4e4e7;
+  --muted: #17171b;
+  --muted-foreground: #9d9da8;
+  --border: #26262c;
+  --input: #1f1f24;
+  --ring: #5b7cff;
+  --accent: #5b7cff;
+  --accent-foreground: #f6f7ff;
+  --accent-subtle: #171c33;
+  --destructive: #ef4444;
+  --destructive-foreground: #fef2f2;
+  --success: #34d399;
+  --warning: #fbbf24;
+  --code-bg: #0d0d10;
+  --scrollbar-thumb: #2a2a31;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent-subtle: var(--accent-subtle);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-code-bg: var(--code-bg);
+  --color-scrollbar-thumb: var(--scrollbar-thumb);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+}
+
+/* Thin, unobtrusive scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 8px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: #3a3a44;
+}
+
+::selection {
+  background: rgba(91, 124, 255, 0.28);
+}
+
+/* Blinking cursor shown while a response is streaming */
+@keyframes x-cursor-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+.streaming-cursor {
+  display: inline-block;
+  width: 0.55em;
+  height: 1.05em;
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  border-radius: 1px;
+  background: var(--accent);
+  animation: x-cursor-blink 1s step-start infinite;
+}
+
+@keyframes x-pulse-dot {
+  0%,
+  80%,
+  100% {
+    opacity: 0.25;
+    transform: scale(0.85);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.streaming-dot {
+  animation: x-pulse-dot 1.2s ease-in-out infinite;
+}
