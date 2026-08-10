@@ -6,6 +6,9 @@ import {
   Database,
   Wrench,
   Activity,
+  Orbit,
+  ScanFace,
+  GitBranch,
   Plus,
   PanelLeftClose,
   PanelLeftOpen,
@@ -21,10 +24,13 @@ import { formatRelativeTime } from "@/lib/utils/format";
 import { ConnectionStatus } from "@/components/layout/connection-status";
 
 const NAV = [
+  { href: "/", label: "Network", icon: Orbit, altHref: "/network" },
   { href: "/chat", label: "Chat", icon: MessageSquare },
   { href: "/memory", label: "Memory", icon: Database },
+  { href: "/graph", label: "Graph", icon: GitBranch },
   { href: "/tools", label: "Tools", icon: Wrench },
   { href: "/system", label: "System", icon: Activity },
+  { href: "/presence", label: "Presence", icon: ScanFace },
 ];
 
 export function Sidebar() {
@@ -58,14 +64,14 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        "relative flex h-full shrink-0 flex-col border-r border-border bg-card/60 transition-[width] duration-200",
-        collapsed ? "w-14" : "w-64"
+        "relative flex h-full shrink-0 flex-col border-r border-border/80 bg-card/40 backdrop-blur-sm transition-[width] duration-200",
+        collapsed ? "w-[var(--hud-sidebar-collapsed)]" : "w-[var(--hud-sidebar-width)]"
       )}
     >
       {/* Brand row */}
       <div
         className={cn(
-          "flex h-12 shrink-0 items-center gap-2 border-b border-border px-3",
+          "flex h-[var(--hud-topbar-height)] shrink-0 items-center gap-2 border-b border-border/80 px-3",
           collapsed && "justify-center px-0"
         )}
       >
@@ -117,17 +123,20 @@ export function Sidebar() {
 
       {/* Nav */}
       <nav className={cn("space-y-0.5 px-2", collapsed && "px-1.5")}>
-        {NAV.map(({ href, label, icon: Icon }) => {
-          const active = pathname === href || pathname.startsWith(`${href}/`);
+        {NAV.map(({ href, label, icon: Icon, altHref }) => {
+          const active =
+            pathname === href ||
+            pathname.startsWith(`${href}/`) ||
+            (altHref != null && (pathname === altHref || pathname.startsWith(`${altHref}/`)));
           const item = (
             <button
               key={href}
               onClick={() => router.push(href)}
               className={cn(
-                "flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-[13px] font-medium transition-colors",
+                "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-[12px] font-medium transition-colors",
                 active
-                  ? "bg-accent/10 text-accent"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                  ? "bg-accent/10 text-accent glow-border border border-cyan-300/15"
+                  : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
                 collapsed && "justify-center px-0"
               )}
             >

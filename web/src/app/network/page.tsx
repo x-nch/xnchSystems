@@ -1,5 +1,5 @@
 import { NetworkView } from "@/components/network/network-view";
 
-export default function Home() {
+export default function NetworkPage() {
   return <NetworkView />;
 }

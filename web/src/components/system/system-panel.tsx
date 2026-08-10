@@ -4,12 +4,13 @@ import { Activity, Cpu, Layers, ServerCrash } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
-import { useCapabilities, useHealth, useSystemState } from "@/lib/api/hooks";
+import { useCapabilities, useGatewayOnline, useHealth, useSystemState } from "@/lib/api/hooks";
 
 export function SystemPanel() {
   const health = useHealth();
   const state = useSystemState();
   const capabilities = useCapabilities();
+  const gatewayOk = useGatewayOnline();
 
   return (
     <div className="grid gap-4 overflow-y-auto p-4 lg:grid-cols-2">
@@ -24,7 +25,9 @@ export function SystemPanel() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {health.isPending ? (
+          {!gatewayOk ? (
+            <p className="text-[13px] text-muted-foreground">Waiting for gateway connection…</p>
+          ) : health.isPending ? (
             <Spinner className="h-4 w-4 text-muted-foreground" />
           ) : health.isError || !health.data ? (
             <div className="flex items-center gap-2 text-[13px] text-red-400">
@@ -59,7 +62,9 @@ export function SystemPanel() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {state.isPending ? (
+          {!gatewayOk ? (
+            <p className="text-[13px] text-muted-foreground">Waiting for gateway connection…</p>
+          ) : state.isPending ? (
             <Spinner className="h-4 w-4 text-muted-foreground" />
           ) : state.isError || !state.data ? (
             <div className="flex items-center gap-2 text-[13px] text-red-400">
@@ -86,7 +91,9 @@ export function SystemPanel() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {capabilities.isPending ? (
+          {!gatewayOk ? (
+            <p className="text-[13px] text-muted-foreground">Waiting for gateway connection…</p>
+          ) : capabilities.isPending ? (
             <Spinner className="h-4 w-4 text-muted-foreground" />
           ) : capabilities.isError || !capabilities.data ? (
             <div className="flex items-center gap-2 text-[13px] text-red-400">

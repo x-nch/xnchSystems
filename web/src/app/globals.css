@@ -1,25 +1,37 @@
 @import "tailwindcss";
 
 :root {
-  /* Dark-first palette (default, always on) */
-  --background: #0a0a0b;
-  --foreground: #ededed;
-  --card: #101013;
-  --card-foreground: #e4e4e7;
-  --muted: #17171b;
-  --muted-foreground: #9d9da8;
-  --border: #26262c;
-  --input: #1f1f24;
-  --ring: #5b7cff;
-  --accent: #5b7cff;
-  --accent-foreground: #f6f7ff;
-  --accent-subtle: #171c33;
-  --destructive: #ef4444;
-  --destructive-foreground: #fef2f2;
+  /* Apex palette — deep navy command center, cyan glow, gold accents */
+  --background: #020617;
+  --foreground: #e2e8f0;
+  --card: #030712;
+  --card-foreground: #e6edf7;
+  --muted: #0b1220;
+  --muted-foreground: #8b98b3;
+  --border: #122036;
+  --input: #0d1728;
+  --ring: #22d3ee;
+  --accent: #22d3ee;
+  --accent-foreground: #03131a;
+  --accent-subtle: rgba(34, 211, 238, 0.12);
+  --gold: #f5c518;
+  --gold-subtle: rgba(245, 197, 24, 0.12);
+  --destructive: #f87171;
+  --destructive-foreground: #1c0505;
   --success: #34d399;
   --warning: #fbbf24;
-  --code-bg: #0d0d10;
-  --scrollbar-thumb: #2a2a31;
+  --code-bg: #05080f;
+  --scrollbar-thumb: #16233b;
+
+  /* Layout chrome */
+  --hud-sidebar-width: 15rem;
+  --hud-sidebar-collapsed: 3rem;
+  --hud-topbar-height: 2.5rem;
+
+  /* Glow intensities */
+  --glow-cyan: rgba(34, 211, 238, 0.45);
+  --glow-gold: rgba(245, 197, 24, 0.5);
+  --vignette: radial-gradient(ellipse 80% 70% at 50% 50%, transparent 40%, rgba(2, 6, 23, 0.85) 100%);
 }
 
 @theme inline {
@@ -35,14 +47,16 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent-subtle: var(--accent-subtle);
+  --color-gold: var(--gold);
+  --color-gold-subtle: var(--gold-subtle);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-code-bg: var(--code-bg);
   --color-scrollbar-thumb: var(--scrollbar-thumb);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-space-grotesk);
+  --font-mono: var(--font-jetbrains-mono);
 }
 
 html,
@@ -51,7 +65,10 @@ body {
 }
 
 body {
-  background: var(--background);
+  background:
+    radial-gradient(1200px 700px at 50% -12%, rgba(34, 211, 238, 0.07), transparent 60%),
+    radial-gradient(900px 600px at 90% 110%, rgba(245, 197, 24, 0.05), transparent 55%),
+    var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, sans-serif;
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
@@ -74,11 +91,11 @@ body {
   border-radius: 8px;
 }
 *::-webkit-scrollbar-thumb:hover {
-  background: #3a3a44;
+  background: #1c2c47;
 }
 
 ::selection {
-  background: rgba(91, 124, 255, 0.28);
+  background: rgba(34, 211, 238, 0.28);
 }
 
 /* Blinking cursor shown while a response is streaming */
@@ -116,4 +133,191 @@ body {
 }
 .streaming-dot {
   animation: x-pulse-dot 1.2s ease-in-out infinite;
+}
+
+/* --- Apex utilities --- */
+
+/* Radial dot field backdrop */
+@utility hud-grid {
+  background-image: radial-gradient(circle, rgba(34, 211, 238, 0.16) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+@utility glow-border {
+  box-shadow:
+    0 0 0 1px rgba(34, 211, 238, 0.22),
+    0 0 22px -8px rgba(34, 211, 238, 0.45);
+}
+
+@utility glow-border-gold {
+  box-shadow:
+    0 0 0 1px rgba(245, 197, 24, 0.3),
+    0 0 26px -8px rgba(245, 197, 24, 0.5);
+}
+
+@utility glow-text {
+  text-shadow: 0 0 12px rgba(34, 211, 238, 0.55);
+}
+
+@utility glow-text-gold {
+  text-shadow: 0 0 14px rgba(245, 197, 24, 0.55);
+}
+
+/* Central orb halo */
+@keyframes x-orb-halo {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.18);
+  }
+}
+.orb-halo {
+  animation: x-orb-halo 4s ease-in-out infinite;
+}
+
+/* Slow drift for orbit nodes */
+@keyframes x-node-drift {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 6px rgba(34, 211, 238, 0.35));
+  }
+  50% {
+    filter: drop-shadow(0 0 14px rgba(34, 211, 238, 0.6));
+  }
+}
+.node-drift {
+  animation: x-node-drift 3.2s ease-in-out infinite;
+}
+
+/* Presence crossfade entry */
+@keyframes x-crossfade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.crossfade-in {
+  animation: x-crossfade-in 0.6s ease-out both;
+}
+
+/* Scanline sweep across panels */
+@keyframes x-scanline {
+  0% {
+    transform: translateY(-120%);
+  }
+  100% {
+    transform: translateY(120%);
+  }
+}
+
+.scanline-overlay::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(34, 211, 238, 0.03) 50%,
+    transparent 100%
+  );
+  animation: x-scanline 8s linear infinite;
+  pointer-events: none;
+}
+
+/* Cinematic vignette overlay */
+@utility vignette {
+  background: var(--vignette);
+}
+
+/* HUD panel base */
+@utility hud-panel {
+  border: 1px solid rgba(34, 211, 238, 0.12);
+  background: rgba(3, 7, 18, 0.82);
+  backdrop-filter: blur(12px);
+}
+
+/* Active node pulse */
+@keyframes x-node-active {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 1px rgba(245, 197, 24, 0.35),
+      0 0 28px -4px rgba(245, 197, 24, 0.55);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px rgba(245, 197, 24, 0.55),
+      0 0 36px -2px rgba(245, 197, 24, 0.75);
+  }
+}
+.node-active {
+  animation: x-node-active 2s ease-in-out infinite;
+}
+
+/* Selected graph node — stronger pulse */
+@keyframes x-graph-selected {
+  0%,
+  100% {
+    opacity: 0.85;
+    transform: translate(-50%, 0) scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1.08);
+  }
+}
+
+/* Presence view transition */
+@keyframes x-presence-enter {
+  from {
+    opacity: 0;
+    transform: scale(1.04);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
+  }
+}
+.presence-enter {
+  animation: x-presence-enter 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* React Flow — Apex dark theme overrides */
+.react-flow {
+  --xy-edge-stroke-default: rgba(34, 211, 238, 0.28);
+  --xy-background-color: transparent;
+}
+.react-flow__controls {
+  border: 1px solid rgba(34, 211, 238, 0.15) !important;
+  background: rgba(3, 7, 18, 0.88) !important;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 0 20px -6px rgba(34, 211, 238, 0.3);
+}
+.react-flow__controls-button {
+  border-bottom: 1px solid rgba(34, 211, 238, 0.1) !important;
+  background: transparent !important;
+  fill: #8b98b3 !important;
+}
+.react-flow__controls-button:hover {
+  background: rgba(34, 211, 238, 0.08) !important;
+  fill: #22d3ee !important;
+}
+.react-flow__background {
+  opacity: 0.6;
+}
+
+/* Graph explorer — subtler edges */
+.react-flow__edge-text {
+  font-size: 8px !important;
+}
+.react-flow__edge-textbg {
+  fill: rgba(3, 7, 18, 0.9) !important;
 }

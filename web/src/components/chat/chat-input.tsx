@@ -70,8 +70,8 @@ export function ChatInput({
       <div className="mx-auto max-w-3xl">
         <div
           className={cn(
-            "flex items-end gap-2 rounded-2xl border border-border bg-card p-2 shadow-sm transition-colors",
-            "focus-within:border-accent/50 focus-within:ring-2 focus-within:ring-ring/25"
+            "flex items-end gap-2 rounded-xl border border-border/80 bg-card/90 p-2 shadow-[0_0_24px_-8px_rgba(34,211,238,0.25)] backdrop-blur-sm transition-colors",
+            "focus-within:border-accent/40 focus-within:glow-border"
           )}
         >
           <textarea

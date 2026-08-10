@@ -81,6 +81,63 @@ export interface SurfaceEvent {
   expires_at: string;
 }
 
+// ---- Kuzu L3 graph ----
+
+export interface GraphEntity {
+  entity_id: string;
+  name: string;
+  type: string;
+  created_at?: string | null;
+}
+
+export interface GraphRelation {
+  from_id: string;
+  from_name?: string | null;
+  to_id: string;
+  to_name?: string | null;
+  rel_type: string;
+  confidence: number;
+  created_at?: string | null;
+}
+
+export interface GraphEntitiesPage {
+  entities: GraphEntity[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+export interface GraphRelationsPage {
+  relations: GraphRelation[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+export interface GraphSubgraph {
+  center_id: string;
+  depth: number;
+  entities: GraphEntity[];
+  relations: GraphRelation[];
+}
+
+export interface GraphStats {
+  entity_count: number;
+  relation_count: number;
+  types: Record<string, number>;
+}
+
+/** Parsed SSE event from GET /memory/graph/stream. */
+export type GraphStreamEvent =
+  | ({ type: "stats" } & GraphStats)
+  | { type: "entity"; entity: GraphEntity }
+  | { type: "relation"; relation: GraphRelation }
+  | { type: "ready" }
+  | { type: "sync" }
+  | { type: "heartbeat" }
+  | { type: "error"; message: string }
+  | { type: "done" };
+
 // ---- MCP tools ----
 
 export interface McpTool {

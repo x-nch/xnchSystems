@@ -8,7 +8,7 @@ export function Card({
   return (
     <div
       className={cn(
-        "rounded-xl border border-border bg-card text-card-foreground",
+        "rounded-xl border border-border/70 bg-card/90 text-card-foreground backdrop-blur-sm",
         className
       )}
       {...props}

@@ -17,7 +17,7 @@ export function Topbar({ onOpenSettings }: { onOpenSettings: () => void }) {
   const modelName = capabilities.data?.summary ? "ornith" : "ornith";
 
   return (
-    <header className="flex h-12 shrink-0 items-center gap-2 border-b border-border bg-background/80 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="flex h-[var(--hud-topbar-height)] shrink-0 items-center gap-2 border-b border-border/80 bg-background/60 px-3 backdrop-blur-md supports-[backdrop-filter]:bg-background/40">
       <ConnectionStatus />
 
       <div className="flex-1" />

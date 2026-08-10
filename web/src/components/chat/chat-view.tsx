@@ -25,8 +25,11 @@ export function ChatView() {
   };
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="flex h-9 shrink-0 items-center gap-2 border-b border-border px-4">
+    <div className="flex h-full flex-col bg-background">
+      <div className="flex h-8 shrink-0 items-center gap-2 border-b border-border/80 bg-card/30 px-4 backdrop-blur-sm">
+        <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-cyan-200/80">
+          Session
+        </span>
         <span className="text-xs font-medium text-foreground">
           {conversation?.title ?? "New session"}
         </span>

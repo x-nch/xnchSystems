@@ -1,6 +1,7 @@
 import { useSettingsStore } from "@/lib/stores/settings-store";
 import { buildAuthorization } from "@/lib/auth/auth";
 import type { StreamEvent } from "@/lib/api/types";
+import type { GraphStreamEvent } from "@/lib/api/types";
 
 export const API_BASE = "/api/gateway";
 
@@ -165,6 +166,79 @@ export async function streamChatEvents(
 
   if (buffer.trim()) emitRawEvent(buffer, onEvent);
   onEvent({ type: "done" });
+}
+
+/** SSE stream for live Kuzu graph mutations. */
+export async function streamGraphEvents(options: {
+  signal: AbortSignal;
+  onEvent: (event: GraphStreamEvent) => void;
+}): Promise<void> {
+  const { signal, onEvent } = options;
+  const url = `${API_BASE}/memory/graph/stream`;
+  const headers = await buildHeaders();
+
+  let resp: Response;
+  try {
+    resp = await fetch(url, {
+      method: "GET",
+      headers: { ...headers, Accept: "text/event-stream" },
+      cache: "no-store",
+      signal,
+    });
+  } catch (err) {
+    if (err instanceof DOMException && err.name === "AbortError") return;
+    onEvent({ type: "error", message: "Cannot reach xnch gateway" });
+    return;
+  }
+
+  if (!resp.ok) {
+    onEvent({ type: "error", message: `Graph stream failed (${resp.status})` });
+    return;
+  }
+
+  const reader = resp.body?.getReader();
+  if (!reader) {
+    onEvent({ type: "error", message: "No response body" });
+    return;
+  }
+
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+
+    let boundary = buffer.indexOf("\n\n");
+    while (boundary !== -1) {
+      const rawEvent = buffer.slice(0, boundary);
+      buffer = buffer.slice(boundary + 2);
+      emitGraphRawEvent(rawEvent, onEvent);
+      boundary = buffer.indexOf("\n\n");
+    }
+  }
+
+  if (buffer.trim()) emitGraphRawEvent(buffer, onEvent);
+  onEvent({ type: "done" });
+}
+
+function emitGraphRawEvent(
+  rawEvent: string,
+  onEvent: (e: GraphStreamEvent) => void
+): void {
+  let data = "";
+  for (const line of rawEvent.split("\n")) {
+    if (line.startsWith("data:")) data += line.slice(5).trim();
+  }
+  if (!data) return;
+
+  try {
+    const payload = JSON.parse(data) as GraphStreamEvent;
+    onEvent(payload);
+  } catch {
+    /* ignore malformed frames */
+  }
 }
 
 function emitRawEvent(rawEvent: string, onEvent: (e: StreamEvent) => void): void {

@@ -1,22 +1,25 @@
 "use client";
 
 import { useState } from "react";
-import { Database, Search, Bell, Link2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Database, Search, Bell, Link2, GitBranch } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
-import { useMemoryRecall, useMemorySurface } from "@/lib/api/hooks";
+import { useMemoryRecall, useMemorySurface, useGatewayOnline } from "@/lib/api/hooks";
 import type { MemoryRecallResult } from "@/lib/api/types";
 import { formatPercent, formatRelativeTime } from "@/lib/utils/format";
 
 export function MemoryExplorer() {
+  const router = useRouter();
   const [query, setQuery] = useState("");
   const [topK, setTopK] = useState(5);
   const [submittedQuery, setSubmittedQuery] = useState("");
   const recall = useMemoryRecall();
   const surface = useMemorySurface();
+  const gatewayOk = useGatewayOnline();
 
   const runRecall = () => {
     const q = query.trim();
@@ -29,14 +32,25 @@ export function MemoryExplorer() {
     <div className="grid h-full gap-4 overflow-y-auto p-4 lg:grid-cols-[minmax(0,1fr)_320px]">
       {/* Recall */}
       <div className="min-h-0">
-        <div className="mb-4">
-          <h1 className="flex items-center gap-2 text-base font-semibold tracking-tight">
-            <Database className="h-4 w-4 text-accent" />
-            Memory Explorer
-          </h1>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            Semantic recall over episodic memory via <code className="rounded bg-muted px-1 font-mono">POST /nexi/memory/recall</code>
-          </p>
+        <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h1 className="flex items-center gap-2 text-base font-semibold tracking-tight">
+              <Database className="h-4 w-4 text-accent" />
+              Memory Explorer
+            </h1>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              Semantic recall over episodic memory via <code className="rounded bg-muted px-1 font-mono">POST /nexi/memory/recall</code>
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="glow-border-gold border-amber-400/30 text-amber-200 hover:bg-amber-400/10"
+            onClick={() => router.push("/graph")}
+          >
+            <GitBranch className="h-3.5 w-3.5" />
+            Kuzu Graph
+          </Button>
         </div>
 
         <div className="mb-4 flex items-center gap-2">
@@ -124,7 +138,12 @@ export function MemoryExplorer() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
-            {surface.isError && (
+            {!gatewayOk && (
+              <p className="text-[12px] text-muted-foreground">
+                Waiting for gateway connection…
+              </p>
+            )}
+            {surface.isError && gatewayOk && (
               <p className="text-[12px] text-red-400">
                 Unavailable — {surface.error instanceof Error ? surface.error.message : "error"}
               </p>

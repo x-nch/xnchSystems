@@ -5,6 +5,7 @@ import { Sidebar } from "@/components/layout/sidebar";
 import { Topbar } from "@/components/layout/topbar";
 import { SettingsModal } from "@/components/settings/settings-modal";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { GatewayQuerySync } from "@/components/layout/gateway-query-sync";
 import { useHydrated } from "@/lib/hooks/use-hydrated";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -30,6 +31,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         )}
         <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
+        <GatewayQuerySync />
       </div>
     </TooltipProvider>
   );

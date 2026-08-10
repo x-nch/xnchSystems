@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Check, Copy, RefreshCw, User } from "lucide-react";
+import { Check, Copy, RefreshCw, User, Wrench } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { MarkdownContent } from "@/components/chat/markdown-content";
 import { formatFullTime } from "@/lib/utils/format";
 import type { ChatMessage } from "@/lib/stores/chat-store";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Spinner } from "@/components/ui/spinner";
 
 /** Progressively reveal assistant content so single-chunk streams feel live. */
 function useReveal(content: string, animate: boolean): string {
@@ -52,17 +53,43 @@ function CopyButton({ text, className }: { text: string; className?: string }) {
 function ToolTrace({ message }: { message: ChatMessage }) {
   if (!message.toolCalls || message.toolCalls.length === 0) return null;
   return (
-    <div className="mb-2 flex flex-wrap gap-1.5">
-      {message.toolCalls.map((call, i) => (
-        <span
-          key={i}
-          className="inline-flex items-center gap-1 rounded-md border border-border bg-muted/50 px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground"
-          title={call.result !== undefined ? JSON.stringify(call.result) : "running…"}
-        >
-          <span className="h-1.5 w-1.5 rounded-full bg-accent/70" />
-          {call.tool}
-        </span>
-      ))}
+    <div className="mb-3 space-y-1.5">
+      {message.toolCalls.map((call, i) => {
+        const running = call.result === undefined;
+        return (
+          <div
+            key={i}
+            className={cn(
+              "rounded-lg border bg-card/90 px-3 py-2 backdrop-blur-sm",
+              running
+                ? "glow-border border-cyan-300/20"
+                : "glow-border-gold border-amber-400/20"
+            )}
+            title={call.result !== undefined ? JSON.stringify(call.result) : "running…"}
+          >
+            <div className="flex items-center gap-2">
+              {running ? (
+                <Spinner className="h-3.5 w-3.5 text-accent" />
+              ) : (
+                <Wrench className="h-3.5 w-3.5 text-amber-300" />
+              )}
+              <span className="font-mono text-[11px] font-semibold text-cyan-100">
+                {call.tool}
+              </span>
+              <span className="ml-auto rounded border border-border/60 px-1.5 py-px font-mono text-[8px] uppercase tracking-wider text-muted-foreground">
+                {running ? "executing" : "complete"}
+              </span>
+            </div>
+            {call.result !== undefined && (
+              <pre className="mt-1.5 max-h-24 overflow-auto rounded border border-border/40 bg-code-bg/80 p-2 font-mono text-[10px] leading-relaxed text-muted-foreground">
+                {typeof call.result === "string"
+                  ? call.result
+                  : JSON.stringify(call.result, null, 2)}
+              </pre>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
