@@ -5,6 +5,8 @@ from __future__ import annotations
 import re
 from typing import Any
 
+import httpx
+
 _RECALL_RE = re.compile(
     r"^\s*(?:/recall|recall memory|memory recall)\s+(.+?)\s*$", re.IGNORECASE
 )
@@ -47,6 +49,20 @@ def parse_recall_intent(text: str) -> str | None:
         return None
     match = _RECALL_RE.match(text)
     return match.group(1) if match else None
+
+
+def format_http_error(exc: httpx.HTTPStatusError) -> str:
+    """Human-readable API error including JSON detail when present."""
+    detail = exc.response.text
+    try:
+        body = exc.response.json()
+        if isinstance(body.get("detail"), str):
+            detail = body["detail"]
+        elif body.get("detail") is not None:
+            detail = str(body["detail"])
+    except Exception:
+        pass
+    return f"HTTP {exc.response.status_code}: {detail}"
 
 
 def parse_timer_line(line: str) -> dict[str, str] | None:

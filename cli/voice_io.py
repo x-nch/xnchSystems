@@ -38,6 +38,51 @@ def _input_device() -> int | None:
     return int(raw) if raw.isdigit() else raw  # type: ignore[return-value]
 
 
+def resolve_input_device() -> int | str | None:
+    """Pick mic: env override, else default input, else first input-capable device."""
+    import sounddevice as sd
+
+    explicit = _input_device()
+    if explicit is not None:
+        return explicit
+
+    default_idx = sd.default.device[0]
+    if default_idx is not None:
+        info = sd.query_devices(default_idx)
+        if info.get("max_input_channels", 0) > 0:
+            return default_idx
+
+    for idx, dev in enumerate(sd.query_devices()):
+        if dev.get("max_input_channels", 0) > 0:
+            return idx
+    return None
+
+
+def pcm_stats(pcm: bytes) -> dict[str, float]:
+    """Peak and RMS for mono int16 PCM (diagnose silent / blocked mic)."""
+    if len(pcm) < 2:
+        return {"peak": 0.0, "rms": 0.0, "duration_s": 0.0}
+    mono = np.frombuffer(pcm, dtype=np.int16)
+    peak = float(np.max(np.abs(mono)))
+    rms = float(np.sqrt(np.mean(mono.astype(np.float64) ** 2)))
+    duration_s = len(mono) / float(_SAMPLE_RATE)
+    return {"peak": peak, "rms": rms, "duration_s": duration_s}
+
+
+def is_silent_pcm(pcm: bytes, *, peak_threshold: int = 150) -> bool:
+    return pcm_stats(pcm)["peak"] < peak_threshold
+
+
+def describe_input_device() -> str:
+    import sounddevice as sd
+
+    device = resolve_input_device()
+    if device is None:
+        return "no input device"
+    info = sd.query_devices(device, "input")
+    return f"[{device}] {info.get('name', device)}"
+
+
 def _output_device() -> int | None:
     raw = os.environ.get("XNCH_VOICE_OUTPUT_DEVICE", "").strip()
     if not raw:
@@ -48,16 +93,31 @@ def _output_device() -> int | None:
 def record_seconds(duration_s: float) -> bytes:
     import sounddevice as sd
 
-    frames = int(duration_s * _SAMPLE_RATE)
+    device = resolve_input_device()
+    if device is None:
+        raise RuntimeError("No microphone input device found")
+
+    native_sr = _SAMPLE_RATE
+    if device is not None:
+        try:
+            native_sr = int(sd.query_devices(device, "input").get("default_samplerate", _SAMPLE_RATE))
+        except Exception:
+            native_sr = _SAMPLE_RATE
+
+    frames = int(duration_s * native_sr)
     audio = sd.rec(
         frames,
-        samplerate=_SAMPLE_RATE,
+        samplerate=native_sr,
         channels=_CHANNELS,
         dtype="int16",
-        device=_input_device(),
+        device=device,
     )
     sd.wait()
-    return audio.tobytes()
+    pcm = audio.tobytes()
+    if native_sr != _SAMPLE_RATE:
+        mono = np.frombuffer(pcm, dtype=np.int16)
+        pcm = _resample_int16(mono, native_sr, _SAMPLE_RATE).tobytes()
+    return pcm
 
 
 def record_until_release(poll_interval_s: float = 0.1) -> bytes:
@@ -80,7 +140,7 @@ def record_until_release(poll_interval_s: float = 0.1) -> bytes:
                 samplerate=_SAMPLE_RATE,
                 channels=_CHANNELS,
                 dtype="int16",
-                device=_input_device(),
+                device=resolve_input_device(),
             )
             sd.wait()
             chunks.append(block.tobytes())
