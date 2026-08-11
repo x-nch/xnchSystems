@@ -18,11 +18,11 @@ ExecStart=/home/x-nch/venvs/vllm-ornith/bin/vllm serve \
   --port 8082 \
   --trust-remote-code \
   --dtype float16 \
-  --max-model-len 65536 \
+  --max-model-len 32768 \
   --quantization gptq_marlin \
-  --gpu-memory-utilization 0.97 \
+  --gpu-memory-utilization 0.95 \
   --enable-prefix-caching \
-  --max-num-seqs 1 \
+  --max-num-seqs 2 \
   --enable-auto-tool-choice \
   --tool-call-parser qwen3_xml
 Restart=on-failure
