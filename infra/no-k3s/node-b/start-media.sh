@@ -36,9 +36,10 @@ Options:
   --no-wait-node-a   Skip reachability checks against Node A
   -h, --help         Show this help
 
-Exclusivity: vllm-ornith.service and nexi.service must be stopped before this
+Exclusivity: vllm-ornith.service must be stopped before this
 stack starts (systemd Conflicts= is the backstop). The script OFFERS to stop
-them; it never does so silently. Node A xnch must be stopped manually on Node A.
+it; it never does so silently. nexi.service shares qwen-vl and may run
+concurrently. Node A xnch must be stopped manually on Node A.
 
 Services started (in order):
   1. qwen-vl.service        (:8083, vLLM Qwen2.5-VL-7B-AWQ)
@@ -177,7 +178,6 @@ ok "nvidia-smi"
 
 step "Exclusivity precheck (3090 dedicated to this stack)"
 require_stopped vllm-ornith.service "vLLM Ornith"
-require_stopped nexi.service "Nexi engine"
 if (( WAIT_NODE_A )) && [[ -n "$NODE_A_IP" ]]; then
   if curl -sf "http://${NODE_A_IP}:8001/health" >/dev/null 2>&1; then
     warn "Node A xnch (:8001) is reachable and may still route to this GPU via LiteLLM."
