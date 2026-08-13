@@ -1,5 +1,11 @@
 [Unit]
 Description=Run XNCH Consolidation Daily at 02:00
+# Do not pull in local-fs.target (avoids failure when USB /var mount times out).
+DefaultDependencies=no
+After=network.target xnch.service
+Wants=xnch.service
+Before=timers.target shutdown.target
+Conflicts=shutdown.target
 
 [Timer]
 OnCalendar=*-*-* 02:00:00

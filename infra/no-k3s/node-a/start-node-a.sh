@@ -102,11 +102,33 @@ if (( ! SKIP_DOCKER )); then
   fi
 fi
 
+ensure_var_mount() {
+  systemctl is-active --quiet var.mount && return 0
+  echo "  WARN  var.mount inactive — retrying (USB /var may enumerate slowly)"
+  sudo systemctl start var.mount 2>/dev/null || true
+  systemctl is-active --quiet var.mount
+}
+
+start_consolidation_timer() {
+  if sudo systemctl start consolidation.timer 2>/dev/null; then
+    return 0
+  fi
+  if ! systemctl is-active --quiet var.mount; then
+    echo "  WARN  consolidation.timer blocked by var.mount failure" >&2
+    echo "        Check: systemctl status var.mount" >&2
+    echo "        /var is on USB sda4; fstab may need x-systemd.device-timeout=120" >&2
+    ensure_var_mount || true
+    sudo systemctl start consolidation.timer
+    return $?
+  fi
+  return 1
+}
+
 step "systemd: xnch + consolidation"
 sudo systemctl enable xnch.service consolidation.timer
-sudo systemctl start xnch.service consolidation.timer
+sudo systemctl start xnch.service
 wait_http "http://localhost:8001/health" "xnch :8001" 60
-systemctl is-active --quiet consolidation.timer && ok "consolidation.timer" || fail "consolidation.timer"
+start_consolidation_timer && ok "consolidation.timer" || fail "consolidation.timer"
 
 if (( WAKE_NODE_B )); then
   step "Wake Node B (xnch-core)"
