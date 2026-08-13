@@ -1,0 +1,116 @@
+{
+  "1": {
+    "class_type": "UnetLoaderGGUF",
+    "inputs": {
+      "unet_name": "wan2.1-i2v-14b-480p-Q5_K_M.gguf",
+      "weight_dtype": "default"
+    }
+  },
+  "2": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+      "clip_name": "umt5_xxl_fp8_e4m3fn_scaled.safetensors",
+      "type": "wan"
+    }
+  },
+  "3": {
+    "class_type": "VAELoader",
+    "inputs": {
+      "vae_name": "wan_2.1_vae.safetensors"
+    }
+  },
+  "4": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "text": "<PROMPT>",
+      "clip": ["2", 0]
+    }
+  },
+  "5": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "text": "",
+      "clip": ["2", 0]
+    }
+  },
+  "6": {
+    "class_type": "LoadVideo",
+    "inputs": {
+      "file": "<INPUT_IMAGE>"
+    }
+  },
+  "7": {
+    "class_type": "GetVideoComponents",
+    "inputs": {
+      "video": ["6", 0]
+    }
+  },
+  "8": {
+    "class_type": "ImageFromBatch",
+    "inputs": {
+      "image": ["7", 0],
+      "batch_index": 0,
+      "length": 1
+    }
+  },
+  "9": {
+    "class_type": "ImageFromBatch",
+    "inputs": {
+      "image": ["7", 0],
+      "batch_index": "<LAST_FRAME>",
+      "length": 1
+    }
+  },
+  "10": {
+    "class_type": "WanFirstLastFrameToVideo",
+    "inputs": {
+      "positive": ["4", 0],
+      "negative": ["5", 0],
+      "vae": ["3", 0],
+      "width": 832,
+      "height": 480,
+      "length": "<VIDEO_LENGTH>",
+      "batch_size": 1,
+      "start_image": ["8", 0],
+      "end_image": ["9", 0]
+    }
+  },
+  "11": {
+    "class_type": "KSampler",
+    "inputs": {
+      "model": ["1", 0],
+      "positive": ["10", 0],
+      "negative": ["10", 1],
+      "latent_image": ["10", 2],
+      "seed": "<SEED>",
+      "steps": 20,
+      "cfg": 6.0,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "denoise": 1.0
+    }
+  },
+  "12": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "samples": ["11", 0],
+      "vae": ["3", 0]
+    }
+  },
+  "13": {
+    "class_type": "CreateVideo",
+    "inputs": {
+      "images": ["12", 0],
+      "fps": 16
+    }
+  },
+  "14": {
+    "class_type": "SaveVideo",
+    "inputs": {
+      "video": ["13", 0],
+      "filename_prefix": "<OUTPUT_PREFIX>",
+      "format": "mp4",
+      "codec": "auto"
+    }
+  }
+}

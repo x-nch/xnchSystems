@@ -1,0 +1,20 @@
+[Unit]
+Description=Media Gateway — REST orchestrator for Qwen-VL + ComfyUI
+After=network-online.target qwen-vl.service comfy-ui.service
+Wants=qwen-vl.service comfy-ui.service
+Conflicts=vllm-ornith.service
+
+[Service]
+Type=simple
+User=x-nch
+WorkingDirectory=/home/x-nch/xnchSystems
+EnvironmentFile=/home/x-nch/.xnch/media.env
+Environment=PYTHONPATH=/home/x-nch/xnchSystems/media-gateway
+ExecStart=/home/x-nch/venvs/media-gateway/bin/python -m media_gateway.main
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

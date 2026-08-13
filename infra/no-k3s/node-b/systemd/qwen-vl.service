@@ -1,0 +1,33 @@
+[Unit]
+Description=vLLM — Qwen2.5-VL-7B-Instruct (AWQ, image+video understanding)
+After=network-online.target nvidia-ready.service
+Wants=network-online.target nvidia-ready.service
+Conflicts=vllm-ornith.service
+ConditionPathExists=/usr/bin/nvidia-smi
+
+[Service]
+Type=simple
+User=x-nch
+WorkingDirectory=/home/x-nch
+Environment=VLLM_ATTENTION_BACKEND=FLASH_ATTN
+Environment=VLLM_MEMORY_PROFILER_ESTIMATE_CUDAGRAPHS=0
+Environment=VLLM_USE_FLASHINFER_SAMPLER=0
+ExecStart=/home/x-nch/venvs/vllm-qwen-vl/bin/vllm serve \
+  /home/x-nch/models/Qwen2.5-VL-7B-Instruct-AWQ \
+  --served-model-name qwen2.5-vl-7b \
+  --host 0.0.0.0 \
+  --port 8083 \
+  --trust-remote-code \
+  --dtype float16 \
+  --quantization awq_marlin \
+  --gpu-memory-utilization 0.55 \
+  --max-model-len 16384 \
+  --limit-mm-per-prompt "{\"image\": 4, \"video\": 1}" \
+  --enable-prefix-caching
+Restart=on-failure
+RestartSec=15
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
