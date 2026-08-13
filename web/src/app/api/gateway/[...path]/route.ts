@@ -81,14 +81,6 @@ function buildUpstreamHeaders(request: NextRequest): Headers {
     headers.set(key, value);
   }
 
-  // Cloudflare Access service token (Vercel → api.x-nch.com behind Access).
-  const cfClientId = process.env.CF_ACCESS_CLIENT_ID;
-  const cfClientSecret = process.env.CF_ACCESS_CLIENT_SECRET;
-  if (cfClientId && cfClientSecret) {
-    headers.set("CF-Access-Client-Id", cfClientId);
-    headers.set("CF-Access-Client-Secret", cfClientSecret);
-  }
-
   return headers;
 }
 
