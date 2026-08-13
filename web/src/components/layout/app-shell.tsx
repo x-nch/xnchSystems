@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Topbar } from "@/components/layout/topbar";
 import { SettingsModal } from "@/components/settings/settings-modal";
@@ -8,9 +9,19 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { GatewayQuerySync } from "@/components/layout/gateway-query-sync";
 import { useHydrated } from "@/lib/hooks/use-hydrated";
 
+/** Routes rendered without control-surface chrome (standalone landing pages). */
+const STANDALONE_ROUTES = ["/constellation"];
+
 export function AppShell({ children }: { children: React.ReactNode }) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const hydrated = useHydrated();
+  const pathname = usePathname();
+  const standalone =
+    STANDALONE_ROUTES.some((r) => pathname === r || pathname.startsWith(`${r}/`));
+
+  if (standalone) {
+    return <TooltipProvider delayDuration={250}>{children}</TooltipProvider>;
+  }
 
   return (
     <TooltipProvider delayDuration={250}>

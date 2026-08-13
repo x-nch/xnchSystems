@@ -1,0 +1,239 @@
+/* ------------------------------------------------------------------ */
+/* Constellation landing — scoped design tokens + motion system.       */
+/* Sole accent: chartreuse #C8FF00. Everything else is near-black.     */
+/* Scoped under .constellation so the control-surface palette is       */
+/* untouched.                                                          */
+/* ------------------------------------------------------------------ */
+
+.constellation {
+  --const-ink: #070806;
+  --const-ink-2: #0b0d09;
+  --const-ink-3: #12150e;
+  --const-lime: #c8ff00;
+  --const-lime-dim: rgba(200, 255, 0, 0.55);
+  --const-lime-faint: rgba(200, 255, 0, 0.16);
+  --const-lime-glow: rgba(200, 255, 0, 0.45);
+  --const-line: rgba(200, 255, 0, 0.28);
+  --const-fore: #eef2e2;
+  --const-dim: #8d9483;
+  --const-hairline: rgba(200, 255, 0, 0.14);
+
+  background:
+    radial-gradient(1100px 720px at 68% 18%, rgba(200, 255, 0, 0.06), transparent 62%),
+    radial-gradient(900px 700px at 22% 88%, rgba(200, 255, 0, 0.045), transparent 58%),
+    var(--const-ink);
+  color: var(--const-fore);
+}
+
+.constellation ::selection {
+  background: rgba(200, 255, 0, 0.3);
+}
+
+/* ---- Shared chrome ------------------------------------------------- */
+
+.constellation .const-chip {
+  border: 1px solid var(--const-hairline);
+  background: rgba(11, 13, 9, 0.6);
+  color: var(--const-dim);
+}
+
+.constellation .const-link-ghost {
+  color: var(--const-dim);
+  transition: color 180ms ease, border-color 180ms ease, background 180ms ease;
+  border: 1px solid transparent;
+}
+.constellation .const-link-ghost:hover {
+  color: var(--const-lime);
+  border-color: var(--const-hairline);
+  background: rgba(200, 255, 0, 0.05);
+}
+
+/* ---- Core orb: breathing halo + expanding StatusPulse rings -------- */
+
+@keyframes const-orb-breathe {
+  0%,
+  100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.95;
+    transform: scale(1.12);
+  }
+}
+.const-orb-halo {
+  animation: const-orb-breathe 4.2s ease-in-out infinite;
+}
+
+@keyframes const-ring-expand {
+  0% {
+    transform: scale(0.55);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(2.1);
+    opacity: 0;
+  }
+}
+.const-pulse-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  border: 1px solid var(--const-lime-dim);
+  animation: const-ring-expand 3s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+  pointer-events: none;
+}
+
+@keyframes const-core-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.const-core-dash {
+  background: repeating-conic-gradient(
+    from 0deg,
+    var(--const-lime-faint) 0deg 12deg,
+    transparent 12deg 28deg
+  );
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 1px), #000 calc(100% - 1px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 1px), #000 calc(100% - 1px));
+  animation: const-core-spin 26s linear infinite;
+}
+
+@keyframes const-node-drift {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 1px rgba(200, 255, 0, 0.14),
+      0 0 18px -6px rgba(200, 255, 0, 0.28);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px rgba(200, 255, 0, 0.3),
+      0 0 30px -4px rgba(200, 255, 0, 0.55);
+  }
+}
+.const-node-drift {
+  animation: const-node-drift 3.4s ease-in-out infinite;
+}
+
+@keyframes const-node-focus {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 1px var(--const-lime),
+      0 0 34px -4px var(--const-lime-glow),
+      0 0 0 5px rgba(200, 255, 0, 0.08);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px var(--const-lime),
+      0 0 52px -2px rgba(200, 255, 0, 0.7),
+      0 0 0 7px rgba(200, 255, 0, 0.12);
+  }
+}
+.const-node-focus {
+  animation: const-node-focus 2.1s ease-in-out infinite;
+}
+
+/* HITL gate — the differentiator gets a hard-edged "gate" identity.  */
+@keyframes const-gate-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+.const-gate-beacon {
+  animation: const-gate-blink 1.6s ease-in-out infinite;
+}
+
+/* ---- SVG links ------------------------------------------------------ */
+
+@keyframes const-link-flow {
+  to {
+    stroke-dashoffset: -26;
+  }
+}
+.const-link-active {
+  stroke-dasharray: 6 10;
+  animation: const-link-flow 1.6s linear infinite;
+}
+
+@keyframes const-packet-travel {
+  0% {
+    offset-distance: 0%;
+  }
+  100% {
+    offset-distance: 100%;
+  }
+}
+.const-packet {
+  offset-path: path("M 0 0 L 0 0");
+  animation: const-packet-travel 2.8s linear infinite;
+}
+
+/* ---- Background starfield ------------------------------------------ */
+
+@keyframes const-twinkle {
+  0%,
+  100% {
+    opacity: 0.18;
+  }
+  50% {
+    opacity: 0.65;
+  }
+}
+.const-star {
+  animation: const-twinkle 4.5s ease-in-out infinite;
+}
+
+/* ---- Detail panel + narrative reveal -------------------------------- */
+
+@keyframes const-rise {
+  from {
+    opacity: 0;
+    transform: translateY(26px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.const-rise {
+  animation: const-rise 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes const-panel-in {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+.const-panel-in {
+  animation: const-panel-in 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .constellation .const-orb-halo,
+  .constellation .const-pulse-ring,
+  .constellation .const-core-dash,
+  .constellation .const-node-drift,
+  .constellation .const-node-focus,
+  .constellation .const-gate-beacon,
+  .constellation .const-link-active,
+  .constellation .const-packet,
+  .constellation .const-star {
+    animation: none;
+  }
+  .constellation .const-rise,
+  .constellation .const-panel-in {
+    animation-duration: 0.01s;
+  }
+}
