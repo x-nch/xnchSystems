@@ -24,6 +24,17 @@ logger = logging.getLogger(__name__)
 
 MAX_TOOL_ROUNDS = int(os.environ.get("XNCH_MCP_MAX_TOOL_ROUNDS", str(settings.mcp_max_tool_rounds)))
 
+# Counteracts small models that "refuse" by describing how to act instead of
+# calling a tool. Strong, explicit, and role-model-specific.
+_TOOL_SYSTEM_PROMPT = (
+    "You are an autonomous agent with access to real tools. "
+    "When the user asks you to search the web, look something up, check status, "
+    "read a file, or perform any action covered by a tool, CALL the tool "
+    "immediately. Do not claim you lack tool access and do not give the user "
+    "instructions to do it themselves — you can do it. If a tool call fails, "
+    "report the error and try a reasonable alternative."
+)
+
 
 def _max_tool_rounds() -> int:
     env = os.environ.get("XNCH_MCP_MAX_TOOL_ROUNDS")
@@ -55,6 +66,7 @@ async def chat_with_tools(
     headers = {"Authorization": f"Bearer {LITELLM_API_KEY}"} if LITELLM_API_KEY else {}
 
     last_message: dict[str, Any] = {}
+    messages = [{"role": "system", "content": _TOOL_SYSTEM_PROMPT}, *messages]
     async with httpx.AsyncClient(base_url=LITELLM_BASE, timeout=120.0) as client:
         for round_idx in range(max_rounds):
             payload: dict[str, Any] = {
