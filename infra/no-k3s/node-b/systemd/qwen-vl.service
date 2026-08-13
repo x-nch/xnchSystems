@@ -23,7 +23,9 @@ ExecStart=/home/x-nch/venvs/vllm-qwen-vl/bin/vllm serve \
   --gpu-memory-utilization 0.55 \
   --max-model-len 16384 \
   --limit-mm-per-prompt "{\"image\": 4, \"video\": 1}" \
-  --enable-prefix-caching
+  --enable-prefix-caching \
+  --enable-auto-tool-choice \
+  --tool-call-parser hermes
 Restart=on-failure
 RestartSec=15
 StandardOutput=journal
