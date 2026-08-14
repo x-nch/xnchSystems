@@ -5,10 +5,10 @@ max_results: 5
 max_results_cap: 10
 timeout_s: 15
 safesearch: 1
-engines:
-  - duckduckgo
-  - brave
-  - wikipedia
+# Empty = use SearXNG's configured default engines. Curated sets (e.g.
+# duckduckgo/brave/wikipedia) can return ZERO results for common queries on
+# some instances — leave empty unless you have verified the curated set works.
+engines: []
 allowed_actors:
   - nexi
   - operator
