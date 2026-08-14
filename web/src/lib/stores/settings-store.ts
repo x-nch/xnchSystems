@@ -14,6 +14,8 @@ export interface SettingsState {
   pastedToken: string;
   /** Sidebar collapsed state. */
   sidebarCollapsed: boolean;
+  /** Auto-speak assistant replies via TTS (default off). */
+  voiceAutoSpeak: boolean;
 
   setActorId: (id: string) => void;
   setActorRole: (role: string) => void;
@@ -21,6 +23,7 @@ export interface SettingsState {
   setAuthSecret: (secret: string) => void;
   setPastedToken: (token: string) => void;
   setSidebarCollapsed: (collapsed: boolean) => void;
+  setVoiceAutoSpeak: (enabled: boolean) => void;
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -32,6 +35,7 @@ export const useSettingsStore = create<SettingsState>()(
       authSecret: "",
       pastedToken: "",
       sidebarCollapsed: false,
+      voiceAutoSpeak: false,
 
       setActorId: (actorId) => set({ actorId }),
       setActorRole: (actorRole) => set({ actorRole }),
@@ -39,6 +43,7 @@ export const useSettingsStore = create<SettingsState>()(
       setAuthSecret: (authSecret) => set({ authSecret }),
       setPastedToken: (pastedToken) => set({ pastedToken }),
       setSidebarCollapsed: (sidebarCollapsed) => set({ sidebarCollapsed }),
+      setVoiceAutoSpeak: (voiceAutoSpeak) => set({ voiceAutoSpeak }),
     }),
     { name: "xnch-ui-settings" }
   )

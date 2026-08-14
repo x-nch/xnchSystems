@@ -5,6 +5,7 @@ import { ArrowUp, Square } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/button";
 import { Kbd } from "@/components/ui/kbd";
+import { VoiceButton } from "@/components/chat/voice-button";
 
 const MAX_ROWS = 8;
 
@@ -20,6 +21,7 @@ export function ChatInput({
   onStop: () => void;
 }) {
   const [value, setValue] = useState("");
+  const [voiceError, setVoiceError] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -49,6 +51,12 @@ export function ChatInput({
       e.preventDefault();
       onStop();
     }
+  };
+
+  const handleVoiceTranscript = (text: string) => {
+    setVoiceError(null);
+    setValue((prev) => (prev.trim() ? `${prev} ${text}` : text));
+    textareaRef.current?.focus();
   };
 
   return (
@@ -84,6 +92,11 @@ export function ChatInput({
             disabled={disabled}
             className="max-h-44 flex-1 resize-none bg-transparent px-2 py-1.5 text-[14px] leading-relaxed text-foreground outline-none placeholder:text-muted-foreground/60 disabled:opacity-60"
           />
+          <VoiceButton
+            disabled={disabled || streaming}
+            onTranscript={handleVoiceTranscript}
+            onError={setVoiceError}
+          />
           {streaming ? (
             <Button
               size="icon"
@@ -116,6 +129,9 @@ export function ChatInput({
             <Kbd>Enter</Kbd> newline
           </span>
           <span className="flex-1" />
+          {voiceError && (
+            <span className="text-[10px] text-red-400">{voiceError}</span>
+          )}
           <span>routed via xnch :8001</span>
         </div>
       </div>

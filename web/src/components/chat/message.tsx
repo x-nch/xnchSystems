@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Check, Copy, RefreshCw, User, Wrench } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Check, Copy, RefreshCw, User, Volume2, Wrench } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { MarkdownContent } from "@/components/chat/markdown-content";
 import { formatFullTime } from "@/lib/utils/format";
 import type { ChatMessage } from "@/lib/stores/chat-store";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Spinner } from "@/components/ui/spinner";
+import { speakWav, stopAudio } from "@/lib/api/voice";
 
 /** Progressively reveal assistant content so single-chunk streams feel live. */
 function useReveal(content: string, animate: boolean): string {
@@ -47,6 +48,54 @@ function CopyButton({ text, className }: { text: string; className?: string }) {
     >
       {copied ? <Check className="h-3.5 w-3.5 text-success" /> : <Copy className="h-3.5 w-3.5" />}
     </button>
+  );
+}
+
+// Synthesized audio URLs cached per message so replay doesn't re-run TTS.
+const speakUrlCache = new Map<string, string>();
+
+function SpeakButton({ message }: { message: ChatMessage }) {
+  const [playing, setPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const toggle = async () => {
+    if (playing) {
+      audioRef.current?.pause();
+      audioRef.current = null;
+      setPlaying(false);
+      return;
+    }
+    stopAudio();
+    try {
+      let url = speakUrlCache.get(message.id);
+      if (!url) {
+        const blob = await speakWav(message.content);
+        url = URL.createObjectURL(blob);
+        speakUrlCache.set(message.id, url);
+      }
+      const audio = new Audio(url);
+      audioRef.current = audio;
+      audio.onended = () => setPlaying(false);
+      await audio.play();
+      setPlaying(true);
+    } catch {
+      setPlaying(false);
+    }
+  };
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button
+          onClick={() => void toggle()}
+          className="inline-flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground/70 transition-colors hover:bg-muted hover:text-foreground"
+          aria-label={playing ? "Stop speech" : "Speak message"}
+        >
+          <Volume2 className={cn("h-3.5 w-3.5", playing && "text-accent")} />
+        </button>
+      </TooltipTrigger>
+      <TooltipContent>{playing ? "Stop" : "Speak"}</TooltipContent>
+    </Tooltip>
   );
 }
 
@@ -177,6 +226,7 @@ export function Message({
           {!isStreaming && message.content && (
             <div className="mt-1 flex h-6 items-center gap-0.5 opacity-0 transition-opacity group-hover/msg:opacity-100">
               <CopyButton text={message.content} />
+              {message.role === "assistant" && <SpeakButton message={message} />}
               {canRegenerate && (
                 <Tooltip>
                   <TooltipTrigger asChild>
