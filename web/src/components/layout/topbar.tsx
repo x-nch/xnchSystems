@@ -14,7 +14,7 @@ export function Topbar({ onOpenSettings }: { onOpenSettings: () => void }) {
   const capabilities = useCapabilities();
   const { actorId, actorRole, authMode } = useSettingsStore();
 
-  const modelName = capabilities.data?.summary ? "ornith" : "ornith";
+  const modelName = capabilities.data?.summary ? "qwen-vl" : "qwen-vl";
 
   return (
     <header className="flex h-[var(--hud-topbar-height)] shrink-0 items-center gap-2 border-b border-border/80 bg-background/60 px-3 backdrop-blur-md supports-[backdrop-filter]:bg-background/40">
@@ -30,7 +30,7 @@ export function Topbar({ onOpenSettings }: { onOpenSettings: () => void }) {
           </Badge>
         </TooltipTrigger>
         <TooltipContent>
-          Routed model via LiteLLM (classify_request → ornith)
+          Routed model via LiteLLM (classify_request → qwen-vl)
         </TooltipContent>
       </Tooltip>
 

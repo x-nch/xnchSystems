@@ -250,7 +250,7 @@ export function Message({
                 </Tooltip>
               )}
               <span className="pl-1 font-mono text-[10px] text-muted-foreground/50">
-                {message.modelUsed || "ornith"} · {formatFullTime(message.createdAt)}
+                {message.modelUsed || "qwen-vl"} · {formatFullTime(message.createdAt)}
               </span>
             </div>
           )}
