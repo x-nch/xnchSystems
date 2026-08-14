@@ -56,6 +56,7 @@ const speakUrlCache = new Map<string, string>();
 
 function SpeakButton({ message }: { message: ChatMessage }) {
   const [playing, setPlaying] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const toggle = async () => {
@@ -65,6 +66,7 @@ function SpeakButton({ message }: { message: ChatMessage }) {
       setPlaying(false);
       return;
     }
+    setError(null);
     stopAudio();
     try {
       let url = speakUrlCache.get(message.id);
@@ -78,8 +80,8 @@ function SpeakButton({ message }: { message: ChatMessage }) {
       audio.onended = () => setPlaying(false);
       await audio.play();
       setPlaying(true);
-    } catch {
-      setPlaying(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Speech unavailable");
     }
   };
 
@@ -88,13 +90,19 @@ function SpeakButton({ message }: { message: ChatMessage }) {
       <TooltipTrigger asChild>
         <button
           onClick={() => void toggle()}
-          className="inline-flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground/70 transition-colors hover:bg-muted hover:text-foreground"
+          className="relative inline-flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground/70 transition-colors hover:bg-muted hover:text-foreground"
           aria-label={playing ? "Stop speech" : "Speak message"}
         >
           <Volume2 className={cn("h-3.5 w-3.5", playing && "text-accent")} />
+          {error && (
+            <span
+              className="absolute -top-1 right-0 h-1.5 w-1.5 rounded-full bg-red-500"
+              title={error}
+            />
+          )}
         </button>
       </TooltipTrigger>
-      <TooltipContent>{playing ? "Stop" : "Speak"}</TooltipContent>
+      <TooltipContent>{error ? error : playing ? "Stop" : "Speak"}</TooltipContent>
     </Tooltip>
   );
 }
