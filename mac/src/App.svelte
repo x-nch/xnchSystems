@@ -36,11 +36,14 @@
   }
 
   function arm() {
-    listening = true;
-    send({ type: 'arm' });
+    if (ws && ws.readyState === 1) {
+      listening = true;
+      send({ type: 'arm' });
+    }
   }
 
   function disarm() {
+    listening = false;
     send({ type: 'disarm' });
   }
 
