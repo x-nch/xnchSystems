@@ -18,6 +18,7 @@ import websockets
 _clients: set = set()
 _bridge_loop: asyncio.AbstractEventLoop | None = None
 _on_command: Callable[[dict], None] | None = None
+_http_server: ThreadingHTTPServer | None = None
 
 _MOBILE_PAGE = """<!DOCTYPE html>
 <html><head><meta charset="utf-8"><title>XNCH CC</title></head>
@@ -67,8 +68,11 @@ async def _serve() -> None:
         await asyncio.Future()
 
 
-def _run_http() -> None:
-    ThreadingHTTPServer((_HOST, _HTTP_PORT), _Handler).serve_forever()
+def _run_ws() -> None:
+    try:
+        _bridge_loop.run_until_complete(_serve())
+    except (RuntimeError, asyncio.CancelledError):
+        pass  # loop stopped or serve task cancelled during teardown
 
 
 def start_bridge(
@@ -78,14 +82,15 @@ def start_bridge(
     ws_port: int = 9001,
     http_port: int = 9002,
 ) -> None:
-    global _bridge_loop, _on_command, _HOST, _WS_PORT, _HTTP_PORT
+    global _bridge_loop, _on_command, _HOST, _WS_PORT, _HTTP_PORT, _http_server
     _on_command = on_command
     _HOST = host
     _WS_PORT = ws_port
     _HTTP_PORT = http_port
-    threading.Thread(target=_run_http, daemon=True).start()
+    _http_server = ThreadingHTTPServer((host, http_port), _Handler)
+    threading.Thread(target=_http_server.serve_forever, daemon=True).start()
     _bridge_loop = asyncio.new_event_loop()
-    threading.Thread(target=_bridge_loop.run_until_complete, args=(_serve(),), daemon=True).start()
+    threading.Thread(target=_run_ws, daemon=True).start()
 
 
 async def _send_all(payload: dict) -> None:
