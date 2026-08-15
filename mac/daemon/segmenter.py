@@ -22,7 +22,7 @@ class VadSegmenter:
     ) -> None:
         self.sample_rate = sample_rate
         self.chunk_ms = chunk_ms
-        self.chunk_bytes = sample_rate * chunk_ms // 1000
+        self.chunk_bytes = sample_rate * chunk_ms // 1000 * 2
         self.silence_limit = silence_ms // chunk_ms
         self.max_chunks = max_ms // chunk_ms
         self._armed = False

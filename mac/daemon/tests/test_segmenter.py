@@ -2,7 +2,7 @@
 
 from daemon.segmenter import VadSegmenter, is_garbage
 
-CHUNK = 480  # 30ms @ 16kHz int16
+CHUNK = 960  # 480 samples @ 16kHz int16 (30ms frame)
 
 
 def _c(value: int = 1) -> bytes:
