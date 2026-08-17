@@ -13,11 +13,13 @@ nexi callback is a no-op, and the pipeline pass is a mock returning
 ``ESCALATED`` for the block test.
 """
 import asyncio
+import json
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import UUID
 
 from nexi.goal.driver import _run_goal_step
+from nexi.goal.planner import build_simulation
 from nexi.models import Goal
 from nexi.pipeline.run import PipelinePassResult
 from xnch.memory.db import init_db
@@ -39,7 +41,9 @@ def _make_request(goal_store: GoalStore) -> MagicMock:
     return request
 
 
-def _make_dispatch_body(goal_id: str, *, step: int, outcome: str) -> dict[str, object]:
+def _make_dispatch_body(
+    goal_id: str, *, step: int, simulation: dict[str, object] | None
+) -> dict[str, object]:
     """Build the /execute dispatch body for one loop iteration."""
     return {
         "execution_ref": f"ref-{step}",
@@ -47,8 +51,17 @@ def _make_dispatch_body(goal_id: str, *, step: int, outcome: str) -> dict[str, o
         "execution_token": "t",
         "action_spec": {"type": "DEPLOY", "target": "svc", "params": {}},
         "goal_id": goal_id,
-        "simulation": {"outcome": outcome},
+        "simulation": simulation,
     }
+
+
+def _simulation_for_step(goal: dict[str, object]) -> dict[str, object] | None:
+    """Resolve the per-step override from the stored plan via build_simulation."""
+    goal_dict = dict(goal)
+    goal_dict["simulation_plan"] = json.loads(
+        str(goal_dict.get("simulation_plan") or "[]")
+    )
+    return build_simulation(goal_dict)
 
 
 async def test_goal_loop_completes(tmp_path: Path) -> None:
@@ -67,7 +80,11 @@ async def test_goal_loop_completes(tmp_path: Path) -> None:
         for step in range(3):
             goal = await store.claim_next_goal("e2e")
             assert goal is not None
-            body = _make_dispatch_body(str(goal["goal_id"]), step=step, outcome="success")
+            simulation = _simulation_for_step(goal)
+            assert simulation == {"outcome": "success"}  # plan entry for this step
+            body = _make_dispatch_body(
+                str(goal["goal_id"]), step=step, simulation=simulation
+            )
             await execute_stub(body, request)
         await asyncio.sleep(0)  # drain the fire-and-forget callback task
 
@@ -94,7 +111,11 @@ async def test_goal_loop_fails_on_repeated_failure(tmp_path: Path) -> None:
         for step in range(3):
             goal = await store.claim_next_goal("e2e")
             assert goal is not None
-            body = _make_dispatch_body(str(goal["goal_id"]), step=step, outcome="fail")
+            simulation = _simulation_for_step(goal)
+            assert simulation == {"outcome": "fail"}  # plan entry for this step
+            body = _make_dispatch_body(
+                str(goal["goal_id"]), step=step, simulation=simulation
+            )
             await execute_stub(body, request)
         await asyncio.sleep(0)  # drain the fire-and-forget callback task
 
