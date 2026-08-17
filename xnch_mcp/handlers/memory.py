@@ -75,6 +75,7 @@ async def _memory_store_note(app: Any, actor: ActorContext, args: dict[str, Any]
         type_="note",
         raw_text=text,
         summary=text[:120],
+        session_id=actor.session_id,
     )
     return {"status": "ok", "episode_id": episode_id}
 

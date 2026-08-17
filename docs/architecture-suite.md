@@ -326,6 +326,42 @@ flowchart TB
 > `agentmemory` (`am_*`) is a parallel curated store — explicit tool calls only.
 > See [memory-routing.md](guides/memory-routing.md).
 
+### 5a. Unified memory graph (all four tiers)
+
+`xnch/memory/tier_graph.py` flattens L0–L3 into one node/edge model tagged with a
+`tier` label, powering the web graph explorer (`/graph`):
+
+- `GET /memory/graph/tiers` — per-tier node/edge counts + cross-tier edge count
+  (`GraphStatsResponse` also gains `tiers` + `cross_edges`).
+- `GET /memory/graph/all?tier=&search=&limit=&offset=` — unified paginated nodes
+  and edges across all tiers.
+
+Cross-tier edges (both labelled `tier: "cross"` and dashed violet in the UI):
+
+- session (L1) ──`produced`──▶ episode (L2) — via `episodes.session_id`
+  (column added in `pg_episodic_store.py`; write sites in `nexi_gateway.py`,
+  `voice/pipeline.py`, and the xnch_mcp memory handler now pass the session id).
+- episode (L2) ──`mentions`──▶ entity (L3) — heuristic name match in `raw_text`,
+  capped at 8 edges per episode.
+
+Node id prefixes avoid cross-tier collisions: `sensory:`, `working:`, `episode:`,
+`semantic:`. Per-tier caps: sensory 50, working 20 sessions × 20 turns, episodic
+200 (30-day window), semantic 400. Every store read is fail-open — a disconnected
+store contributes an empty tier. L1↔L2 edges apply to episodes created after the
+`session_id` migration; historical episodes keep `session_id = NULL`.
+
+```mermaid
+flowchart LR
+    L0["L0 sensory<br/>perceptions"] -->|"sensory: node"| A
+    L1["L1 working<br/>session → turns"] -->|"working: nodes + has_turn"| A
+    L2["L2 episodic<br/>episodes"] -->|"episode: nodes"| A
+    L3["L3 semantic<br/>entities + relations"] -->|"semantic: nodes + rels"| A
+    A["tier_graph assembler"] --> T["GET /memory/graph/tiers"]
+    A --> G["GET /memory/graph/all"]
+    L1 -.->|"produced (session_id)"| L2
+    L2 -.->|"mentions (name in raw_text)"| L3
+```
+
 ---
 
 ## 6. Schema
