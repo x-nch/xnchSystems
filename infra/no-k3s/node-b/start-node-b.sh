@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Start Node B stack: vLLM Ornith + nexi (xnch/nexi stack only).
-# Does not start local redis/postgres, k3s-agent, vllm-quality, or vllm-qwen.
+# Does not start local redis/postgres, k3s-agent, or vllm-quality.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
