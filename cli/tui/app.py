@@ -51,7 +51,7 @@ class XnchTuiApp(App):
         width: 40;
         min-width: 0;
         max-width: 60;
-        background: $surface-dark;
+        background: $surface-darken-1;
         border-left: solid $primary;
         display: none;
     }
