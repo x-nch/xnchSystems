@@ -33,6 +33,22 @@ app.add_typer(mcp_app, name="mcp")
 app.add_typer(voice_app, name="voice")
 
 
+@app.command()
+def tui() -> None:
+    """Launch the Textual TUI dashboard."""
+    try:
+        from cli.tui.app import XnchTuiApp
+    except ImportError:
+        typer.secho(
+            "Textual is required for the TUI. Install with: pip install textual",
+            fg=typer.colors.RED,
+            err=True,
+        )
+        raise typer.Exit(code=1)
+    app_tui = XnchTuiApp()
+    app_tui.run()
+
+
 def _client() -> XnchCliClient:
     return XnchCliClient()
 
