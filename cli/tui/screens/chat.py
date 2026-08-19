@@ -65,6 +65,7 @@ class ChatScreen(Screen):
 
     BINDINGS = [
         Binding("ctrl+v", "toggle_voice", "Voice Mode"),
+        Binding("enter", "submit_message", "Send", show=False, priority=True),
     ]
 
     def compose(self) -> ComposeResult:
@@ -74,7 +75,7 @@ class ChatScreen(Screen):
             id="chat-messages",
         )
         yield Vertical(
-            TextArea(id="chat-input", placeholder="Type a message... (Ctrl+Enter to send)"),
+            TextArea(id="chat-input", placeholder="Type a message and press Enter to send"),
             id="chat-input-area",
         )
 
@@ -86,26 +87,33 @@ class ChatScreen(Screen):
         """Focus the input on mount."""
         self.query_one("#chat-input", TextArea).focus()
 
-    async def on_text_area_submitted(self, event: TextArea.Submitted) -> None:
-        """Handle message submission."""
-        text = event.text_area.text.strip()
+    def action_submit_message(self) -> None:
+        """Enter key: submit the current TextArea content."""
+        ta = self.query_one("#chat-input", TextArea)
+        text = ta.text.strip()
         if not text:
             return
+        ta.text = ""
+        self.run_worker(self._process_message(text))
 
-        event.text_area.text = ""
-
-        # Check for slash commands
+    async def _process_message(self, text: str) -> None:
+        """Route a submitted message to slash command or chat."""
         cmd = parse_slash_command(text)
         if cmd:
             await self._handle_command(cmd)
             return
 
-        # Add user message to display
         self._append_message("you", text)
-
-        # Stream response from Nexi
         self._append_message("nexi", "")
         await self._stream_response(text)
+
+    async def on_text_area_submitted(self, event: TextArea.Submitted) -> None:
+        """Handle Ctrl+Enter submission (fallback)."""
+        text = event.text_area.text.strip()
+        if not text:
+            return
+        event.text_area.text = ""
+        await self._process_message(text)
 
     async def _stream_response(self, message: str) -> None:
         """Stream a chat response from Nexi."""
@@ -227,7 +235,6 @@ class ChatScreen(Screen):
 
         sr = 16000
         duration = 30
-        self_ref = None  # avoid capture; use module-level ref
         recording = sd.rec(int(duration * sr), samplerate=sr, channels=1, dtype="int16")
         sd.wait()
 
