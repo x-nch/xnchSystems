@@ -141,6 +141,30 @@ class AsyncXnchClient:
             self._sync.mcp_call, name, arguments, actor_role=actor_role
         )
 
+    # ── Voice ──────────────────────────────────────────────────────
+
+    async def voice_transcribe(self, wav_bytes: bytes) -> dict[str, Any]:
+        return await asyncio.to_thread(self._sync.voice_transcribe, wav_bytes)
+
+    async def voice_speak(self, text: str) -> bytes:
+        return await asyncio.to_thread(self._sync.voice_speak, text)
+
+    async def voice_chat(
+        self,
+        wav_bytes: bytes,
+        *,
+        session_id: str | None = None,
+        actor_role: str | None = None,
+        return_audio: bool = True,
+    ) -> dict[str, Any]:
+        return await asyncio.to_thread(
+            self._sync.voice_chat,
+            wav_bytes,
+            session_id=session_id,
+            actor_role=actor_role,
+            return_audio=return_audio,
+        )
+
     # ── Token ───────────────────────────────────────────────────────
 
     async def mint_token(
