@@ -13,6 +13,7 @@ dependencies = [
     "psycopg[binary]>=3.2",
     "litellm>=1.89.4",
     "pyjwt>=2.8",
+    "textual>=0.40",
     "typer>=0.12",
     "mcp>=1.0",
     "anyio>=4.0",
