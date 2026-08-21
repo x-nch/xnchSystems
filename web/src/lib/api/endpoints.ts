@@ -4,6 +4,7 @@ import type {
   ChatResponse,
   ChatRequest,
   HealthResponse,
+  LlmStatusResponse,
   McpCallRequest,
   McpCallResponse,
   McpServersResponse,
@@ -21,6 +22,7 @@ import type {
 
 export const endpoints = {
   health: () => apiRequest<HealthResponse>("/health"),
+  llmStatus: () => apiRequest<LlmStatusResponse>("/system/llm-status"),
   systemState: () => apiRequest<SystemStateResponse>("/system/state"),
   capabilities: () => apiRequest<CapabilitiesResponse>("/nexi/capabilities"),
   systemPrompt: () => apiRequest<string>("/nexi/system-prompt"),

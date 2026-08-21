@@ -6,6 +6,7 @@ import type { McpCallRequest } from "@/lib/api/types";
 
 const HEALTH_MS = 5_000;
 const SURFACE_MS = 15_000;
+const LLM_STATUS_MS = 15_000;
 
 export function useHealth() {
   return useQuery({
@@ -20,6 +21,17 @@ export function useHealth() {
 export function useGatewayOnline(): boolean {
   const { data, isError } = useHealth();
   return !isError && data?.status === "ok";
+}
+
+export function useLlmStatus() {
+  const online = useGatewayOnline();
+  return useQuery({
+    queryKey: ["llm-status"],
+    queryFn: endpoints.llmStatus,
+    enabled: online,
+    refetchInterval: online ? LLM_STATUS_MS : false,
+    retry: 1,
+  });
 }
 
 export function useSystemState() {

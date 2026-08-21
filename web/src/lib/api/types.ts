@@ -14,6 +14,12 @@ export interface SystemStateResponse {
   policy_version: string;
 }
 
+export interface LlmStatusResponse {
+  available: boolean;
+  model: string;
+  latency_ms: number | null;
+}
+
 // ---- Chat ----
 
 export interface ChatRequest {

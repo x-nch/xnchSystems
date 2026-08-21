@@ -1,6 +1,7 @@
 "use client";
 
 import { ChatInput } from "@/components/chat/chat-input";
+import { LlmStatus } from "@/components/chat/llm-status";
 import { MessageList } from "@/components/chat/message-list";
 import { Badge } from "@/components/ui/badge";
 import { useChatStore } from "@/lib/stores/chat-store";
@@ -42,6 +43,7 @@ export function ChatView() {
         <Badge tone="muted" className="font-mono">
           role:{actorRole}
         </Badge>
+        <LlmStatus />
       </div>
 
       <div className="min-h-0 flex-1">
