@@ -17,6 +17,7 @@ from xnch_mcp.context import ActorContext
 from xnch_mcp.registry import invoke_tool, list_openai_tools
 from xnch_mcp.tool_loop import (
     assistant_tool_call_message,
+    merge_tool_system_prompt,
     parse_tool_calls_from_message,
     tool_result_message,
 )
@@ -110,7 +111,7 @@ async def chat_with_tools(
 
     last_message: dict[str, Any] = {}
     last_tool_result: dict[str, Any] | None = None
-    messages = [{"role": "system", "content": _TOOL_SYSTEM_PROMPT}, *messages]
+    messages = merge_tool_system_prompt(messages, _TOOL_SYSTEM_PROMPT)
     forced = False
     force_answer = False
     prev_tool_sig: str | None = None
