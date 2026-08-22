@@ -1,5 +1,6 @@
 """xnch-train CLI — extract, validate-dataset, baseline (added in Task 12)."""
 import asyncio
+import json
 import logging
 from pathlib import Path
 from typing import Annotated, Optional
@@ -69,6 +70,40 @@ def extract_cmd(
     manifest = build_scrub_manifest(counts, settings.pseudonymize_secret)
     write_dataset(scrubbed, manifest, out)
     typer.echo(f"wrote {len(scrubbed)} scrubbed records to {out}; counts={counts}")
+
+
+@app.command("baseline")
+def baseline_cmd(
+    base_url: Annotated[str, typer.Option()],
+    model: Annotated[str, typer.Option()],
+    suite: Annotated[Path, typer.Option()],
+    out: Annotated[Path, typer.Option()],
+    checkpoint_id: Annotated[str, typer.Option()] = "incumbent",
+    fake_reply: Annotated[Optional[str], typer.Option()] = None,
+) -> None:
+    """Capture an incumbent-only baseline report (five gate numbers)."""
+    from .evalharness.client import FakeModelClient, VllmOpenAIClient
+    from .evalharness.runner import run_baseline
+    from .evalharness.suites import load_suite
+
+    eval_suite = load_suite(suite)
+    if fake_reply is not None:
+        client: object = FakeModelClient([fake_reply])
+    else:
+        client = VllmOpenAIClient(base_url=base_url, model=model)
+
+    async def _run() -> object:
+        try:
+            return await run_baseline(client, eval_suite, checkpoint_id=checkpoint_id)  # type: ignore[arg-type]
+        finally:
+            close = getattr(client, "aclose", None)
+            if close is not None:
+                await close()
+
+    report = asyncio.run(_run())
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(report.model_dump_json(indent=2), encoding="utf-8")  # type: ignore[union-attr]
+    typer.echo(f"wrote baseline report for {checkpoint_id} to {out}")
 
 
 if __name__ == "__main__":
