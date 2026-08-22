@@ -21,3 +21,8 @@ memory/
 
 # Agent logs
 scripts/logs/
+
+# local runtime artifacts
+.chroma_db/
+storage/
+SESSIONS
