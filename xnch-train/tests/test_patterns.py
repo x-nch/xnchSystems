@@ -40,6 +40,18 @@ def test_password_kv_detected() -> None:
     assert len(spans) == 1
 
 
+def test_aws_access_key_detected() -> None:
+    text = "key AKIAIOSFODNN7EXAMPLE embedded"
+    spans = [s for s in find_secret_spans(text) if s[0] == "aws_access_key"]
+    assert len(spans) == 1
+    start, end = spans[0][1], spans[0][2]
+    assert text[start:end] == "AKIAIOSFODNN7EXAMPLE"
+    assert [s for s in find_secret_spans("ref akiaiosfodnn7example x")
+            if s[0] == "aws_access_key"] == []
+    assert [s for s in find_secret_spans("AKIAIOSFODNN7EXAMPLE2 too long")
+            if s[0] == "aws_access_key"] == []
+
+
 def test_card_only_when_luhn_valid() -> None:
     good = "4532 0151 1283 0366"   # Luhn-valid, spaced
     bad = "4532 0151 1283 0367"    # fails checksum
