@@ -9,7 +9,7 @@ from xnch_mcp.registry import ToolDef
 from xnch_mcp.tiers import ToolTier
 from xnch_mcp.web.service import WebSearchService
 
-_WEB_ACTORS = frozenset({"nexi", "operator"})
+_WEB_ACTORS = frozenset({"nexi", "operator", "opencode"})
 
 
 def _web_service(app: Any) -> WebSearchService:

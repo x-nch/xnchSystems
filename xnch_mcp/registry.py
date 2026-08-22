@@ -25,9 +25,9 @@ def get_registry() -> list[ToolDef]:
 
 
 def _load_handlers() -> None:
-    from xnch_mcp.handlers import exec, fs, memory, session, system, web
+    from xnch_mcp.handlers import exec, fs, memory, scraper, session, system, web
 
-    for mod in (system, memory, session, fs, exec, web):
+    for mod in (system, memory, session, fs, exec, web, scraper):
         for tool in mod.TOOLS:
             _register(tool)
 
