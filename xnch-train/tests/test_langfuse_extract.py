@@ -53,6 +53,15 @@ async def test_malformed_payloads_return_none() -> None:
     assert LangfuseExtractor.verdict_record_from_observation(bad) is None
 
 
+async def test_scalar_and_array_payloads_return_none() -> None:
+    base = {"name": "llm-call", "model": "policy-engine"}
+    for prompt, completion in (("5", '{"verdict": "BLOCK"}'),
+                               ('{"action": {}}', "null"),
+                               ('{"action": {}}', '["BLOCK"]')):
+        obs = {**base, "prompt": prompt, "completion": completion}
+        assert LangfuseExtractor.verdict_record_from_observation(obs) is None
+
+
 async def test_extract_verdicts_paginates_and_filters(monkeypatch: pytest.MonkeyPatch) -> None:
     ex = LangfuseExtractor(HOST, "pk", "sk", page_size=1)
 

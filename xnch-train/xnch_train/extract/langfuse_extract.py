@@ -61,6 +61,8 @@ class LangfuseExtractor:
             response = json.loads(str(obs.get("completion", "")))
         except json.JSONDecodeError:
             return None
+        if not isinstance(request, dict) or not isinstance(response, dict):
+            return None
         raw_verdict = str(response.get("verdict", "")).upper()
         if "action" not in request or raw_verdict not in _ALLOWED_VERDICTS:
             return None
