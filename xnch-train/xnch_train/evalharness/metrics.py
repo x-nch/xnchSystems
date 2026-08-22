@@ -110,15 +110,20 @@ def rejection_avoidance(candidates: list[str], cases: list[RejectionCase]) -> fl
     return avoided / len(cases)
 
 
+def _marker_hit(marker: str, text_lower: str) -> bool:
+    pattern = r"\b" + re.escape(marker.lower()) + r"\b"
+    return re.search(pattern, text_lower) is not None
+
+
 def persona_consistency(candidates: list[str], probes: list[PersonaProbe]) -> float:
     if not probes:
         return 0.0
     scores: list[float] = []
     for candidate, probe in zip(candidates, probes, strict=False):
         lowered = candidate.lower()
-        required_hits = sum(1 for m in probe.required_markers if m.lower() in lowered)
+        required_hits = sum(1 for m in probe.required_markers if _marker_hit(m, lowered))
         required_frac = required_hits / len(probe.required_markers) if probe.required_markers else 1.0
-        forbidden_hits = sum(1 for m in probe.forbidden_markers if m.lower() in lowered)
+        forbidden_hits = sum(1 for m in probe.forbidden_markers if _marker_hit(m, lowered))
         forbidden_frac = forbidden_hits / len(probe.forbidden_markers) if probe.forbidden_markers else 0.0
         scores.append(max(0.0, min(1.0, required_frac - forbidden_frac)))
     return sum(scores) / len(scores)
@@ -129,9 +134,9 @@ def tool_call_validity(candidates: list[str]) -> float:
         return 0.0
     good = 0
     for candidate in candidates:
+        blocks = len(re.findall(r"<tool_call>", candidate, re.IGNORECASE))
         calls = parse_tool_calls(candidate)
-        has_block = "<tool_call>" in candidate.lower()
-        good += 1 if has_block and len(calls) >= 1 else 0
+        good += 1 if blocks >= 1 and len(calls) == blocks else 0
     return good / len(candidates)
 
 

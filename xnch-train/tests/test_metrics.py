@@ -61,6 +61,20 @@ def test_tool_call_validity() -> None:
     assert tool_call_validity([valid, malformed]) == 0.5
 
 
+def test_tool_call_validity_mixed_blocks_score_zero() -> None:
+    valid = '<tool_call>{"name": "x", "arguments": {}}</tool_call>'
+    malformed = "<tool_call>{oops</tool_call>"
+    assert tool_call_validity([valid + malformed]) == 0.0
+    assert tool_call_validity([valid]) == 1.0
+
+
+def test_persona_markers_use_word_boundaries() -> None:
+    probes = [PersonaProbe(prompt="greet", required_markers=["direct"],
+                           forbidden_markers=["um"])]
+    assert persona_consistency(["be direct, summarize usage"], probes) == 1.0
+    assert persona_consistency(["be direct, um maybe"], probes) == 0.0
+
+
 def test_serving_ratio() -> None:
     assert serving_ratio(100.0, 105.0) == 1.05
     assert serving_ratio(100.0, 90.0) == 0.9
