@@ -3,12 +3,15 @@
 
 Same input + same key ⇒ same tag, so entity identity relationships survive
 training while the raw value never appears in a dataset (ADR §1).
+
+Apply exactly once: re-application corrupts emitted tokens (idempotency
+contract).
 """
 import hmac
 import re
 
 _EMAIL: re.Pattern[str] = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
-_LONG_DIGITS: re.Pattern[str] = re.compile(r"(?<![\w])\d{7,}(?![\w])")
+_LONG_DIGITS: re.Pattern[str] = re.compile(r"(?<!\d)\d{7,}(?!\d)")
 
 _TAG_LEN = 16
 

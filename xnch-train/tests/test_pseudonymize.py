@@ -37,6 +37,16 @@ def test_long_digit_runs_replaced_short_kept() -> None:
     assert "<num:" in out
 
 
+def test_word_adjacent_digit_runs_replaced() -> None:
+    out = _make_pseudo().pseudonymize("acct_7001002003 and ID=AB12345678 done")
+    assert "7001002003" not in out
+    assert "12345678" not in out
+    assert "<num:" in out
+    whole = _make_pseudo().pseudonymize("ref 12345678901 end")
+    assert whole.count("<num:") == 1
+    assert ":11>" in whole
+
+
 def test_no_raw_email_or_account_leaks() -> None:
     out = _make_pseudo().pseudonymize(
         "acct 7001002003 owner bob@corp.example paid"
