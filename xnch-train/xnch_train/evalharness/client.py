@@ -1,4 +1,5 @@
 """Inference clients for the eval harness (OpenAI-compatible endpoints)."""
+import json
 import time
 from typing import Any, Protocol
 
@@ -36,6 +37,7 @@ class VllmOpenAIClient:
         await self._client.aclose()
 
     async def complete(self, prompt: str, *, max_tokens: int = 512) -> ModelReply:
+        """Complete a prompt; latency_ms spans the full HTTP round trip (wall-clock TTFT proxy for v1)."""
         started = time.perf_counter()
         resp = await self._client.post(
             "/v1/chat/completions",
@@ -51,11 +53,16 @@ class VllmOpenAIClient:
         message = choice.get("message", {})
         text = message.get("content") or ""
         if not text and message.get("tool_calls"):
-            text = "".join(
-                f'<tool_call>{{"name": "{tc["function"]["name"]}", '
-                f'"arguments": {tc["function"]["arguments"]}}}</tool_call>'
-                for tc in message["tool_calls"]
-            )
+            parts = []
+            for tc in message["tool_calls"]:
+                fn = tc["function"]
+                args = fn.get("arguments", {})
+                args_text = args if isinstance(args, str) else json.dumps(args)
+                parts.append(
+                    f'<tool_call>{{"name": "{fn.get("name", "")}", '
+                    f'"arguments": {args_text}}}</tool_call>'
+                )
+            text = "".join(parts)
         return ModelReply(text=text, latency_ms=latency_ms)
 
 
