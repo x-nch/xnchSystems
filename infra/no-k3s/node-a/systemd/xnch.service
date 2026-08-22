@@ -8,7 +8,7 @@ Type=simple
 User=x-nch
 WorkingDirectory=/home/x-nch/xnchSystems
 EnvironmentFile=/home/x-nch/.xnch/xnch.env
-Environment=PYTHONPATH=/home/x-nch/xnchSystems/xnch
+Environment=PYTHONPATH=/home/x-nch/xnchSystems/xnch:/home/x-nch/xnchSystems
 ExecStart=/home/x-nch/xnchSystems/xnch/.venv/bin/uvicorn xnch.main:app --host 0.0.0.0 --port 8001
 Restart=on-failure
 RestartSec=10

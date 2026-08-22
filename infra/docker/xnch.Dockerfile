@@ -6,6 +6,7 @@ COPY xnch/ /app/xnch/
 COPY xnch/pyproject.toml /app/
 COPY xnch/uv.lock /app/
 COPY xnch/litellm_config.yaml /app/litellm_config.yaml
+COPY scraper/ /app/scraper/
 
 RUN pip install --no-cache-dir -e /app
 
