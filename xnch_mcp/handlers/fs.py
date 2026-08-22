@@ -8,7 +8,7 @@ from xnch_mcp.context import ActorContext
 from xnch_mcp.registry import ToolDef
 from xnch_mcp.tiers import ToolTier
 
-_FS_ACTORS = frozenset({"nexi", "operator", "admin"})
+_FS_ACTORS = frozenset({"nexi", "operator", "admin", "opencode"})
 
 _HOST_SCHEMA = {
     "type": "string",

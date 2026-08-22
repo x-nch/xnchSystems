@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "opencode": {
+      "command": "npx",
+      "args": ["-y", "opencode-mcp"],
+      "env": {
+        "OPENCODE_DEFAULT_PROVIDER": "opencode-go",
+        "OPENCODE_DEFAULT_MODEL": "kimi-k2.7-code",
+        "OPENCODE_AUTO_SERVE": "true"
+      }
+    }
+  }
+}

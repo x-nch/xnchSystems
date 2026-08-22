@@ -6,6 +6,7 @@ COPY nexi/pyproject.toml /app/nexi/
 COPY nexi/ /app/nexi/
 COPY xnch/pyproject.toml /app/xnch/
 COPY xnch/ /app/xnch/
+COPY scraper/ /app/scraper/
 
 RUN pip install --no-cache-dir -e /app/nexi -e /app/xnch
 
