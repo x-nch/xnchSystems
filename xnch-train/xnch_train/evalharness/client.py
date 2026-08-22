@@ -1,7 +1,7 @@
 """Inference clients for the eval harness (OpenAI-compatible endpoints)."""
 import json
 import time
-from typing import Any, Protocol
+from typing import Protocol
 
 import httpx
 from pydantic import BaseModel

@@ -4,7 +4,6 @@ import re
 from xnch_train.scrub.patterns import (
     CARD_CANDIDATE,
     PATTERN_SET_VERSION,
-    SECRET_RULES,
     find_secret_spans,
     luhn_valid,
 )

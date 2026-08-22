@@ -1,7 +1,8 @@
 """Secret-pattern denylist — first scrub layer before anything leaves memory.
 
 Version-stamped: bump PATTERN_SET_VERSION whenever rules change so scrub
-manifests stay auditable (ADR §1 hygiene requirements).
+manifests stay auditable (ADR §1 hygiene requirements). The bearer_token
+bound is deliberately recall-biased ({8,}) per scrub-first posture.
 """
 import re
 

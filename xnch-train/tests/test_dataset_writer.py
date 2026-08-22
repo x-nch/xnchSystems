@@ -77,3 +77,36 @@ def test_cli_suite_writes_starter(tmp_path: Path) -> None:
     assert result.exit_code == 0
     loaded = load_suite(out_path)
     assert len(loaded.persona) == 50
+
+
+def test_cli_extract_smoke(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    from datetime import datetime as dt
+
+    from xnch_train.models.records import RecordSource as RS
+
+    def _empty() -> list[TrainingRecord]:
+        return []
+
+    async def fake_connect(self: object) -> None:
+        return None
+
+    async def fake_outcomes(
+        self: object, since: dt | None = None, limit: int = 5000
+    ) -> list[TrainingRecord]:
+        return [TrainingRecord(trace_id="d-1", ts=dt(2026, 8, 1, tzinfo=UTC),
+                               source=RecordSource.OUTCOME)]
+
+    async def fake_corrections(self: object) -> list[TrainingRecord]:
+        return _empty()
+
+    monkeypatch.setattr("xnch_train.extract.pg_extract.PgExtractor.connect", fake_connect)
+    monkeypatch.setattr("xnch_train.extract.pg_extract.PgExtractor.close", fake_connect)
+    monkeypatch.setattr("xnch_train.extract.pg_extract.PgExtractor.extract_outcomes", fake_outcomes)
+    monkeypatch.setattr("xnch_train.extract.pg_extract.PgExtractor.extract_corrections",
+                        fake_corrections)
+    runner = CliRunner()
+    out_dir = tmp_path / "smoke-ds"
+    result = runner.invoke(app, ["extract", "--out", str(out_dir), "--skip-langfuse"])
+    assert result.exit_code == 0, result.output
+    assert "wrote 1" in result.output
+    assert (out_dir / "records.jsonl").is_file()

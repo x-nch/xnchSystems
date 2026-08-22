@@ -8,6 +8,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
+from ..evalharness.metrics import serving_ratio
 from ..evalharness.runner import BaselineReport
 
 GATED_METRICS: tuple[str, ...] = (
@@ -52,7 +53,7 @@ def evaluate_candidate(
             reasons.append(
                 f"metric regression {metric}: drop {drop:.3f} > bound {regression_bound:.3f}"
             )
-    ratio = candidate.latency_p95_ms / baseline.latency_p95_ms if baseline.latency_p95_ms else float("inf")
+    ratio = serving_ratio(baseline.latency_p95_ms, candidate.latency_p95_ms)
     if ratio > 1 + serving_bound_pct / 100.0:
         reasons.append(
             f"serving latency p95 ratio {ratio:.2f} exceeds +{serving_bound_pct:.0f}%"
