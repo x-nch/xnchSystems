@@ -8,6 +8,14 @@
         "OPENCODE_DEFAULT_MODEL": "kimi-k2.7-code",
         "OPENCODE_AUTO_SERVE": "true"
       }
+    },
+    "code-review-graph": {
+      "command": "uvx",
+      "args": [
+        "code-review-graph",
+        "serve"
+      ],
+      "type": "stdio"
     }
   }
 }
