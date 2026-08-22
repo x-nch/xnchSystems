@@ -15,12 +15,30 @@ from .pseudonymize import EntityPseudonymizer
 _EMAIL: re.Pattern[str] = re.compile(
     r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}"
 )
-_DIGITS: re.Pattern[str] = re.compile(r"(?<![\w])\d{7,}(?![\w])")
+_DIGITS: re.Pattern[str] = re.compile(r"(?<!\d)\d{7,}(?!\d)")
 
 _SCRUBBED_TEXT_FIELDS = ("input_context", "output")
 
 
+def _merge_spans(spans: list[tuple[str, int, int]]) -> list[tuple[str, int, int]]:
+    """Merge overlapping spans, retaining the earliest-starting rule per region."""
+    merged: list[list[str | int]] = []
+    for rule, start, end in sorted(spans, key=lambda s: (s[1], -s[2])):
+        if merged and start < int(merged[-1][2]):
+            merged[-1][2] = max(int(merged[-1][2]), end)
+        else:
+            merged.append([rule, start, end])
+    return [(str(r), int(s), int(e)) for r, s, e in merged]
+
+
 class Scrubber:
+    """Last gate before datasets (ADR §1).
+
+    Overlapping secret spans are merged — earliest-starting rule wins — and
+    applied right-to-left so offsets stay valid. Card-shaped digit runs that
+    failed the Luhn check survive every layer untouched.
+    """
+
     def __init__(self, key: bytes) -> None:
         self._pseudo = EntityPseudonymizer(key)
         self._totals: dict[str, int] = {}
@@ -46,11 +64,10 @@ class Scrubber:
         return scrubbed, totals
 
     def _scrub_text(self, text: str) -> str:
-        for rule, start, end in find_secret_spans(text):
+        merged = _merge_spans(find_secret_spans(text))
+        for rule, start, end in sorted(merged, key=lambda s: s[2], reverse=True):
             text = text[:start] + f"[REDACTED:{rule}]" + text[end:]
             self._tally(rule)
-        # Card-shaped runs that failed Luhn must survive both layers, so they
-        # are excluded from pseudonymization (passed through verbatim).
         pieces: list[str] = []
         cursor = 0
         email_hits = 0

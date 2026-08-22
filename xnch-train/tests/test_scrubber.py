@@ -69,3 +69,25 @@ def test_scrub_many_counts_rules() -> None:
     assert all(r.scrub_status is ScrubStatus.SCRUBBED for r in scrubbed)
     assert counts.get("api_key") == 1
     assert counts.get("email") == 1
+
+
+def test_two_secrets_in_one_field_both_redacted() -> None:
+    scrubbed = _make_scrubber().scrub(_make_record(
+        output="AAAA sk-proj-abcd1234EFGH5678ijk Bearer tok1234567890abcdef"))
+    assert "sk-proj-" not in scrubbed.output
+    assert "tok123456" not in scrubbed.output
+    assert "[REDACTED:api_key]" in scrubbed.output
+    assert "[REDACTED:bearer_token]" in scrubbed.output
+
+
+def test_bearer_wrapped_luhn_card_single_region() -> None:
+    scrubbed = _make_scrubber().scrub(_make_record(
+        output="Authorization: Bearer 4532015112830366"))
+    assert "4532015112830366" not in scrubbed.output
+    assert "[REDACT[" not in scrubbed.output
+
+
+def test_digit_run_counted_for_word_adjacent_runs() -> None:
+    records = [_make_record(input_context="id_9999999 ok")]
+    _, counts = _make_scrubber().scrub_many(records)
+    assert counts.get("digit_run") == 1
