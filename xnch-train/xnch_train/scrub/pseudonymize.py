@@ -10,8 +10,10 @@ contract).
 import hmac
 import re
 
-_EMAIL: re.Pattern[str] = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
-_LONG_DIGITS: re.Pattern[str] = re.compile(r"(?<!\d)\d{7,}(?!\d)")
+_TOKENIZER: re.Pattern[str] = re.compile(
+    r"(?P<email>[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})"
+    r"|(?P<digits>(?<!\d)\d{7,}(?!\d))"
+)
 
 _TAG_LEN = 16
 
@@ -26,9 +28,15 @@ class EntityPseudonymizer:
         return digest[:_TAG_LEN]
 
     def pseudonymize(self, text: str) -> str:
-        """Replace emails and long digit runs with stable pseudo-tokens."""
-        text = _EMAIL.sub(lambda m: f"<id:{self.tag(m.group(0))}>@pseudo.local", text)
-        text = _LONG_DIGITS.sub(
-            lambda m: f"<num:{self.tag(m.group(0))}:{len(m.group(0))}>", text
-        )
-        return text
+        """Replace emails and long digit runs with stable pseudo-tokens.
+
+        Single pass: emitted tokens are never rescanned.
+        """
+
+        def _replace(match: re.Match[str]) -> str:
+            if match.lastgroup == "email":
+                return f"<id:{self.tag(match.group('email'))}>@pseudo.local"
+            run = match.group("digits")
+            return f"<num:{self.tag(run)}:{len(run)}>"
+
+        return _TOKENIZER.sub(_replace, text)

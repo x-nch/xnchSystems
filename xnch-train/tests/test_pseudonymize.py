@@ -1,5 +1,7 @@
 # xnch-train/tests/test_pseudonymize.py
 """Deterministic, format-preserving entity pseudonymization."""
+import re
+
 from xnch_train.scrub.pseudonymize import EntityPseudonymizer
 
 KEY = b"unit-secret"
@@ -45,6 +47,17 @@ def test_word_adjacent_digit_runs_replaced() -> None:
     whole = _make_pseudo().pseudonymize("ref 12345678901 end")
     assert whole.count("<num:") == 1
     assert ":11>" in whole
+
+
+def test_email_tags_never_corrupted_by_digit_pass() -> None:
+    p = _make_pseudo()
+    addresses = [f"user{i}@example.com" for i in range(60)]
+    out = p.pseudonymize(" ".join(addresses))
+    tokens = re.findall(r"<id:[0-9a-f]{16}>@pseudo\.local", out)
+    assert len(tokens) == 60
+    assert "<id:<" not in out
+    ids = " ".join(re.findall(r"<id:[^>]*>", out))
+    assert re.findall(r"<num:", ids) == []
 
 
 def test_no_raw_email_or_account_leaks() -> None:
