@@ -36,7 +36,7 @@ async def crawl_browser(
         headless=headless,
         fingerprint_generator=_make_fingerprint_generator(),
         navigation_timeout=timedelta(seconds=timeout),
-        chromium_sandbox=False,
+        browser_new_context_options={"chromium_sandbox": False},
     )
 
     @crawler.router.default_handler
@@ -119,7 +119,7 @@ async def crawl_browser_batch(
         headless=headless,
         fingerprint_generator=_make_fingerprint_generator(),
         max_requests_per_crawl=len(urls),
-        chromium_sandbox=False,
+        browser_new_context_options={"chromium_sandbox": False},
     )
 
     @crawler.router.default_handler
