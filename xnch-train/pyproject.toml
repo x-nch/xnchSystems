@@ -11,6 +11,9 @@ dependencies = [
     "typer>=0.12",
 ]
 
+[project.scripts]
+xtrain = "xnch_train.cli:app"
+
 [build-system]
 requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
