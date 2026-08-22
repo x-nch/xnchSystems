@@ -6,8 +6,6 @@ import re
 from urllib.parse import urlparse
 
 from .models import CrawlTier, ExtractedContent, SocialResult
-from .tiers.browser import crawl_browser, crawl_browser_batch
-from .tiers.social import crawl_facebook, crawl_instagram, crawl_twitter
 from .tiers.static import crawl_static, crawl_static_batch
 
 logger = logging.getLogger(__name__)
@@ -132,6 +130,7 @@ async def crawl(
 
     # --- Auto or explicit static / browser ---
     if resolved is not None and resolved == CrawlTier.BROWSER:
+        from .tiers.browser import crawl_browser
         return await crawl_browser(url, headless=headless)
 
     # Try static first
@@ -146,6 +145,7 @@ async def crawl(
             len(result.markdown),
             url,
         )
+        from .tiers.browser import crawl_browser
         return await crawl_browser(url, headless=headless)
 
     return result
@@ -158,10 +158,13 @@ async def _crawl_social(url: str, platform: str) -> ExtractedContent:
         return ExtractedContent(url=url, markdown="", metadata={"error": f"Could not extract username from {url}"})
 
     if platform == "instagram":
+        from .tiers.social import crawl_instagram
         result = await crawl_instagram(username)
     elif platform == "facebook":
+        from .tiers.social import crawl_facebook
         result = await crawl_facebook(url)
     elif platform == "twitter":
+        from .tiers.social import crawl_twitter
         result = await crawl_twitter(username)
     else:
         return ExtractedContent(url=url, markdown="", metadata={"error": f"Unknown social platform: {platform}"})
@@ -215,6 +218,7 @@ async def crawl_batch(
                 results[idx] = content
 
         if fallback_urls:
+            from .tiers.browser import crawl_browser
             for idx, url in fallback_urls:
                 results[idx] = await crawl_browser(url)
 
@@ -239,6 +243,7 @@ async def _batch_by_tier(
     if tier == CrawlTier.STATIC:
         return await crawl_static_batch(urls, max_concurrent=max_concurrent)
     if tier == CrawlTier.BROWSER:
+        from .tiers.browser import crawl_browser_batch
         return await crawl_browser_batch(urls, headless=headless, max_concurrent=max_concurrent)
     # Social — no shared batch method, run individually with concurrency limit
     sem = asyncio.Semaphore(max_concurrent)
