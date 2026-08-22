@@ -46,15 +46,17 @@ echo "$NEXI_CHAT" | grep -q '"response"' && pass "/nexi/chat (direct LLM)" || fa
 
 echo ""
 echo "=== Scraper ==="
-STORE_RESULT=$(curl -sf -X POST "http://${NODE_A}:8001/mcp/tools/call" \
+STORE_RESULT=$(curl -sf -X POST "http://${NODE_A}:8001/mcp/call" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer ${TOKEN}" \
+  -H "X-Actor-Role: operator" \
   -d '{"name":"xnch_scraper_store","arguments":{"urls":["https://example.com"],"tier":"static"}}' 2>&1) || true
 echo "$STORE_RESULT" | grep -q '"chunks_stored"' && pass "scraper store" || fail "scraper store: $STORE_RESULT"
 
-QUERY_RESULT=$(curl -sf -X POST "http://${NODE_A}:8001/mcp/tools/call" \
+QUERY_RESULT=$(curl -sf -X POST "http://${NODE_A}:8001/mcp/call" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer ${TOKEN}" \
+  -H "X-Actor-Role: operator" \
   -d '{"name":"xnch_scraper_query","arguments":{"query":"example domain","n_results":3}}' 2>&1) || true
 echo "$QUERY_RESULT" | grep -q '"results"' && pass "scraper query" || fail "scraper query: $QUERY_RESULT"
 
