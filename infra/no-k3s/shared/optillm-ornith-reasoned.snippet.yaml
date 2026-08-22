@@ -1,0 +1,19 @@
+# Optional LiteLLM route for hard-reasoning via optillm (operational mode).
+#
+# Prerequisites on Node B:
+#   1. scripts/unit_swap_hard_reasoning.sh to-ornith
+#   2. docker run --rm -d --name optillm -p 8000:8000 \
+#        -e OPTILLM_API_KEY=local \
+#        ghcr.io/algorithmicsuperintelligence/optillm:latest-proxy \
+#        --base-url http://127.0.0.1:8082/v1 --approach auto --host 0.0.0.0
+#
+# Merge the block below into xnch/litellm_config.yaml model_list.
+# Source Node B IP from env (192.168.50.2 vs 192.168.1.9).
+#
+# Skip: optillm memory plugin; AutoThink/deepconf (not available via proxy).
+
+# - model_name: ornith-reasoned
+#   litellm_params:
+#     model: openai/cepo-ornith-1.0-35b
+#     api_base: http://192.168.50.2:8000/v1
+#     api_key: local
