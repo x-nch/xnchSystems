@@ -45,6 +45,23 @@ def parse_tool_calls_from_message(message: dict[str, Any]) -> list[dict[str, Any
     return calls
 
 
+def merge_tool_system_prompt(
+    messages: list[dict[str, Any]],
+    tool_prompt: str,
+) -> list[dict[str, Any]]:
+    """Ensure exactly one leading system message carrying the tool prompt.
+
+    vLLM rejects any system message that is not at the beginning of the
+    conversation, so a second prepended system message must be merged into
+    the existing one instead.
+    """
+    if messages and messages[0].get("role") == "system":
+        merged = dict(messages[0])
+        merged["content"] = f"{tool_prompt}\n\n{merged.get('content', '')}".strip()
+        return [merged, *messages[1:]]
+    return [{"role": "system", "content": tool_prompt}, *messages]
+
+
 def tool_result_message(tool_call_id: str, name: str, result: Any) -> dict[str, Any]:
     return {
         "role": "tool",
