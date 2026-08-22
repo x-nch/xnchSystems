@@ -2,6 +2,7 @@
 from pathlib import Path
 from typing import Any
 
+from pydantic import model_validator
 from pydantic.fields import FieldInfo
 from pydantic_settings import (
     BaseSettings,
@@ -55,6 +56,16 @@ class XtrainSettings(BaseSettings):
             dotenv_settings,
             file_secret_settings,
         )
+
+    @model_validator(mode="after")
+    def _require_pseudonymize_secret(self) -> "XtrainSettings":
+        """Fail fast: an empty secret silently disables HMAC pseudonymization."""
+        if not self.pseudonymize_secret:
+            raise ValueError(
+                "XTRAIN_PSEUDONYMIZE_SECRET must be set to a non-empty secret; "
+                "an empty value would silently weaken scrubbing"
+            )
+        return self
 
     def pseudonymize_key(self) -> bytes:
         """Deterministic HMAC key for entity pseudonymization."""
