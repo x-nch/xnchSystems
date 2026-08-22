@@ -78,3 +78,22 @@ def test_wrong_pattern_set_version_invalidates(tmp_path: Path) -> None:
     assert not result.valid
     assert any("pattern_set_version" in r for r in result.reasons)
     assert any(r.startswith("stale pattern_set_version") for r in result.reasons)
+
+
+def test_signoff_verification_detects_tampering(tmp_path: Path) -> None:
+    ds = tmp_path / "ds"
+    _write_dataset(ds)
+    result = validate_dataset(ds, signoff_secret="wrong-secret")
+    assert not result.valid
+    assert any("verification failed" in r for r in result.reasons)
+    ok = validate_dataset(ds, signoff_secret="sign-secret")
+    assert ok.valid
+
+
+def test_signoff_tampered_body_invalidated(tmp_path: Path) -> None:
+    ds = tmp_path / "ds"
+    _write_dataset(ds)
+    stored = json.loads((ds / "scrub_manifest.json").read_text(encoding="utf-8"))
+    stored["rule_counts"]["api_key"] = 99  # rewrite history without re-signing
+    (ds / "scrub_manifest.json").write_text(json.dumps(stored), encoding="utf-8")
+    assert not validate_dataset(ds, signoff_secret="sign-secret").valid

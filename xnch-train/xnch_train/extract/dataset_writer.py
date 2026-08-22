@@ -1,7 +1,9 @@
 """Atomic dataset persistence — the only sanctioned path to disk.
 
 Enforces the ADR §1 hard requirement structurally: raw (unscrubbed) records
-are refused, and loading a dataset without a valid manifest raises.
+are refused, and loading a dataset without a valid manifest raises. When a
+sign-off secret is passed to ``load_dataset`` the manifest signature is
+verified as well.
 """
 from collections.abc import Sequence
 import json
@@ -30,8 +32,10 @@ def write_dataset(
     return out_dir
 
 
-def load_dataset(dataset_dir: Path) -> tuple[list[TrainingRecord], ScrubManifest]:
-    validation = validate_dataset(dataset_dir)
+def load_dataset(
+    dataset_dir: Path, signoff_secret: str | None = None
+) -> tuple[list[TrainingRecord], ScrubManifest]:
+    validation = validate_dataset(dataset_dir, signoff_secret=signoff_secret)
     if not validation.valid:
         raise ValueError(f"invalid dataset {dataset_dir}: {validation.reasons}")
     manifest = ScrubManifest.model_validate(

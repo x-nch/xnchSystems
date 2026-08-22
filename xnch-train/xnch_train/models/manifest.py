@@ -1,7 +1,10 @@
 """Scrub manifest — audit trail proving a dataset was scrubbed, by whom/what.
 
 Hard requirement (ADR §1): a dataset without a manifest is invalid input to
-any trainer or evaluator.
+any trainer or evaluator. When a sign-off secret is supplied to
+``validate_dataset`` the operator_signoff hash is recomputed and compared,
+so tampering with the manifest body invalidates the dataset; without a
+secret only structural validity is checked.
 """
 import hashlib
 import json
@@ -30,6 +33,19 @@ class DatasetValidation(BaseModel):
     record_count: int = 0
 
 
+def _signing_payload(manifest: ScrubManifest) -> str:
+    """Canonical pre-hash body shared by build and verify.
+
+    Covers pattern_set_version + rule_counts (``created_at`` records when
+    signing happened but is not attested).
+    """
+    body: dict[str, Any] = {
+        "pattern_set_version": manifest.pattern_set_version,
+        "rule_counts": manifest.rule_counts,
+    }
+    return json.dumps(body, sort_keys=True) + "|"
+
+
 def build_scrub_manifest(rule_counts: dict[str, int], signoff_secret: str) -> ScrubManifest:
     """Sign-off hash covers the manifest body minus ``created_at`` plus the
     local secret — builds with identical inputs are byte-identical in
@@ -40,16 +56,14 @@ def build_scrub_manifest(rule_counts: dict[str, int], signoff_secret: str) -> Sc
         operator_signoff="",
         created_at=datetime.now(tz=UTC),
     )
-    body: dict[str, Any] = {
-        "pattern_set_version": manifest.pattern_set_version,
-        "rule_counts": manifest.rule_counts,
-    }
-    payload = json.dumps(body, sort_keys=True) + "|" + signoff_secret
+    payload = _signing_payload(manifest) + signoff_secret
     manifest.operator_signoff = hashlib.sha256(payload.encode("utf-8")).hexdigest()
     return manifest
 
 
-def validate_dataset(dataset_dir: Path) -> DatasetValidation:
+def validate_dataset(
+    dataset_dir: Path, signoff_secret: str | None = None
+) -> DatasetValidation:
     reasons: list[str] = []
     records_path = dataset_dir / RECORDS_FILENAME
     manifest_path = dataset_dir / MANIFEST_FILENAME
@@ -78,5 +92,11 @@ def validate_dataset(dataset_dir: Path) -> DatasetValidation:
                 )
             if len(manifest.operator_signoff) != 64:
                 reasons.append("operator_signoff missing or malformed")
+            elif signoff_secret:
+                expected = hashlib.sha256(
+                    (_signing_payload(manifest) + signoff_secret).encode("utf-8")
+                ).hexdigest()
+                if manifest.operator_signoff != expected:
+                    reasons.append("operator_signoff verification failed")
 
     return DatasetValidation(valid=not reasons, reasons=reasons, record_count=record_count)

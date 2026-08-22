@@ -1,13 +1,13 @@
-"""xnch-train CLI — extract, validate-dataset, baseline (added in Task 12)."""
+"""xnch-train CLI — extract, validate-dataset, suite, baseline."""
 import asyncio
-import json
-import logging
 from pathlib import Path
 from typing import Annotated, Optional
 
 import typer
 
 from .config import XtrainSettings
+from .evalharness.client import ModelClient
+from .evalharness.runner import BaselineReport
 from .extract.dataset_writer import write_dataset
 from .extract.pg_extract import PgExtractor
 from .models.manifest import build_scrub_manifest, validate_dataset
@@ -15,13 +15,13 @@ from .models.records import TrainingRecord
 from .scrub.scrubber import Scrubber
 
 app = typer.Typer(help="xnch-train Phase 0: data pipeline + eval harness")
-logger = logging.getLogger(__name__)
 
 
 @app.command("validate-dataset")
 def validate_dataset_cmd(directory: Annotated[Path, typer.Argument()]) -> None:
     """Gate check: a dataset is usable only with a valid scrub manifest."""
-    result = validate_dataset(directory)
+    settings = XtrainSettings()
+    result = validate_dataset(directory, signoff_secret=settings.pseudonymize_secret or None)
     typer.echo(result.model_dump_json(indent=2))
     raise typer.Exit(code=0 if result.valid else 1)
 
@@ -72,6 +72,29 @@ def extract_cmd(
     typer.echo(f"wrote {len(scrubbed)} scrubbed records to {out}; counts={counts}")
 
 
+@app.command("suite")
+def suite_cmd(
+    out: Annotated[Path, typer.Option()],
+    cutoff: Annotated[Optional[str], typer.Option()] = None,
+) -> None:
+    """Write a starter eval suite JSON (persona battery populated; case lists empty until Phase 2 data exists)."""
+    from datetime import UTC, datetime
+
+    from .evalharness.suites import EvalSuite, default_persona_battery
+
+    cutoff_ts = (
+        datetime.fromisoformat(cutoff).replace(tzinfo=UTC)
+        if cutoff else datetime.now(tz=UTC)
+    )
+    starter = EvalSuite(
+        cutoff_ts=cutoff_ts,
+        persona=default_persona_battery(),
+    )
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(starter.model_dump_json(indent=2), encoding="utf-8")
+    typer.echo(f"wrote starter suite v{starter.suite_version} to {out}")
+
+
 @app.command("baseline")
 def baseline_cmd(
     base_url: Annotated[str, typer.Option()],
@@ -88,13 +111,13 @@ def baseline_cmd(
 
     eval_suite = load_suite(suite)
     if fake_reply is not None:
-        client: object = FakeModelClient([fake_reply])
+        client: ModelClient = FakeModelClient([fake_reply])
     else:
         client = VllmOpenAIClient(base_url=base_url, model=model)
 
-    async def _run() -> object:
+    async def _run() -> BaselineReport:
         try:
-            return await run_baseline(client, eval_suite, checkpoint_id=checkpoint_id)  # type: ignore[arg-type]
+            return await run_baseline(client, eval_suite, checkpoint_id=checkpoint_id)
         finally:
             close = getattr(client, "aclose", None)
             if close is not None:
@@ -102,7 +125,7 @@ def baseline_cmd(
 
     report = asyncio.run(_run())
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(report.model_dump_json(indent=2), encoding="utf-8")  # type: ignore[union-attr]
+    out.write_text(report.model_dump_json(indent=2), encoding="utf-8")
     typer.echo(f"wrote baseline report for {checkpoint_id} to {out}")
 
 
