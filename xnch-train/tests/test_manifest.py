@@ -35,6 +35,10 @@ def test_signoff_hash_covers_body_and_secret() -> None:
     m3 = build_scrub_manifest({"api_key": 3}, "s2")
     assert m1.operator_signoff == m2.operator_signoff
     assert m1.operator_signoff != m3.operator_signoff
+    m4 = build_scrub_manifest({"api_key": 4}, "s1")
+    m5 = build_scrub_manifest({"api_key": 3, "card_number": 1}, "s1")
+    assert m1.operator_signoff != m4.operator_signoff
+    assert m1.operator_signoff != m5.operator_signoff
 
 
 def test_valid_dataset_passes(tmp_path: Path) -> None:
@@ -73,3 +77,4 @@ def test_wrong_pattern_set_version_invalidates(tmp_path: Path) -> None:
     result = validate_dataset(ds)
     assert not result.valid
     assert any("pattern_set_version" in r for r in result.reasons)
+    assert any(r.startswith("stale pattern_set_version") for r in result.reasons)
