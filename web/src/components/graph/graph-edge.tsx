@@ -102,7 +102,7 @@ export function GraphEdge({
               transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
               pointerEvents: "none",
             }}
-            className="rounded border border-amber-400/40 bg-card/95 px-1.5 py-0.5 font-mono text-[8px] font-semibold uppercase tracking-wider text-amber-200 glow-border-gold"
+            className="rounded border border-[var(--state-attention)] bg-card/95 px-1.5 py-0.5 font-mono text-[8px] font-semibold uppercase tracking-wider text-[var(--accent)] "
           >
             {relType}
           </div>

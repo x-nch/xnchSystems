@@ -27,7 +27,7 @@ export function EntityPanel({
   );
 
   return (
-    <HudCard glow="cyan" className="flex h-full flex-col">
+    <HudCard glow="attention" className="flex h-full flex-col">
       <HudCardHeader className="flex-row items-start justify-between gap-2">
         <div className="min-w-0">
           <HudCardTitle className="truncate normal-case tracking-normal text-foreground">
@@ -82,14 +82,14 @@ export function EntityPanel({
                   <li key={`${rel.from_id}-${rel.to_id}-${rel.rel_type}-${i}`}>
                     <button
                       onClick={() => onNavigate(otherId)}
-                      className="w-full rounded-lg border border-border/60 bg-card/50 px-2.5 py-2 text-left transition-colors hover:border-cyan-300/25 hover:bg-accent/5"
+                      className="w-full rounded-lg border border-border/60 bg-card/50 px-2.5 py-2 text-left transition-colors hover:border-[var(--state-attention)]/20 hover:bg-[var(--accent-subtle)]"
                     >
                       <div className="flex items-center gap-2">
                         <span className="font-mono text-[10px] text-amber-200">{rel.rel_type}</span>
                         <span className="text-[9px] text-muted-foreground">
                           {outbound ? "→" : "←"}
                         </span>
-                        <span className="truncate font-mono text-[10px] text-cyan-100">
+                        <span className="truncate font-mono text-[10px] text-foreground">
                           {otherName ?? otherId}
                         </span>
                         <span className="ml-auto font-mono text-[9px] text-muted-foreground">

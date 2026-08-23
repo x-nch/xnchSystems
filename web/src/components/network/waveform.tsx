@@ -6,6 +6,7 @@ export function Waveform({ className }: { className?: string }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -32,7 +33,7 @@ export function Waveform({ className }: { className?: string }) {
     const frame = () => {
       t += 0.04;
       ctx.clearRect(0, 0, w, h);
-      ctx.strokeStyle = "rgba(34, 211, 238, 0.35)";
+      ctx.strokeStyle = "rgba(242,244,247,0.22)";
       ctx.lineWidth = 1;
       ctx.beginPath();
       for (let x = 0; x < w; x++) {
@@ -54,5 +55,5 @@ export function Waveform({ className }: { className?: string }) {
     };
   }, []);
 
-  return <canvas ref={canvasRef} className={className} aria-hidden />;
+  return <canvas ref={canvasRef} className={className} data-motion="decorative" aria-hidden />;
 }

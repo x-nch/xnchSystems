@@ -62,8 +62,8 @@ function ToolTrace({ message }: { message: ChatMessage }) {
             className={cn(
               "rounded-lg border bg-card/90 px-3 py-2 backdrop-blur-sm",
               running
-                ? "glow-border border-cyan-300/20"
-                : "glow-border-gold border-amber-400/20"
+                ? " border-border"
+                : "-gold border-amber-400/20"
             )}
             title={call.result !== undefined ? JSON.stringify(call.result) : "running…"}
           >
@@ -73,7 +73,7 @@ function ToolTrace({ message }: { message: ChatMessage }) {
               ) : (
                 <Wrench className="h-3.5 w-3.5 text-amber-300" />
               )}
-              <span className="font-mono text-[11px] font-semibold text-cyan-100">
+              <span className="font-mono text-[11px] font-semibold text-foreground">
                 {call.tool}
               </span>
               <span className="ml-auto rounded border border-border/60 px-1.5 py-px font-mono text-[8px] uppercase tracking-wider text-muted-foreground">
