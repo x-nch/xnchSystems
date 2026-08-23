@@ -1,11 +1,10 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Clock3, Copy, FilePlus, Play, Pencil, Trash2, Workflow as WorkflowIcon, ShieldCheck, ChevronUp, ChevronDown, Plus } from "lucide-react";
+import { Clock3, Copy, FilePlus, Play, Pencil, Trash2, Workflow as WorkflowIcon, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -13,10 +12,10 @@ import { useWorkflowStore } from "@/lib/stores/workflow-store";
 import { useServerWorkflows, useServerRuns, useWorkflowMutations } from "@/lib/hooks/use-workflows-api";
 import { workflowDtoToLocal } from "@/lib/approvals/adapters";
 import { useConnectionState } from "@/components/layout/connection-status";
+import { WorkflowCanvasEditor } from "@/components/workflows/canvas/workflow-canvas-editor";
+import type { GraphCompileResult } from "@/lib/workflows/graph";
 import type { Workflow, WorkflowStep, WorkflowTrigger } from "@/lib/workflows/types";
 import type { HitlActionKind } from "@/lib/approvals/types";
-
-const ACTION_KINDS: HitlActionKind[] = ["write_file", "exec_tool", "send_email", "create_goal", "update_memory", "other"];
 
 function kindLabel(k: HitlActionKind): string {
   switch (k) {
@@ -102,10 +101,20 @@ export function WorkflowsView() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const editingWorkflow = useMemo(() => workflows.find((w) => w.id === editingId) ?? null, [workflows, editingId]);
   const draft = useDraftWorkflow(editingWorkflow);
+  const [compiled, setCompiled] = useState<GraphCompileResult>({ steps: [], errors: [] });
+  const saveSteps = compiled.steps;
   const [toast, setToast] = useState<string | null>(null);
 
-  const openCreate = () => { setEditingId(null); setBuilderOpen(true); };
-  const openEdit = (id: string) => { setEditingId(id); setBuilderOpen(true); };
+  const openCreate = () => {
+    setEditingId(null);
+    setCompiled({ steps: [], errors: [] });
+    setBuilderOpen(true);
+  };
+  const openEdit = (id: string) => {
+    setEditingId(id);
+    setCompiled({ steps: workflows.find((w) => w.id === id)?.steps ?? [], errors: [] });
+    setBuilderOpen(true);
+  };
   const setSelected = (id: string | null) => {
     const p = new URLSearchParams(searchParams.toString());
     if (id) p.set("selected", id); else p.delete("selected");
@@ -114,11 +123,12 @@ export function WorkflowsView() {
   };
 
   const handleSaveOnline = async () => {
+    if (!saveSteps) return;
     const trigger =
       draft.triggerKind === "schedule"
         ? { kind: "schedule" as const, cron: draft.cron.trim() || "0 9 * * 1" }
         : { kind: "manual" as const };
-    const steps = draft.steps.map((s) => ({
+    const steps = saveSteps.map((s) => ({
       id: s.id,
       kind: s.kind,
       summary: s.summary,
@@ -171,13 +181,12 @@ export function WorkflowsView() {
   const handleSave = () => {
     if (online) return void handleSaveOnline();
     const nameTrim = draft.name.trim();
-    if (!nameTrim) return;
-    if (draft.steps.length === 0) return;
+    if (!nameTrim || !saveSteps || saveSteps.length === 0) return;
     const trigger: WorkflowTrigger = draft.triggerKind === "schedule" ? { kind: "schedule", cron: draft.cron.trim() || "0 9 * * 1" } : { kind: "manual" };
     if (editingId) {
-      updateWorkflow(editingId, { name: nameTrim, description: draft.description.trim() || null, trigger, steps: draft.steps });
+      updateWorkflow(editingId, { name: nameTrim, description: draft.description.trim() || null, trigger, steps: saveSteps });
     } else {
-      const id = createWorkflow({ name: nameTrim, description: draft.description.trim() || null, trigger, steps: draft.steps });
+      const id = createWorkflow({ name: nameTrim, description: draft.description.trim() || null, trigger, steps: saveSteps });
       setSelected(id);
     }
     setBuilderOpen(false);
@@ -190,35 +199,6 @@ export function WorkflowsView() {
       setToast(`Workflow ran — ${res.approvalsCreated} approval${res.approvalsCreated===1?"":"s"} created · check Approvals`);
       setTimeout(() => setToast(null), 4000);
     }
-  };
-
-  const addStep = () => {
-    const step: WorkflowStep = {
-      id: `step_${Math.random().toString(36).slice(2,7)}`,
-      kind: "exec_tool",
-      summary: "New step",
-      target: null,
-      preview: null,
-      args: null,
-      requiresApproval: true,
-      description: null,
-    };
-    draft.setSteps([...draft.steps, step]);
-  };
-  const updateStep = (idx: number, patch: Partial<WorkflowStep>) => {
-    const next = [...draft.steps];
-    next[idx] = { ...next[idx], ...patch };
-    draft.setSteps(next);
-  };
-  const removeStep = (idx: number) => {
-    draft.setSteps(draft.steps.filter((_, i) => i !== idx));
-  };
-  const moveStep = (idx: number, dir: -1 | 1) => {
-    const j = idx + dir;
-    if (j < 0 || j >= draft.steps.length) return;
-    const next = [...draft.steps];
-    const tmp = next[idx]; next[idx] = next[j]; next[j] = tmp;
-    draft.setSteps(next);
   };
 
   return (
@@ -240,12 +220,10 @@ export function WorkflowsView() {
       </div>
 
       <div className="border-b border-[var(--state-attention)] bg-[var(--accent-subtle)] px-4 py-2 text-xs leading-5">
-        <span className="font-medium text-[var(--accent)]">Prototype</span>
-        <span className="text-muted-foreground"> — runs create approvals in </span>
+        <span className="font-medium text-[var(--accent)]">Builder</span>
+        <span className="text-muted-foreground"> — canvas editing saves locally this phase; runs create approvals in </span>
         <button onClick={() => router.push("/")} className="underline decoration-[var(--state-attention)] underline-offset-4 text-foreground hover:text-[var(--accent)]">Approvals</button>
-        <span className="text-muted-foreground">. Later swap store for real </span>
-        <span className="font-mono text-foreground">POST /workflows</span>
-        <span className="text-muted-foreground"> endpoints. Backend does not have workflows yet — this is UI-only per audit.</span>
+        <span className="text-muted-foreground">. Server-side validation re-checks every step on save.</span>
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col md:flex-row">
@@ -403,75 +381,52 @@ export function WorkflowsView() {
 
       {/* Builder */}
       <Dialog open={builderOpen} onOpenChange={setBuilderOpen}>
-        <DialogContent className="max-h-[86vh] overflow-hidden p-0 sm:max-w-[720px]">
+        <DialogContent className="flex max-h-[90vh] flex-col overflow-hidden p-0 sm:max-w-[1060px]">
           <DialogHeader>
             <DialogTitle>{editingId ? "Edit workflow" : "New workflow"}</DialogTitle>
-            <DialogDescription>Playbook that creates HITL-gated approvals on Run. No backend yet — local only.</DialogDescription>
+            <DialogDescription>
+              Drag nodes to arrange, connect top-to-bottom — the chain defines run order. Fully keyboard-operable: Tab to the canvas, Enter selects a node; add via palette, wire via Connections.
+            </DialogDescription>
           </DialogHeader>
-          <div className="max-h-[62vh] overflow-y-auto px-5 pb-2">
+          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pb-2">
             <div className="grid gap-4">
-              <label className="grid gap-1.5">
-                <span className="text-xs font-medium text-foreground">Name *</span>
-                <Input value={draft.name} onChange={(e)=>draft.setName(e.target.value)} placeholder="e.g. Weekly Digest" />
-              </label>
-              <label className="grid gap-1.5">
-                <span className="text-xs font-medium text-foreground">Description</span>
-                <Textarea value={draft.description} onChange={(e)=>draft.setDescription(e.target.value)} rows={2} placeholder="What this playbook does…" />
-              </label>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid gap-4 md:grid-cols-[1fr_1fr_auto]">
                 <label className="grid gap-1.5">
-                  <span className="text-xs font-medium text-foreground">Trigger</span>
-                  <select value={draft.triggerKind} onChange={(e)=>draft.setTriggerKind(e.target.value as WorkflowTrigger["kind"])} className="h-9 rounded-lg border border-border bg-input px-2 text-sm text-foreground">
-                    <option value="manual">manual</option>
-                    <option value="schedule">schedule</option>
-                  </select>
+                  <span className="text-xs font-medium text-foreground">Name *</span>
+                  <Input value={draft.name} onChange={(e)=>draft.setName(e.target.value)} placeholder="e.g. Weekly Digest" />
                 </label>
-                {draft.triggerKind==="schedule" && (
+                <label className="grid gap-1.5">
+                  <span className="text-xs font-medium text-foreground">Description</span>
+                  <Input value={draft.description} onChange={(e)=>draft.setDescription(e.target.value)} placeholder="What this playbook does…" />
+                </label>
+                <div className="flex items-end gap-2">
                   <label className="grid gap-1.5">
-                    <span className="text-xs font-medium text-foreground">Cron</span>
-                    <Input value={draft.cron} onChange={(e)=>draft.setCron(e.target.value)} placeholder="0 9 * * 1" className="font-mono" />
+                    <span className="text-xs font-medium text-foreground">Trigger</span>
+                    <select value={draft.triggerKind} onChange={(e)=>draft.setTriggerKind(e.target.value as WorkflowTrigger["kind"])} aria-label="Trigger kind" className="h-9 rounded-lg border border-border bg-input px-2 text-sm text-foreground">
+                      <option value="manual">manual</option>
+                      <option value="schedule">schedule</option>
+                    </select>
                   </label>
-                )}
-              </div>
-              <div>
-                <div className="mb-2 flex items-center justify-between">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Steps · {draft.steps.length}</span>
-                  <Button type="button" size="sm" variant="outline" onClick={addStep} className="h-7 gap-1"><Plus className="h-3 w-3" /> Add step</Button>
+                  {draft.triggerKind==="schedule" && (
+                    <label className="grid gap-1.5">
+                      <span className="sr-only">Cron expression</span>
+                      <Input value={draft.cron} onChange={(e)=>draft.setCron(e.target.value)} placeholder="0 9 * * 1" className="h-9 w-32 font-mono" aria-label="Cron expression" />
+                    </label>
+                  )}
                 </div>
-                {draft.steps.length===0 ? (
-                  <div className="rounded-lg border border-dashed border-border p-6 text-center text-xs text-muted-foreground">No steps yet — add one. Each gated step will create an approval on Run.</div>
-                ) : (
-                  <div className="space-y-2">
-                    {draft.steps.map((s, idx)=> (
-                      <div key={s.id} className="rounded-xl border border-border bg-card p-3">
-                        <div className="mb-2 flex items-center gap-2">
-                          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-muted font-mono text-xs text-muted-foreground">{idx+1}</span>
-                          <select value={s.kind} onChange={(e)=>updateStep(idx, {kind: e.target.value as HitlActionKind})} className="h-7 rounded-md border border-border bg-input px-2 text-xs">
-                            {ACTION_KINDS.map((k)=> <option key={k} value={k}>{k}</option>)}
-                          </select>
-                          <label className="ml-auto flex items-center gap-1.5 text-xs">
-                            <input type="checkbox" checked={s.requiresApproval} onChange={(e)=>updateStep(idx, {requiresApproval: e.target.checked})} className="rounded" />
-                            <span className={cn(s.requiresApproval ? "text-[var(--accent)]" : "text-muted-foreground")}>requires approval</span>
-                          </label>
-                          <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={()=>moveStep(idx,-1)} disabled={idx===0}><ChevronUp className="h-3.5 w-3.5" /></Button>
-                          <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={()=>moveStep(idx,1)} disabled={idx===draft.steps.length-1}><ChevronDown className="h-3.5 w-3.5" /></Button>
-                          <Button type="button" size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={()=>removeStep(idx)}><Trash2 className="h-3.5 w-3.5" /></Button>
-                        </div>
-                        <Input value={s.summary} onChange={(e)=>updateStep(idx, {summary: e.target.value})} placeholder="Summary — e.g. Write file reports/weekly.md" className="h-8 text-sm" />
-                        <div className="mt-2 grid grid-cols-2 gap-2">
-                          <Input value={s.target ?? ""} onChange={(e)=>updateStep(idx, {target: e.target.value || null})} placeholder="Target (path/tool/email)" className="h-8 font-mono text-xs" />
-                          <Input value={s.preview ?? ""} onChange={(e)=>updateStep(idx, {preview: e.target.value || null})} placeholder="Preview (optional)" className="h-8 font-mono text-xs" />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+              </div>
+              <div className="h-[52vh] min-h-[380px]">
+                <WorkflowCanvasEditor
+                  key={editingId ?? "new"}
+                  initialSteps={editingWorkflow?.steps ?? []}
+                  onChange={(result) => setCompiled(result)}
+                />
               </div>
             </div>
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={()=>setBuilderOpen(false)}>Cancel</Button>
-            <Button onClick={handleSave} disabled={!draft.name.trim() || draft.steps.length===0} className="btn-accent">Save workflow</Button>
+            <Button onClick={handleSave} disabled={!draft.name.trim() || !saveSteps || saveSteps.length===0} className="btn-accent">Save workflow</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

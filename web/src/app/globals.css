@@ -203,6 +203,29 @@ h1, h2, h3, .font-display {
   fill: rgba(12, 15, 20, 0.9) !important;
 }
 
+/* Workflow canvas editor — edges carry meaning (run order), so they must
+   stay ≥3:1 against --background (#7A869F ≈ 5.2:1). Scoped so the
+   read-only network/graph views keep their faint decorative strokes. */
+.workflow-canvas .react-flow__edge path {
+  stroke: #7a869f;
+  stroke-width: 1.5;
+}
+.workflow-canvas .react-flow__edge.selected path,
+.workflow-canvas .react-flow__edge:hover path {
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+.workflow-canvas .react-flow__connection {
+  stroke: #7a869f;
+  stroke-width: 1.5;
+}
+.workflow-canvas .react-flow__node {
+  cursor: grab;
+}
+.workflow-canvas .react-flow__node.dragging {
+  cursor: grabbing;
+}
+
 /* ── Deprecated Apex utilities — kept as no-ops to avoid breaking existing views
       until migrated. Do not use in new code. ── */
 @utility hud-grid {
