@@ -129,10 +129,47 @@ services:
       timeout: 10s
       retries: 3
 
+  # Scrapes xnch/nexi /metrics + node/DCGM exporters on both nodes.
+  # Config in ./prometheus/ (LAN-internal, unauthenticated — do not funnel).
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus:/etc/prometheus:ro
+      - prometheus-data:/prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.retention.time=30d
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+    networks:
+      - xnch-net
+
+  # Delivers firing alerts to xnch POST /admin/alerts (audit log + operator UI)
+  # and to any extra push channel configured node-side (see receivers-extra.example.yml).
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    container_name: alertmanager
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./alertmanager:/etc/alertmanager:ro
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+    networks:
+      - xnch-net
+
 volumes:
   redis-data:
   pgdata:
   langfuse-pgdata:
+  prometheus-data:
 
 networks:
   xnch-net:

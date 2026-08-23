@@ -1,0 +1,31 @@
+# Alertmanager — solo-operator delivery config.
+#
+# Default receiver posts every alert to xnch (/admin/alerts), which persists
+# them to the audit log and surfaces them in the operator UI. That path needs
+# no credentials and works out of the box.
+#
+# Want push notifications too? See receivers-extra.example.yml for ready-made
+# ntfy / Telegram blocks — enable whichever channel you actually check, and
+# keep any token/topic in that file OUT of git (it is not mounted by default).
+global:
+  resolve_timeout: 5m
+
+route:
+  receiver: xnch-webhook
+  group_by: ["alertname", "area"]
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+  routes:
+    # Security-critical: bypass the grouping wait entirely, nag often.
+    - matchers: [ 'severity="security"' ]
+      receiver: xnch-webhook
+      group_wait: 0s
+      repeat_interval: 30m
+
+receivers:
+  - name: xnch-webhook
+    webhook_configs:
+      - url: "http://host.docker.internal:8001/admin/alerts"
+        send_resolved: true
+        max_alerts: 0

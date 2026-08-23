@@ -1,0 +1,20 @@
+[Unit]
+Description=NVIDIA DCGM exporter (GPU VRAM/util/temp/power)
+After=docker.service nvidia-ready.service
+Requires=docker.service
+Wants=nvidia-ready.service
+
+[Service]
+Type=simple
+ExecStartPre=-/usr/bin/docker rm -f dcgm-exporter
+ExecStart=/usr/bin/docker run --rm --name dcgm-exporter \
+  --gpus all \
+  --cap-add SYS_ADMIN \
+  -p 9400:9400 \
+  nvcr.io/nvidia/k8s/dcgm-exporter:3.3.5-3.4.1-ubuntu22.04
+ExecStop=/usr/bin/docker stop dcgm-exporter
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,62 @@
+# Prometheus scrape config for the xnchSystems two-node stack.
+#
+# SECURITY: all targets are LAN-internal (192.168.50.0/24) and unauthenticated
+# by design. Never expose :9090/:9100/:9400 or any /metrics through the
+# Tailscale funnel. No credentials belong in this file; if a future exporter
+# needs auth, use an env-injected file_sd with credentials living on the node,
+# never committed.
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - /etc/prometheus/rules/*.yml
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ["host.docker.internal:9093"]
+
+scrape_configs:
+  # Control plane API (Node A host service)
+  - job_name: xnch-control-plane
+    static_configs:
+      - targets: ["host.docker.internal:8001"]
+        labels:
+          node: "a"
+
+  # Decision/inference engine (Node B host service)
+  - job_name: nexi-engine
+    static_configs:
+      - targets: ["192.168.50.2:8000"]
+        labels:
+          node: "b"
+
+  # Host metrics; on node-b the systemd collector exposes
+  # node_systemd_unit_state -> Ornith vs Vision Media Stack lock holder
+  - job_name: node-exporter-a
+    static_configs:
+      - targets: ["host.docker.internal:9100"]
+        labels:
+          node: "a"
+  - job_name: node-exporter-b
+    static_configs:
+      - targets: ["192.168.50.2:9100"]
+        labels:
+          node: "b"
+
+  # GPU hardware (VRAM used/util/temp/power) — DCGM official exporter
+  - job_name: dcgm-node-b
+    static_configs:
+      - targets: ["192.168.50.2:9400"]
+        labels:
+          node: "b"
+
+  # vLLM exposes native Prometheus metrics on its serving port; backs the
+  # inference-performance dashboard (throughput, queue depth, latency quantiles)
+  # and the node-b "vllm_up" signal.
+  - job_name: vllm-node-b
+    static_configs:
+      - targets: ["192.168.50.2:8082"]
+        labels:
+          node: "b"

@@ -1,0 +1,31 @@
+# OPTIONAL extra receivers for Alertmanager.
+#
+# This file is NOT mounted or loaded by default — it is a copy-paste source
+# for adding a push channel to alertmanager.yml. If you enable one:
+#   1. Edit alertmanager.yml on the node (infra/no-k3s/node-a/alertmanager/).
+#   2. Add the receiver + a route for it.
+#   3. NEVER git-commit the resulting file if it contains a token or a private
+#      topic name — treat both as credentials (see the prior plaintext-creds
+#      finding). Keep the edited file node-side only.
+#
+# ---------------------------------------------------------------- ntfy.sh ---
+# Solo-op friendly: install ntfy on your phone, subscribe to YOUR topic.
+# The topic name IS the credential — generate one: openssl rand -hex 12
+#   ntfy_topic=$(openssl rand -hex 12)
+#   curl -d "test" "https://ntfy.sh/$ntfy_topic"
+# receivers:
+#   - name: ntfy-push
+#     webhook_configs:
+#       - url: "https://ntfy.sh/<YOUR_RANDOM_TOPIC>"
+#         send_resolved: true
+# routes:
+#   - matchers: [ 'severity=~"security|critical"' ]
+#     receiver: ntfy-push
+#     group_wait: 0s
+#     repeat_interval: 30m
+#
+# -------------------------------------------------------------- telegram ----
+# Requires a bot token from @BotFather and your chat id — both are secrets;
+# keep them in an env-sourced file on Node A, never in git.
+# template: (from prometheus-alertmanager) not shown; use webhook bridge e.g.
+#   https://github.com/inCaller/prometheus_bot — point webhook at it.
