@@ -21,7 +21,9 @@ scrape_configs:
   # Control plane API (Node A host service)
   - job_name: xnch-control-plane
     static_configs:
-      - targets: ["host.docker.internal:8001"]
+      # host LAN IP, not host.docker.internal: the bridge source would fall
+      # outside XNCH_METRICS_ALLOW_CIDRS and get 403'd.
+      - targets: ["192.168.50.1:8001"]
         labels:
           node: "a"
 
