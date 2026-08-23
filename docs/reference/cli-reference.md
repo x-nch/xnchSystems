@@ -69,7 +69,7 @@ Per-subcommand flags are visible via `--help`. Full walkthrough:
 | `scripts/install-voice-models.sh` | download whisper/piper models |
 | `scripts/test-nexi-mcp.sh` | smoke the nexi MCP tool path |
 | `scripts/audit-memory-overlap.py` | memory overlap audit report |
-| `scripts/openevolve_persona_trial.sh` | persona experiment harness |
+| `scripts/openevolve_persona_trial.sh` | persona experiment harness (scaffold only — not run, not a dependency; see promotion contract in script header) |
 | `scripts/agent-gateway/` | standalone agent-gateway mini-package (own pyproject) |
 
 Infra boot scripts (on nodes): `start-node-a.sh`, `start-node-b.sh`,

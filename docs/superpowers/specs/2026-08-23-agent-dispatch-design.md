@@ -93,3 +93,31 @@ card UX. Writes go through the existing signed `/api/gateway` proxy.
   ("create hello.txt containing hi") end-to-end and verify artifact + DONE.
 - E2E acceptance: Day-1 job-search task dispatched from muse, artifact lands in
   `~/xnch-agents/<id>/`, episode recorded, goal step-outcome posted manually after review.
+
+## v1 addendum — scheduled goal-step dispatch (implemented)
+
+v0 listed scheduled auto-dispatch as a non-goal. v1 added it **without removing
+the human gate**: the cron job (`xnch/jobs/goal_dispatch.py`, wired in
+`xnch/main.py` when `XNCH_GOAL_DISPATCH_ENABLED=true`) does not dispatch an agent
+run directly. Per tick it:
+
+1. Loads the scoped goal (`XNCH_GOAL_DISPATCH_GOAL_ID`) and checks
+   PENDING/ACTIVE status and `max_steps`.
+2. Skips if an approval for this goal is already pending (one in flight).
+3. Builds the step prompt from `simulation_plan[steps_completed]`
+   (`build_step_prompt`).
+4. Files a `goal_step` APPROVAL in the workflow store — this approval IS the gate.
+5. On human approve (`POST /workflows/approvals/{id}` with `decision=approve`,
+   `xnch/routes/workflows.py`), `spawn_agent_run_for_approval` creates the
+   `agent_run`; the Mac runner claims and executes it; the outcome posts back via
+   `apply_outcome_backpressure`, which completes the goal step.
+
+**Gate semantics (resolves the "allowlist" question):** there is no step-kind
+allowlist. Every goal step requires an explicit per-step human approval before
+any agent run is created. Safety is enforced by construction (approval-first),
+not by classifying steps as low-risk. There is intentionally no auto-approve
+path for `goal_step` approvals.
+
+Env flags: `XNCH_GOAL_DISPATCH_ENABLED` (default false),
+`XNCH_GOAL_DISPATCH_CRON_MINUTE` (default 30), `XNCH_GOAL_DISPATCH_GOAL_ID`
+(single-goal scope).
