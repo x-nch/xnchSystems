@@ -23,6 +23,63 @@ from urllib import request as urlrequest
 
 _DEFAULT_URL = "http://192.168.1.10:8001"
 
+# Provider id that must exist in the global opencode config (LiteLLM proxy on
+# node-a). Dispatched runs are policy-scoped to this provider only.
+ALLOWED_PROVIDER_ID = "xnch-litellm"
+
+# Child-process env allowlist: the spawned coding agent never sees the launchd
+# service environment (secrets included). HOME is required so opencode resolves
+# its own config/auth under ~/.config and ~/.local/share.
+_ENV_ALLOWLIST = ("PATH", "HOME", "USER", "LOGNAME", "TMPDIR", "SHELL", "LANG")
+
+# Per-workspace project config: deny every LLM provider except the local one.
+# Project policies can only restrict further (global policies win conflicts);
+# global carries no policies, so this scopes dispatched runs without touching
+# interactive sessions elsewhere on this machine. The sandbox plugin is also
+# loaded per-workspace only (U3): Seatbelt-wraps any bash call in dispatched
+# runs; interactive sessions on this machine are unaffected.
+_WORKSPACE_OPENCODE_CONFIG = {
+    "$schema": "https://opencode.ai/config.json",
+    "plugin": ["opencode-sandbox"],
+    "experimental": {
+        "policies": [
+            {"effect": "deny", "action": "provider.use", "resource": "*"},
+            {"effect": "allow", "action": "provider.use", "resource": ALLOWED_PROVIDER_ID},
+        ]
+    },
+}
+
+# Strict inline sandbox config for dispatched runs (fail-open plugin, so this
+# is defense-in-depth beneath the agent-level bash deny, not a replacement).
+_SANDBOX_CONFIG = json.dumps(
+    {
+        "filesystem": {
+            "denyRead": [
+                "~/.ssh", "~/.gnupg", "~/.aws/credentials", "~/.azure",
+                "~/.config/gcloud", "~/.config/gh", "~/.kube",
+                "~/.docker/config.json", "~/.npmrc", "~/.netrc", "~/.env",
+            ],
+            "allowWrite": [".", "/tmp"],
+        },
+        "network": {
+            "allowedDomains": [
+                "registry.npmjs.org", "*.npmjs.org", "pypi.org",
+                "files.pythonhosted.org", "github.com", "*.github.com",
+            ]
+        },
+    }
+)
+
+
+def _spawn_env(env: dict[str, str] | None = None) -> dict[str, str]:
+    source = dict(os.environ if env is None else env)
+    out = {key: source[key] for key in _ENV_ALLOWLIST if key in source}
+    # launchd may provide neither; the child needs both to find its binary and
+    # resolve opencode's config/auth under HOME.
+    out.setdefault("HOME", os.path.expanduser("~"))
+    out.setdefault("PATH", "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin")
+    return out
+
 
 @dataclass(frozen=True)
 class RunnerConfig:
@@ -40,12 +97,20 @@ class RunnerConfig:
         secret = e.get("XNCH_GATEWAY_SECRET", "")
         if not secret:
             raise SystemExit("XNCH_GATEWAY_SECRET is required")
+        agent_args = e.get("XNCH_AGENT_ARGS", "run")
+        allow_unscoped = e.get("XNCH_ALLOW_UNSCOPED_AGENT", "") == "1"
+        if "--agent" not in shlex.split(agent_args) and not allow_unscoped:
+            raise SystemExit(
+                "refusing unscoped dispatch: XNCH_AGENT_ARGS must pin the "
+                "restricted agent (e.g. \"run --agent xnch-dispatch\"); set "
+                "XNCH_ALLOW_UNSCOPED_AGENT=1 to override deliberately"
+            )
         return cls(
             gateway_url=e.get("XNCH_GATEWAY_URL", _DEFAULT_URL).rstrip("/"),
             gateway_secret=secret,
             runner_id=e.get("XNCH_RUNNER_ID", os.uname().nodename),
             agent_command=e.get("XNCH_AGENT_COMMAND", "opencode"),
-            agent_args=e.get("XNCH_AGENT_ARGS", "run"),
+            agent_args=agent_args,
             timeout_s=int(e.get("XNCH_RUNNER_TIMEOUT_S", "1800")),
             poll_s=int(e.get("XNCH_RUNNER_POLL_S", "5")),
         )
@@ -111,12 +176,17 @@ def handle_once(cfg: RunnerConfig, spawn=None) -> str:
     outcome_url = f"{cfg.gateway_url}/agents/runs/{run_id}/outcome"
     try:
         workspace.mkdir(parents=True, exist_ok=True)
+        # Scoped provider firewall for this run (see _WORKSPACE_OPENCODE_CONFIG).
+        (workspace / "opencode.json").write_text(
+            json.dumps(_WORKSPACE_OPENCODE_CONFIG), encoding="utf-8"
+        )
         proc = spawn(
             build_command(cfg, run["prompt"]),
             cwd=workspace,
             capture_output=True,
             text=True,
             timeout=cfg.timeout_s,
+            env={**_spawn_env(), "OPENCODE_SANDBOX_CONFIG": _SANDBOX_CONFIG},
         )
         ok = proc.returncode == 0
         answer = (proc.stdout or "").strip() if ok else ""

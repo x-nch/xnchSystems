@@ -38,7 +38,9 @@ app = FastAPI(
 
 def _verify_api_key(authorization: str | None = Header(default=None)) -> None:
     if not settings.api_key:
-        return
+        # Fail CLOSED: this service spawns coding-agent CLIs; an unauthenticated
+        # spawn surface must be a loud misconfiguration, never a default.
+        raise HTTPException(status_code=503, detail="api_key not configured")
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Missing bearer token")
     token = authorization.removeprefix("Bearer ").strip()

@@ -1,0 +1,21 @@
+#!/bin/zsh
+# Pre-commit secret scan (2026-08-24 audit U1).
+# Wired via `git config core.hooksPath scripts/security/hooks` in the parent
+# repo and both submodules. Fails the commit on detected secrets in staged
+# changes; warns (but allows) if gitleaks itself is missing.
+
+if ! command -v gitleaks >/dev/null 2>&1; then
+  print -u2 "WARNING: gitleaks not installed — skipping pre-commit secret scan."
+  print -u2 "         Install with: brew install gitleaks"
+  exit 0
+fi
+
+gitleaks git --pre-commit --staged --no-banner --redact -v
+rc=$?
+if (( rc != 0 )); then
+  print -u2 ""
+  print -u2 "COMMIT BLOCKED: gitleaks found secrets in staged changes."
+  print -u2 "Remove the secret(s), or if this is a false positive, add an"
+  print -u2 "allowlist entry to .gitleaksignore and retry."
+fi
+exit $rc
