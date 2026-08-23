@@ -251,7 +251,7 @@ export function GraphCanvas({
         <Controls
           showInteractive={false}
           position="bottom-right"
-          className="!border-cyan-300/15 !bg-card/80 !backdrop-blur-md"
+          className="!border-border !bg-card/80 !backdrop-blur-md"
         />
       </ReactFlow>
     </div>

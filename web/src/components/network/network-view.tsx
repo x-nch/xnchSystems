@@ -176,24 +176,25 @@ export function NetworkView() {
         source: "core",
         target: s.id,
         type: "glow",
-        data: { active: status.active || status.online },
+        data: { active: status.active, online: status.online },
       };
     });
 
     return { nodes: [coreNode, ...satellites], edges: edgeList };
   }, [health.isError, health.data, statuses]);
 
+  const isOnline = !health.isError && health.data?.status === "ok";
   return (
-    <div className="relative h-full w-full overflow-hidden bg-[#020617]">
-      <div
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background:
-            "radial-gradient(600px 500px at 50% 48%, rgba(34,211,238,0.06), transparent 70%)",
-        }}
-        aria-hidden
-      />
-
+    <div className="relative h-full w-full overflow-hidden bg-background">
+      {isOnline && (
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background: "radial-gradient(520px 420px at 50% 46%, rgba(200,255,0,0.05), transparent 70%)",
+          }}
+          aria-hidden
+        />
+      )}
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -216,12 +217,10 @@ export function NetworkView() {
           variant={BackgroundVariant.Dots}
           gap={28}
           size={1}
-          color="rgba(34, 211, 238, 0.1)"
+          color="rgba(242, 244, 247, 0.06)"
         />
         <Controls showInteractive={false} position="top-right" />
       </ReactFlow>
-
-      <div className="pointer-events-none absolute inset-0 vignette" aria-hidden />
 
       <NetworkHud
         health={health.data}

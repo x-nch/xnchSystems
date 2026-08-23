@@ -14,16 +14,16 @@ export function useConnectionState(): ConnectionState {
 }
 
 const dotClass: Record<ConnectionState, string> = {
-  online: "bg-success shadow-[0_0_8px] shadow-success/50",
-  degraded: "bg-warning shadow-[0_0_8px] shadow-warning/50",
-  offline: "bg-destructive shadow-[0_0_8px] shadow-destructive/50",
+  online: "bg-[var(--state-healthy)]",
+  degraded: "bg-[var(--state-degraded)]",
+  offline: "bg-[var(--state-offline)]",
   checking: "bg-muted-foreground animate-pulse",
 };
 
 const labelClass: Record<ConnectionState, string> = {
-  online: "text-emerald-400",
-  degraded: "text-amber-400",
-  offline: "text-red-400",
+  online: "text-emerald-300",
+  degraded: "text-amber-300",
+  offline: "text-muted-foreground",
   checking: "text-muted-foreground",
 };
 

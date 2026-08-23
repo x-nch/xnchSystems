@@ -33,15 +33,17 @@ export interface ButtonProps
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = "default", size = "md", asChild = false, ...props }, ref) => {
     const Comp = asChild ? Slot : "button";
+    const press = variant === "default" ? "active:scale-[0.97] active:duration-90" : "active:scale-[0.98]";
     return (
       <Comp
         ref={ref}
         className={cn(
-          "inline-flex items-center justify-center font-medium transition-colors",
+          "inline-flex items-center justify-center font-medium transition-all",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
           "disabled:pointer-events-none disabled:opacity-50 select-none whitespace-nowrap",
           variantClasses[variant],
           sizeClasses[size],
+          press,
           className
         )}
         {...props}

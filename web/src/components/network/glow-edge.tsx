@@ -4,6 +4,7 @@ import { BaseEdge, getStraightPath, type EdgeProps } from "@xyflow/react";
 
 type GlowEdgeData = {
   active?: boolean;
+  online?: boolean;
 };
 
 export function GlowEdge({
@@ -18,36 +19,24 @@ export function GlowEdge({
   const [path] = getStraightPath({ sourceX, sourceY, targetX, targetY });
   const edgeData = data as GlowEdgeData | undefined;
   const active = edgeData?.active ?? false;
-  const stroke = active ? "rgba(245, 197, 24, 0.65)" : "rgba(34, 211, 238, 0.32)";
-  const glow = active ? "rgba(245, 197, 24, 0.5)" : "rgba(34, 211, 238, 0.45)";
+  const online = edgeData?.online ?? active;
+
+  // Solid, state-carrying stroke — no blur glow. Offline is dashed muted grey.
+  const stroke = active ? "#7A9E0A" : online ? "#2E8B6A" : "#5A6780";
+  const width = active ? 1.6 : 1;
+  const dash = online ? undefined : "6 4";
 
   return (
-    <>
-      <BaseEdge
-        id={`${id}-glow`}
-        path={path}
-        style={{
-          ...style,
-          stroke: glow,
-          strokeWidth: active ? 4 : 3,
-          opacity: 0.35,
-          filter: "blur(3px)",
-        }}
-      />
-      <BaseEdge
-        id={id}
-        path={path}
-        style={{
-          ...style,
-          stroke,
-          strokeWidth: active ? 1.5 : 1,
-        }}
-      />
-      {active && (
-        <circle r="3" fill="#f5c518">
-          <animateMotion dur="2.4s" repeatCount="indefinite" path={path} />
-        </circle>
-      )}
-    </>
+    <BaseEdge
+      id={id}
+      path={path}
+      style={{
+        ...style,
+        stroke,
+        strokeWidth: width,
+        strokeDasharray: dash,
+        opacity: online ? 0.9 : 0.6,
+      }}
+    />
   );
 }
