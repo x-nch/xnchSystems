@@ -11,11 +11,13 @@ export interface AgentRunDTO {
   exit_code: number | null;
   output_path: string | null;
   error: string | null;
+  result_text: string | null;
   created_at: number;
   updated_at: number;
 }
 
 export const agentsApi = {
+  getRun: (id: string) => apiRequest<AgentRunDTO>(`/agents/runs/${id}`),
   listRuns: (status?: string) =>
     apiRequest<AgentRunDTO[]>(
       `/agents/runs${status ? `?status=${encodeURIComponent(status)}` : ""}`

@@ -78,10 +78,16 @@ def test_handle_once_done_path(fake_xnch, tmp_path):
         gateway_url=url, gateway_secret="s", runner_id="mac-runner",
         agent_command="true", agent_args="", timeout_s=60, poll_s=1,
     )
-    result = R.handle_once(cfg)
+    class FakeProc:
+        returncode = 0
+        stdout = "final agent answer text"
+        stderr = ""
+
+    result = R.handle_once(cfg, spawn=lambda *a, **k: FakeProc())
     assert result == "done"
-    assert seen["outcomes"] and seen["outcomes"][0]["outcome_status"] == "DONE"
-    assert seen["outcomes"][0]["exit_code"] == 0
+    out = seen["outcomes"][0]
+    assert out["outcome_status"] == "DONE" and out["exit_code"] == 0
+    assert out["result_text"] == "final agent answer text"  # shipped to xnch
     assert seen["claims"][0]["runner_id"] == "mac-runner"
 
 

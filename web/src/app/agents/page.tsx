@@ -20,6 +20,7 @@ export default function AgentsPage() {
   const [workspace, setWorkspace] = useState("");
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     try {
@@ -111,7 +112,11 @@ export default function AgentsPage() {
           </p>
         ) : (
           runs.map((r) => (
-            <article key={r.id} className="rounded-xl border border-border bg-card p-3">
+            <article
+              key={r.id}
+              onClick={() => setSelectedId(selectedId === r.id ? null : r.id)}
+              className={`cursor-pointer rounded-xl border bg-card p-3 transition-colors ${selectedId === r.id ? "border-[var(--accent)]" : "border-border hover:border-[var(--accent)]/50"}`}
+            >
               <div className="flex items-center justify-between gap-2">
                 <span className={`font-mono text-xs font-semibold ${STATUS_TONE[r.status]}`}>
                   {r.status}
@@ -130,6 +135,27 @@ export default function AgentsPage() {
                 <p className="mt-1 line-clamp-2 rounded bg-red-950/40 p-1.5 font-mono text-[10px] text-red-300">
                   {r.error}
                 </p>
+              )}
+              {selectedId === r.id && (
+                <div className="mt-3 space-y-2 border-t border-border pt-2">
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Prompt</p>
+                    <pre className="mt-1 whitespace-pre-wrap break-words rounded bg-input/60 p-2 font-mono text-xs text-foreground">{r.prompt}</pre>
+                  </div>
+                  {r.result_text && (
+                    <div>
+                      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                        Agent response · {r.output_path?.split("/").pop()}
+                      </p>
+                      <pre className="mt-1 max-h-96 overflow-y-auto whitespace-pre-wrap break-words rounded bg-input/60 p-2 font-mono text-xs text-foreground">{r.result_text}</pre>
+                    </div>
+                  )}
+                  {!r.result_text && r.status === "DONE" && (
+                    <p className="text-[10px] text-muted-foreground">
+                      No captured response (older run). Artifact on disk: {r.output_path}
+                    </p>
+                  )}
+                </div>
               )}
             </article>
           ))
