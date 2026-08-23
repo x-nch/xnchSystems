@@ -25,7 +25,9 @@ class Settings(BaseSettings):
     opencode_cli: str = "opencode"
     cursor_cli: str = "agent"
 
-    opencode_auto_approve: bool = True
+    # Deny-by-default (A3/core-F1): headless auto-approval must be a
+    # deliberate opt-in, never a silent default.
+    opencode_auto_approve: bool = False
 
 
 settings = Settings()

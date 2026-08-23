@@ -5,12 +5,25 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import os
 from abc import ABC, abstractmethod
 from collections.abc import AsyncIterator
 from dataclasses import dataclass, field
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
+
+# Spawned coding-agent CLIs get an allowlisted environment — never the full
+# gateway process env (2026-08-24 audit: credential re-scoping, A3/core-F1).
+_ENV_ALLOWLIST = ("PATH", "HOME", "USER", "LOGNAME", "TMPDIR", "SHELL", "LANG")
+
+
+def child_env(env: dict[str, str] | None = None) -> dict[str, str]:
+    source = dict(os.environ if env is None else env)
+    out = {key: source[key] for key in _ENV_ALLOWLIST if key in source}
+    out.setdefault("HOME", os.path.expanduser("~"))
+    out.setdefault("PATH", "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin")
+    return out
 
 
 @dataclass
@@ -65,6 +78,7 @@ class AgentAdapter(ABC):
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
             cwd=cwd,
+            env=child_env(),
         )
         try:
             stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=timeout_seconds)
@@ -109,6 +123,7 @@ class AgentAdapter(ABC):
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
             cwd=cwd,
+            env=child_env(),
         )
 
         stderr_buf = bytearray()

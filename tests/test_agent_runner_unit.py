@@ -103,6 +103,96 @@ def test_handle_once_empty_204(fake_xnch):
     assert R.handle_once(cfg) == "empty"
 
 
+def test_spawn_env_allowlist_drops_secrets():
+    """Only a fixed allowlist may reach the spawned coding-agent process."""
+    dirty = {
+        "PATH": "/usr/bin:/bin",
+        "HOME": "/Users/xnch",
+        "USER": "xnch",
+        "XNCH_GATEWAY_SECRET": "super-secret-value",
+        "AWS_SECRET_ACCESS_KEY": "leak-me",
+        "HTTP_PROXY": "http://evil:3128",
+    }
+    env = R._spawn_env(dirty)
+    assert env["PATH"] == "/usr/bin:/bin" and env["HOME"] == "/Users/xnch"
+    assert "XNCH_GATEWAY_SECRET" not in env
+    assert "AWS_SECRET_ACCESS_KEY" not in env
+    assert "HTTP_PROXY" not in env
+
+
+def test_spawn_env_injects_required_defaults():
+    env = R._spawn_env({})
+    assert env.get("HOME"), "child needs HOME for opencode auth/config paths"
+    assert env.get("PATH"), "child needs PATH"
+
+
+def test_handle_once_writes_workspace_provider_policy(fake_xnch, tmp_path):
+    """Each dispatch workspace gets a project opencode.json denying all LLM
+    providers except the local LiteLLM one (scoped provider firewall)."""
+    url, seen = fake_xnch
+    cfg = R.RunnerConfig(
+        gateway_url=url, gateway_secret="s", runner_id="r",
+        agent_command="true", agent_args="run --agent xnch-dispatch",
+        timeout_s=5, poll_s=1,
+    )
+    R.handle_once(cfg)
+    ws_cfg = json.loads((tmp_path / "ws" / "opencode.json").read_text())
+    policies = ws_cfg["experimental"]["policies"]
+    deny_any = [p for p in policies if p["effect"] == "deny" and p["resource"] == "*"]
+    allow_local = [p for p in policies if p["effect"] == "allow" and p["resource"] == R.ALLOWED_PROVIDER_ID]
+    assert deny_any and allow_local
+
+
+def test_handle_once_scopes_sandbox_plugin_to_workspace(fake_xnch, tmp_path, monkeypatch):
+    """U3: the Seatbelt sandbox plugin is loaded ONLY inside dispatch
+    workspaces (project-level plugin entry + strict inline config); spawned
+    process receives OPENCODE_SANDBOX_CONFIG; interactive sessions untouched."""
+    url, seen = fake_xnch
+    cfg = R.RunnerConfig(
+        gateway_url=url, gateway_secret="s", runner_id="r",
+        agent_command="/usr/bin/env", agent_args="run --agent xnch-dispatch",
+        timeout_s=5, poll_s=1,
+    )
+    seen_env: dict = {}
+
+    def spy(cmd, **kwargs):
+        seen_env.update(kwargs.get("env") or {})
+        # openocode isn't under test here; emulate success with no output path
+        class P:
+            returncode = 0
+            stdout = ""
+            stderr = ""
+        return P()
+
+    R.handle_once(cfg, spawn=spy)
+    assert "OPENCODE_SANDBOX_CONFIG" in seen_env, "runner must pass sandbox config"
+    import json as _json
+    sb = _json.loads(seen_env["OPENCODE_SANDBOX_CONFIG"])
+    assert "~/.ssh" in sb["filesystem"]["denyRead"]
+    ws_cfg = _json.loads((tmp_path / "ws" / "opencode.json").read_text())
+    assert "opencode-sandbox" in ws_cfg.get("plugin", [])
+
+
+def test_config_rejects_unscoped_agent_command():
+    """Fail-fast at config time if the spawned command would not pin the
+    restricted agent (deny-by-default scope guard)."""
+    import pytest
+    with pytest.raises(SystemExit, match="agent"):
+        R.RunnerConfig.from_env({
+            "XNCH_GATEWAY_SECRET": "s",
+            "XNCH_AGENT_COMMAND": "opencode",
+            "XNCH_AGENT_ARGS": "run",  # no --agent -> unscoped
+        })
+    # Explicit override escape hatch is honored.
+    cfg = R.RunnerConfig.from_env({
+        "XNCH_GATEWAY_SECRET": "s",
+        "XNCH_AGENT_COMMAND": "opencode",
+        "XNCH_AGENT_ARGS": "run",
+        "XNCH_ALLOW_UNSCOPED_AGENT": "1",
+    })
+    assert cfg.agent_args == "run"
+
+
 def test_handle_once_failure_reports_error(fake_xnch):
     url, seen = fake_xnch
     cfg = R.RunnerConfig(

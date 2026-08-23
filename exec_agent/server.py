@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import secrets
 from pathlib import Path
 from typing import Annotated, Any
 
@@ -35,7 +36,11 @@ def _verify_token(
     token: Annotated[str | None, Header(alias="X-Internal-Token")] = None,
 ) -> None:
     expected = xnch_settings.exec_agent_token
-    if expected and token != expected:
+    if not expected:
+        # Fail CLOSED: an unconfigured token on a 0.0.0.0-bound exec service
+        # must be a loud misconfiguration, never silent open access.
+        raise HTTPException(status_code=503, detail="exec-agent token not configured")
+    if not token or not secrets.compare_digest(token, expected):
         raise HTTPException(status_code=401, detail="invalid internal token")
 
 
