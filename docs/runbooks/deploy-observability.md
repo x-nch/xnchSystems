@@ -88,8 +88,12 @@ If it is down for any reason: [gpu window protocol](gpu-window.md) before touchi
 ~/xnchSystems/scripts/observability-smoke.sh        # exit 0 = series present,
                                                     # targets up, rules loaded,
                                                     # alertmanager healthy
-docker run --rm -v $PWD/infra/no-k3s/node-a/prometheus:/etc/prometheus \
-  prom/prometheus:v2.53.0 promtool check rules /etc/prometheus/rules/alerts.yml
+# $PWD must be the repo root on node-a (absolute path avoids surprises), and the
+# v2.53 image entrypoint is `prometheus` — override to reach promtool:
+docker run --rm --entrypoint=promtool \
+  -v /home/x-nch/xnchSystems/infra/no-k3s/node-a/prometheus:/etc/prometheus \
+  prom/prometheus:v2.53.0 check rules /etc/prometheus/rules/alerts.yml
+# SUCCESS: 13 rules found
 curl -s localhost:8001/observability/summary | jq '.available'   # true
 ```
 
