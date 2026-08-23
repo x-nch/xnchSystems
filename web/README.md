@@ -7,15 +7,16 @@ exclusively through a same-origin proxy route — no CORS, SSE-safe.
 Operating context: [`docs/architecture/workflows-hitl.md`](../docs/architecture/workflows-hitl.md) ·
 [`docs/guides/operate-hitl.md`](../docs/guides/operate-hitl.md).
 
-## Run
+## Run (on this Mac)
 
 ```bash
 npm install
-npm run dev        # local dev server (default port 3000)
-npm run build      # production build
-npm run start
-npm run lint
+npm run dev        # development server on :3000
+# or for daily use:
+npm run build && npm run start
 ```
+
+Port 3000 is free here — Langfuse's :3000 lives on gate7, not on the Mac.
 
 ## Configuration
 
@@ -27,8 +28,8 @@ npm run lint
 ## Gateway proxy (`src/app/api/gateway/[...path]/route.ts`)
 
 - Forwards to `<XNCH_GATEWAY_URL>/<path>` stripping hop-by-hop headers;
-  search params preserved; SSE streams pass through (`maxDuration 300`,
-  sized for Vercel Pro).
+  search params preserved; SSE streams pass through. (`maxDuration 300` is a
+  serverless-host knob — inert when self-hosted on the Mac.)
 - **Hybrid-B**: non-GET requests under `workflows/` or `approvals/` get a fresh
   `X-Gateway-Token` minted from the secret — the browser never sees it.
   Token format: `<expiry_epoch>.<hmac_sha256(secret, expiry)>`, TTL 300 s.

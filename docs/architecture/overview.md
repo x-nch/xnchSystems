@@ -17,7 +17,7 @@ on two owned physical machines ([topology](topology.md)).
 | **nexi decision engine** | Node B, :8000 (`nexi/` submodule) | 10-step decision pipeline, character/persona, proactivity, goal driver, workflow executor |
 | **Workflows + HITL** | xnch API + muse UI | workflow definitions/runs/steps, unified approvals queue, claim-lease executor |
 | **xnch-train** | any (datasets on Node A FS) | extract→scrub→dataset→eval harness→dry-run promotion gate |
-| **muse web app** | `web/` (Next.js, Vercel or dev host) | approvals queue, workflow builder, chat/memory/graph/system views, gateway proxy |
+| **muse web app** | `web/` (Next.js, runs on the operator's Mac) | approvals queue, workflow builder, chat/memory/graph/system views, gateway proxy |
 | **infra** | `infra/no-k3s/` | two-node systemd/compose regime, LiteLLM routing, Langfuse, SearXNG |
 
 Supporting packages: `cli/` (voice-capable CLI client), `xnch_mcp/` (MCP bridge +
