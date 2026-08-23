@@ -11,14 +11,11 @@ export type SubsystemId =
 
 type UiState = {
   activeSubsystems: Set<SubsystemId>;
-  presenceTransitioning: boolean;
   setSubsystemActive: (id: SubsystemId, active: boolean) => void;
-  setPresenceTransitioning: (v: boolean) => void;
 };
 
 export const useUiStore = create<UiState>((set) => ({
   activeSubsystems: new Set(),
-  presenceTransitioning: false,
   setSubsystemActive: (id, active) =>
     set((s) => {
       const next = new Set(s.activeSubsystems);
@@ -26,5 +23,4 @@ export const useUiStore = create<UiState>((set) => ({
       else next.delete(id);
       return { activeSubsystems: next };
     }),
-  setPresenceTransitioning: (presenceTransitioning) => ({ presenceTransitioning }),
 }));
