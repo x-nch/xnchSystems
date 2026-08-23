@@ -138,5 +138,6 @@ export const workflowEndpoints = {
     apiRequest<ApprovalDTO>(`/approvals/${id}/decide`, {
       method: "POST",
       body,
+      headers: { "Idempotency-Key": crypto.randomUUID() },
     }),
 };
