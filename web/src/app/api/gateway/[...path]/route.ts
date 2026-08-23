@@ -11,7 +11,7 @@ export const maxDuration = 300;
  * writes to /workflows/* and /approvals/* carry a short-lived HMAC token so a
  * client-forged role header alone cannot decide approvals.
  */
-const GATED_PREFIXES = ["workflows", "approvals"];
+const GATED_PREFIXES = ["workflows", "approvals", "agents"];
 
 function mintGatewayToken(secret: string, ttlS = 300): string {
   const expiry = String(Math.floor(Date.now() / 1000) + ttlS);

@@ -14,6 +14,7 @@ import {
   Trash2,
   ShieldCheck,
   Workflow,
+  Bot,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,7 @@ import { useApprovalStore } from "@/lib/stores/approval-store";
 const NAV = [
   { href: "/", label: "Approvals", icon: ShieldCheck },
   { href: "/workflows", label: "Workflows", icon: Workflow },
+  { href: "/agents", label: "Agents", icon: Bot },
   { href: "/network", label: "Network", icon: Orbit },
   { href: "/chat", label: "Chat", icon: MessageSquare },
   { href: "/memory", label: "Memory", icon: Database },
