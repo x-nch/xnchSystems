@@ -1,0 +1,252 @@
+/* ─────────────────────────────────────────────────────────────
+   MARKETING ONLY — imported exclusively by src/app/(marketing)/layout.tsx
+   Cybernetic-noise treatment layered on the shared base palette.
+   Every class is prefixed `mkt-`. Must never reach operator surfaces.
+   ───────────────────────────────────────────────────────────── */
+
+.mkt-root {
+  /* Noise treatment tokens — see docs/superpowers/specs/2026-08-24-marketing-cybernetic-noise-design.md */
+  --mkt-noise-opacity: 0.05;
+  --mkt-noise-tile: 180px 180px;
+  --mkt-grain-blend: overlay;
+  --mkt-scanline-opacity: 0.04;
+  --mkt-scanline-period: 3px;
+  --mkt-vignette-strength: 0.5;
+  --mkt-sweep-duration: 9s;
+  --mkt-glitch-duration: 280ms;
+
+  /* Marketing-scoped text colors (may diverge from operator tokens if
+     contrast-over-texture math requires it — see contrast.test.ts) */
+  --mkt-fg: #f2f4f7;
+  --mkt-muted: #8b96ad;
+  --mkt-accent: #c8ff00;
+  --mkt-accent-dim: rgba(200, 255, 0, 0.55);
+
+  background: #0c0f14;
+  color: var(--mkt-fg);
+  font-family: var(--font-inter), system-ui, sans-serif;
+}
+
+/* Content sits above every texture layer */
+.mkt-layered {
+  position: relative;
+}
+.mkt-layered > * {
+  position: relative;
+  z-index: 1;
+}
+.mkt-noise {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+  border-radius: inherit;
+}
+.mkt-noise > span {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+
+/* Static film grain — SVG feTurbulence tile, NO animation by design */
+.mkt-noise__grain {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='matrix' values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0.33 0.33 0.33 0 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  background-size: var(--mkt-noise-tile);
+  opacity: var(--mkt-noise-opacity);
+  mix-blend-mode: var(--mkt-grain-blend);
+}
+
+/* Static CRT scanlines — constant texture, non-flickering */
+.mkt-noise__scanlines {
+  background-image: repeating-linear-gradient(
+    180deg,
+    rgba(255, 255, 255, var(--mkt-scanline-opacity)) 0 1px,
+    transparent 1px var(--mkt-scanline-period)
+  );
+}
+
+/* Static tube-curvature vignette hint */
+.mkt-noise__vignette {
+  background: radial-gradient(
+    ellipse at center,
+    transparent 55%,
+    rgba(4, 6, 9, var(--mkt-vignette-strength)) 100%
+  );
+}
+
+/* Hero-only slow sweep — one soft bar, continuous, non-strobing */
+.mkt-noise__sweep {
+  top: -20%;
+  height: 20%;
+  inset-inline: 0;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    rgba(200, 255, 0, 0.06),
+    transparent
+  );
+  animation: mkt-sweep var(--mkt-sweep-duration) linear infinite;
+  will-change: transform;
+}
+@keyframes mkt-sweep {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(600%);
+  }
+}
+
+/* ── Glitch text — interaction-triggered only, ≤280ms, clip/transform
+   only (zero brightness/inversion steps). Never on nav or CTAs. ── */
+.mkt-glitch {
+  position: relative;
+  display: inline-block;
+}
+.mkt-glitch::before,
+.mkt-glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+.mkt-glitch--on {
+  animation: mkt-glitch-base var(--mkt-glitch-duration) steps(2, jump-none) 1;
+}
+.mkt-glitch--on::before {
+  opacity: 0.7;
+  color: var(--mkt-accent-dim);
+  animation: mkt-glitch-top var(--mkt-glitch-duration) steps(2, jump-none) 1;
+}
+.mkt-glitch--on::after {
+  opacity: 0.5;
+  color: rgba(139, 150, 173, 0.8);
+  animation: mkt-glitch-bottom var(--mkt-glitch-duration) steps(2, jump-none) 1;
+}
+@keyframes mkt-glitch-base {
+  0% { transform: translateX(-1px); }
+  50% { transform: translateX(1px); }
+  100% { transform: translateX(0); }
+}
+@keyframes mkt-glitch-top {
+  0% { clip-path: inset(8% 0 78% 0); transform: translateX(-2px); }
+  50% { clip-path: inset(62% 0 6% 0); transform: translateX(2px); }
+  100% { clip-path: inset(28% 0 52% 0); transform: translateX(0); opacity: 0; }
+}
+@keyframes mkt-glitch-bottom {
+  0% { clip-path: inset(70% 0 12% 0); transform: translateX(2px); }
+  50% { clip-path: inset(10% 0 72% 0); transform: translateX(-2px); }
+  100% { clip-path: inset(45% 0 38% 0); transform: translateX(0); opacity: 0; }
+}
+
+/* ── Chromatic-aberration hover — static fringes while hovered/focused;
+   resting state is clean. Replaced under reduced motion. ── */
+.mkt-chroma {
+  transition: text-shadow 120ms ease-out, color 120ms ease-out;
+}
+.mkt-chroma:hover,
+.mkt-chroma:focus-visible {
+  text-shadow:
+    -0.5px 0 rgba(255, 60, 120, 0.35),
+    0.5px 0 rgba(80, 220, 255, 0.3);
+}
+
+/* Terminal caret — mirrors operator streaming-cursor pattern */
+.mkt-caret {
+  display: inline-block;
+  width: 0.55em;
+  height: 1.05em;
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  border-radius: 1px;
+  background: var(--mkt-accent);
+  animation: mkt-caret-blink 1.06s step-start infinite;
+}
+@keyframes mkt-caret-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* ── Typography helpers ── */
+.mkt-display {
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+}
+.mkt-mono {
+  font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.mkt-kicker {
+  color: var(--mkt-accent);
+  font-size: 0.75rem;
+}
+.mkt-muted {
+  color: var(--mkt-muted);
+}
+
+/* ── CTAs — fully legible always. No glitch, no chroma, no texture
+   composited through the fill. Only the standard focus ring. ── */
+.mkt-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1.4rem;
+  border-radius: 4px;
+  font-weight: 600;
+  line-height: 1;
+}
+.mkt-cta--solid {
+  background: var(--mkt-accent);
+  color: #0c0f14;
+}
+.mkt-cta--outline {
+  border: 1px solid rgba(200, 255, 0, 0.4);
+  color: var(--mkt-accent);
+  background: transparent;
+}
+.mkt-cta:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px #0c0f14, 0 0 0 4px var(--mkt-accent);
+}
+
+.mkt-card {
+  border: 1px solid rgba(242, 244, 247, 0.1);
+  background: rgba(20, 26, 31, 0.9);
+  border-radius: 6px;
+}
+
+/* Nav links stay fully legible — underline only, no transforms */
+.mkt-navlink:hover,
+.mkt-navlink:focus-visible {
+  text-decoration: underline;
+  text-decoration-color: var(--mkt-accent);
+  text-underline-offset: 4px;
+}
+
+/* ── Reduced motion: genuinely static equivalents, not dampened ones ── */
+@media (prefers-reduced-motion: reduce) {
+  /* Scoped above the .mkt-noise > span base rule so specificity can't lose */
+  .mkt-noise > .mkt-noise__sweep {
+    display: none !important;
+  }
+  .mkt-glitch--on,
+  .mkt-glitch--on::before,
+  .mkt-glitch--on::after {
+    animation: none !important;
+  }
+  .mkt-glitch--on::before,
+  .mkt-glitch--on::after {
+    opacity: 0 !important;
+  }
+  .mkt-caret {
+    animation: none !important;
+    opacity: 1;
+  }
+  .mkt-chroma:hover,
+  .mkt-chroma:focus-visible {
+    text-shadow: none;
+    color: var(--mkt-accent);
+  }
+}
