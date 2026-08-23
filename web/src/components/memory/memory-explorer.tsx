@@ -45,7 +45,7 @@ export function MemoryExplorer() {
           <Button
             variant="outline"
             size="sm"
-            className="glow-border-gold border-amber-400/30 text-amber-200 hover:bg-amber-400/10"
+            className=" border-[var(--state-attention)] text-[var(--accent)] hover:bg-[var(--accent-subtle)]"
             onClick={() => router.push("/graph")}
           >
             <GitBranch className="h-3.5 w-3.5" />

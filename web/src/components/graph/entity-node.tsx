@@ -35,13 +35,13 @@ export function EntityNode({ data }: NodeProps<Node<EntityNodeData>>) {
       <Handle
         type="target"
         position={Position.Top}
-        className="!top-3 !h-2 !w-2 !border-cyan-300/40 !bg-cyan-300/30 !opacity-100"
+        className="!top-3 !h-2 !w-2 !border-border !bg-muted !opacity-100"
         style={{ boxShadow: hot ? `0 0 6px ${color}` : undefined }}
       />
       <Handle
         type="source"
         position={Position.Bottom}
-        className="!bottom-8 !h-2 !w-2 !border-cyan-300/40 !bg-cyan-300/30 !opacity-100"
+        className="!bottom-8 !h-2 !w-2 !border-border !bg-muted !opacity-100"
         style={{ boxShadow: hot ? `0 0 6px ${color}` : undefined }}
       />
 
@@ -50,7 +50,7 @@ export function EntityNode({ data }: NodeProps<Node<EntityNodeData>>) {
         <div
           className="node-active pointer-events-none absolute left-1/2 top-3 h-10 w-10 -translate-x-1/2 rounded-full"
           style={{
-            boxShadow: `0 0 28px 8px ${color}66, 0 0 0 2px rgba(245,197,24,0.5)`,
+            boxShadow: `0 0 28px 8px ${color}66, 0 0 0 2px rgba(200,255,0,0.5)`,
           }}
           aria-hidden
         />
@@ -61,7 +61,7 @@ export function EntityNode({ data }: NodeProps<Node<EntityNodeData>>) {
         <div
           className="pointer-events-none absolute left-1/2 top-3 h-10 w-10 -translate-x-1/2 rounded-full"
           style={{
-            boxShadow: `0 0 18px 4px ${color}44, 0 0 0 1px rgba(34,211,238,0.35)`,
+            boxShadow: `0 0 18px 4px ${color}44, 0 0 0 1px rgba(200,255,0,0.35)`,
           }}
           aria-hidden
         />
@@ -72,11 +72,11 @@ export function EntityNode({ data }: NodeProps<Node<EntityNodeData>>) {
         <div
           className={cn(
             "absolute inset-0 rounded-full transition-all duration-300",
-            (selected || data.focused) && "orb-halo"
+            (selected || data.focused) && "motion-halo"
           )}
           style={{
             background: selected
-              ? `radial-gradient(circle, ${color}55 0%, rgba(245,197,24,0.15) 45%, transparent 72%)`
+              ? `radial-gradient(circle, ${color}55 0%, rgba(200,255,0,0.15) 45%, transparent 72%)`
               : `radial-gradient(circle, ${color}33 0%, transparent 70%)`,
           }}
         />
@@ -84,17 +84,17 @@ export function EntityNode({ data }: NodeProps<Node<EntityNodeData>>) {
           className={cn(
             "relative rounded-full border transition-all duration-300",
             selected
-              ? "h-6 w-6 border-amber-300/70"
+              ? "h-6 w-6 border-[var(--state-attention)]"
               : connected
-                ? "h-5 w-5 border-cyan-300/50"
-                : "h-5 w-5 border-cyan-300/25"
+                ? "h-5 w-5 border-[var(--state-attention)]"
+                : "h-5 w-5 border-border"
           )}
           style={{
             background: `radial-gradient(circle at 30% 25%, ${color}, #030712 80%)`,
             boxShadow: selected
-              ? `0 0 24px ${color}, 0 0 12px rgba(245,197,24,0.6), 0 0 0 2px ${color}55`
+              ? `0 0 24px ${color}, 0 0 12px rgba(200,255,0,0.6), 0 0 0 2px ${color}55`
               : connected
-                ? `0 0 16px ${color}88, 0 0 0 1px rgba(34,211,238,0.4)`
+                ? `0 0 16px ${color}88, 0 0 0 1px rgba(200,255,0,0.4)`
                 : `0 0 10px ${color}44`,
           }}
         />
@@ -103,8 +103,8 @@ export function EntityNode({ data }: NodeProps<Node<EntityNodeData>>) {
             className={cn(
               "absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full border px-0.5 font-mono text-[8px]",
               selected
-                ? "border-amber-400/50 bg-amber-400/20 text-amber-100"
-                : "border-cyan-300/20 bg-card/90 text-cyan-200"
+                ? "border-[var(--state-attention)] bg-[var(--accent-subtle)] text-[var(--accent)] border-[var(--state-attention)]"
+                : "border-border bg-card text-muted-foreground"
             )}
           >
             {data.degree}
@@ -117,16 +117,16 @@ export function EntityNode({ data }: NodeProps<Node<EntityNodeData>>) {
         className={cn(
           "w-full rounded-lg border px-1.5 py-1 text-center backdrop-blur-sm transition-all duration-300",
           selected
-            ? "border-amber-400/50 bg-card/95 glow-border-gold"
+            ? "border-[var(--state-attention)] bg-card/95 "
             : connected
-              ? "border-cyan-300/35 bg-card/90 glow-border"
-              : "border-border/50 bg-card/80 hover:border-cyan-300/25 hover:bg-card/90"
+              ? "border-[var(--state-healthy)] bg-card"
+              : "border-border/50 bg-card/80 hover:border-border hover:bg-card/90"
         )}
       >
         <p
           className={cn(
             "line-clamp-2 font-mono text-[10px] font-semibold leading-snug",
-            selected ? "text-amber-100 glow-text-gold" : "text-foreground"
+            selected ? "text-foreground" : "text-foreground"
           )}
           title={data.label}
         >
@@ -134,7 +134,7 @@ export function EntityNode({ data }: NodeProps<Node<EntityNodeData>>) {
         </p>
         <p
           className="mt-0.5 truncate font-mono text-[8px] uppercase tracking-wider"
-          style={{ color: selected ? "#f5c518" : `${color}cc` }}
+          style={{ color: selected ? "var(--accent)" : `${color}cc` }}
         >
           {data.entityType}
         </p>

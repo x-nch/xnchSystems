@@ -2,11 +2,13 @@
 
 import { useEffect, useRef } from "react";
 
-/** Tiny orbiting particle field inside the core node. */
+/** Deprecated — orbiting particles are removed in dark-minimalist.
+ *  Kept for reference; renders static ring and respects reduced-motion. */
 export function CoreParticles() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -18,12 +20,12 @@ export function CoreParticles() {
     canvas.height = size * dpr;
     ctx.scale(dpr, dpr);
 
-    const particles = Array.from({ length: 48 }, (_, i) => ({
-      angle: (i / 48) * Math.PI * 2,
-      radius: 18 + Math.random() * 28,
-      speed: 0.004 + Math.random() * 0.008,
-      size: 0.6 + Math.random() * 1.2,
-      hue: Math.random() > 0.75 ? "gold" : "cyan",
+    // Reduced to 12 particles, muted neutral palette — but core-node no longer mounts this.
+    const particles = Array.from({ length: 12 }, (_, i) => ({
+      angle: (i / 12) * Math.PI * 2,
+      radius: 22 + Math.random() * 18,
+      speed: 0.002 + Math.random() * 0.004,
+      size: 0.8 + Math.random() * 0.8,
     }));
 
     let raf = 0;
@@ -32,30 +34,20 @@ export function CoreParticles() {
 
     const frame = () => {
       ctx.clearRect(0, 0, size, size);
-      ctx.globalCompositeOperation = "lighter";
-
       for (const p of particles) {
         p.angle += p.speed;
         const x = cx + Math.cos(p.angle) * p.radius;
         const y = cy + Math.sin(p.angle) * p.radius;
-        const dist = Math.hypot(x - cx, y - cy);
-        const alpha = Math.max(0.15, 1 - dist / (size * 0.48));
-
-        ctx.globalAlpha = alpha * 0.85;
-        ctx.fillStyle = p.hue === "gold" ? "#f5c518" : "#22d3ee";
+        ctx.fillStyle = "rgba(242,244,247,0.35)";
         ctx.beginPath();
         ctx.arc(x, y, p.size, 0, Math.PI * 2);
         ctx.fill();
       }
-
-      // circuit ring
-      ctx.globalAlpha = 0.22;
-      ctx.strokeStyle = "#22d3ee";
+      ctx.strokeStyle = "rgba(242,244,247,0.12)";
       ctx.lineWidth = 0.5;
       ctx.beginPath();
       ctx.arc(cx, cy, 34, 0, Math.PI * 2);
       ctx.stroke();
-
       raf = requestAnimationFrame(frame);
     };
 
@@ -69,6 +61,7 @@ export function CoreParticles() {
       width={104}
       height={104}
       className="pointer-events-none absolute inset-0 h-full w-full rounded-full"
+      data-motion="decorative"
       aria-hidden
     />
   );

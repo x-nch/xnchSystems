@@ -7,12 +7,13 @@ import {
   Wrench,
   Activity,
   Orbit,
-  ScanFace,
   GitBranch,
   Plus,
   PanelLeftClose,
   PanelLeftOpen,
   Trash2,
+  ShieldCheck,
+  Workflow,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/button";
@@ -22,15 +23,17 @@ import { useSettingsStore } from "@/lib/stores/settings-store";
 import { useMemorySurface } from "@/lib/api/hooks";
 import { formatRelativeTime } from "@/lib/utils/format";
 import { ConnectionStatus } from "@/components/layout/connection-status";
+import { useApprovalStore } from "@/lib/stores/approval-store";
 
 const NAV = [
-  { href: "/", label: "Network", icon: Orbit, altHref: "/network" },
+  { href: "/", label: "Approvals", icon: ShieldCheck },
+  { href: "/workflows", label: "Workflows", icon: Workflow },
+  { href: "/network", label: "Network", icon: Orbit },
   { href: "/chat", label: "Chat", icon: MessageSquare },
   { href: "/memory", label: "Memory", icon: Database },
   { href: "/graph", label: "Graph", icon: GitBranch },
   { href: "/tools", label: "Tools", icon: Wrench },
   { href: "/system", label: "System", icon: Activity },
-  { href: "/presence", label: "Presence", icon: ScanFace },
 ];
 
 export function Sidebar() {
@@ -47,6 +50,7 @@ export function Sidebar() {
     streamingConversationId,
   } = useChatStore();
   const surface = useMemorySurface();
+  const pendingCount = useApprovalStore((s) => s.items.filter((i) => i.status === "pending").length);
 
   const surfaceCount =
     surface.data && Array.isArray(surface.data)
@@ -123,11 +127,8 @@ export function Sidebar() {
 
       {/* Nav */}
       <nav className={cn("space-y-0.5 px-2", collapsed && "px-1.5")}>
-        {NAV.map(({ href, label, icon: Icon, altHref }) => {
-          const active =
-            pathname === href ||
-            pathname.startsWith(`${href}/`) ||
-            (altHref != null && (pathname === altHref || pathname.startsWith(`${altHref}/`)));
+        {NAV.map(({ href, label, icon: Icon }) => {
+          const active = pathname === href || pathname.startsWith(`${href}/`);
           const item = (
             <button
               key={href}
@@ -135,15 +136,20 @@ export function Sidebar() {
               className={cn(
                 "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-[12px] font-medium transition-colors",
                 active
-                  ? "bg-accent/10 text-accent glow-border border border-cyan-300/15"
+                  ? "bg-[var(--accent-subtle)] text-[var(--accent)] border border-[var(--state-attention)]"
                   : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
                 collapsed && "justify-center px-0"
               )}
             >
               <Icon className="h-4 w-4 shrink-0" />
               {!collapsed && <span className="truncate">{label}</span>}
+              {!collapsed && href === "/" && pendingCount > 0 && (
+                <span className="ml-auto rounded-full bg-accent px-1.5 py-0.5 text-[11px] font-bold text-accent-foreground">
+                  {pendingCount}
+                </span>
+              )}
               {!collapsed && href === "/memory" && surfaceCount > 0 && (
-                <span className="ml-auto rounded-full bg-accent/20 px-1.5 text-[10px] font-semibold text-accent">
+                <span className="ml-auto rounded-full bg-muted px-1.5 text-[11px] font-semibold text-muted-foreground">
                   {surfaceCount}
                 </span>
               )}
