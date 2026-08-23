@@ -1,10 +1,8 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import dynamic from "next/dynamic";
 import { useQueryClient } from "@tanstack/react-query";
 import {
-  Box,
   GitBranch,
   Layers,
   RefreshCw,
@@ -28,43 +26,21 @@ import {
   useGraphStats,
   useGraphSubgraph,
 } from "@/lib/api/hooks";
-import { useGraphStream } from "@/lib/hooks/use-graph-stream";
-import {
-  mergeGraphData,
-  useGraphStreamStore,
-} from "@/lib/stores/graph-stream-store";
+import type { GraphRelation } from "@/lib/api/types";
 import { cn } from "@/lib/utils/cn";
 
-const GraphCanvas3D = dynamic(
-  () => import("./graph-canvas-3d").then((m) => m.GraphCanvas3D),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="absolute inset-0 flex items-center justify-center">
-        <Spinner className="h-6 w-6 text-accent" />
-      </div>
-    ),
-  }
-);
-
 type Depth = 1 | 2;
-type ViewMode = "2d" | "3d";
 
 export function GraphExplorer() {
   const queryClient = useQueryClient();
   const gatewayOk = useGatewayOnline();
   const stats = useGraphStats();
-  const { connected: streamLive, reconnecting } = useGraphStream(gatewayOk);
-  const liveEntities = useGraphStreamStore((s) => s.liveEntities);
-  const liveRelations = useGraphStreamStore((s) => s.liveRelations);
-  const streamStats = useGraphStreamStore((s) => s.stats);
 
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
   const [depth, setDepth] = useState<Depth>(1);
   const [focusId, setFocusId] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<ViewMode>("3d");
 
   const overviewMode = focusId === null;
 
@@ -80,52 +56,56 @@ export function GraphExplorer() {
   });
   const subgraphQuery = useGraphSubgraph(focusId, depth);
 
-  const { entities, relations, centerId } = useMemo(() => {
+  const MAX_EDGES = 120;
+  const { entities, relations, centerId, relationsTotal, isCapped } = useMemo(() => {
+    const cap = (rels: GraphRelation[]) => {
+      const sorted = [...rels].sort((a, b) => (b.confidence ?? 0) - (a.confidence ?? 0));
+      if (sorted.length > MAX_EDGES) {
+        return { rels: sorted.slice(0, MAX_EDGES), total: sorted.length, capped: true };
+      }
+      return { rels: sorted, total: sorted.length, capped: false };
+    };
+
     if (!overviewMode && subgraphQuery.data) {
+      const rawRels = subgraphQuery.data.relations;
+      const { rels, total, capped } = cap(rawRels);
       return {
         entities: subgraphQuery.data.entities,
-        relations: subgraphQuery.data.relations,
+        relations: rels,
         centerId: subgraphQuery.data.center_id,
+        relationsTotal: total,
+        isCapped: capped,
       };
     }
     const baseEnts = entitiesQuery.data?.entities ?? [];
-    const ids = new Set(baseEnts.map((e) => e.entity_id));
-    for (const id of Object.keys(liveEntities)) ids.add(id);
-
-    const merged = mergeGraphData(
-      baseEnts,
-      (relationsQuery.data?.relations ?? []).filter(
-        (r) => ids.has(r.from_id) && ids.has(r.to_id)
-      ),
-      liveEntities,
-      liveRelations
-    );
-
-    let ents = merged.entities;
+    const baseRels = relationsQuery.data?.relations ?? [];
+    // No live stream — static snapshot only
+    let ents = baseEnts;
     if (typeFilter) ents = ents.filter((e) => e.type === typeFilter);
     if (search) {
       const q = search.toLowerCase();
       ents = ents.filter((e) => e.name.toLowerCase().includes(q));
     }
-
     const entIds = new Set(ents.map((e) => e.entity_id));
-    const rels = merged.relations.filter(
-      (r) => entIds.has(r.from_id) && entIds.has(r.to_id)
-    );
-
-    return { entities: ents, relations: rels, centerId: null };
+    const filtered = baseRels.filter((r) => entIds.has(r.from_id) && entIds.has(r.to_id));
+    const { rels, total, capped } = cap(filtered);
+    return {
+      entities: ents,
+      relations: rels,
+      centerId: null,
+      relationsTotal: total,
+      isCapped: capped,
+    };
   }, [
     overviewMode,
     subgraphQuery.data,
     entitiesQuery.data,
     relationsQuery.data,
-    liveEntities,
-    liveRelations,
     typeFilter,
     search,
   ]);
 
-  const displayStats = streamStats ?? stats.data;
+  const displayStats = stats.data;
 
   const effectiveSelectedId = useMemo(() => {
     if (!selectedId) return null;
@@ -183,16 +163,16 @@ export function GraphExplorer() {
   };
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-[#020617]">
+    <div className="flex h-full min-h-0 flex-col bg-background">
       {/* HUD toolbar */}
       <div className="shrink-0 border-b border-border/60 bg-card/20 backdrop-blur-md">
         <div className="flex flex-wrap items-center gap-2 px-3 py-2">
           <div className="flex items-center gap-2 pr-2">
             <div className="flex h-7 w-7 items-center justify-center rounded-md bg-accent/10">
-              <GitBranch className="h-3.5 w-3.5 text-cyan-300" />
+              <GitBranch className="h-3.5 w-3.5 text-[var(--accent)]" />
             </div>
             <div>
-              <span className="block font-mono text-[10px] font-semibold uppercase tracking-[0.24em] text-cyan-200 glow-text">
+              <span className="block font-mono text-[10px] font-semibold uppercase tracking-[0.24em] text-foreground ">
                 Semantic Graph
               </span>
               {displayStats && (
@@ -201,14 +181,6 @@ export function GraphExplorer() {
                 </span>
               )}
             </div>
-            {streamLive ? (
-              <span className="flex items-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2 py-0.5 font-mono text-[9px] text-emerald-300">
-                <span className="streaming-dot h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                live
-              </span>
-            ) : reconnecting ? (
-              <span className="font-mono text-[9px] text-amber-300/80">reconnecting…</span>
-            ) : null}
           </div>
 
           <div className="relative min-w-[160px] flex-1 max-w-sm">
@@ -220,31 +192,13 @@ export function GraphExplorer() {
                 setFocusId(null);
               }}
               placeholder="Search by name…"
-              className="h-8 border-border/60 bg-input/80 pl-8 text-xs focus-visible:glow-border"
+              className="h-8 border-border/60 bg-input/80 pl-8 text-xs focus-visible:"
             />
           </div>
 
-          <div className="flex rounded-md border border-border/60 p-0.5">
-            {(
-              [
-                { id: "3d" as const, label: "3D", icon: Box },
-                { id: "2d" as const, label: "2D", icon: Layers },
-              ] as const
-            ).map(({ id, label, icon: Icon }) => (
-              <button
-                key={id}
-                onClick={() => setViewMode(id)}
-                className={cn(
-                  "flex items-center gap-1 rounded px-2.5 py-1 font-mono text-[10px] transition-colors",
-                  viewMode === id
-                    ? "bg-cyan-300/15 text-cyan-100"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                <Icon className="h-3 w-3" />
-                {label}
-              </button>
-            ))}
+          <div className="flex items-center gap-1 rounded-md border border-border/60 bg-muted/30 px-2 py-1 font-mono text-[10px] text-muted-foreground">
+            <Layers className="h-3 w-3" />
+            2D
           </div>
 
           <div className="flex rounded-md border border-border/60 p-0.5">
@@ -252,14 +206,11 @@ export function GraphExplorer() {
               <button
                 key={d}
                 onClick={() => setDepth(d)}
-                disabled={overviewMode}
-                title={overviewMode ? "Select a node and use Focus for hop depth" : undefined}
                 className={cn(
                   "rounded px-2.5 py-1 font-mono text-[10px] transition-colors",
-                  depth === d && !overviewMode
-                    ? "bg-amber-400/15 text-amber-200"
-                    : "text-muted-foreground hover:text-foreground",
-                  overviewMode && "cursor-not-allowed opacity-35"
+                  depth === d
+                    ? "bg-[var(--accent-subtle)] text-[var(--accent)] border border-[var(--state-attention)]"
+                    : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 {d}-hop
@@ -275,7 +226,7 @@ export function GraphExplorer() {
                 setFocusId(null);
                 setSelectedId(null);
               }}
-              className="h-8 border-cyan-300/20 text-xs"
+              className="h-8 border-border text-xs"
             >
               <Share2 className="h-3.5 w-3.5" />
               Overview
@@ -310,8 +261,8 @@ export function GraphExplorer() {
                 className={cn(
                   "shrink-0 rounded-full border px-2 py-0.5 font-mono text-[9px] transition-all",
                   active
-                    ? "glow-border-gold bg-amber-400/10 text-amber-100"
-                    : "border-border/50 text-muted-foreground hover:border-cyan-300/20 hover:text-foreground"
+                    ? "border-[var(--state-attention)] bg-[var(--accent-subtle)] text-[var(--accent)]"
+                    : "border-border/50 text-muted-foreground hover:border-border hover:text-foreground"
                 )}
                 style={
                   active
@@ -339,24 +290,39 @@ export function GraphExplorer() {
       {/* View context bar */}
       {!isLoading && entities.length > 0 && (
         <div className="flex shrink-0 items-center gap-2 border-b border-border/30 px-3 py-1 font-mono text-[9px] text-muted-foreground">
-          <span className="text-cyan-200/80">
+          <span className="text-foreground/80">
             showing {entities.length} nodes
           </span>
           <span>·</span>
           <span>{connectedInView} edges in view</span>
-          {streamLive && (
-            <>
-              <span>·</span>
-              <span className="text-emerald-300/80">streaming</span>
-            </>
-          )}
-          {viewMode === "3d" && <span className="text-cyan-200/80">· 3D orbit</span>}
-          {focusId && <span className="text-amber-200/80">· focus mode</span>}
+          <span>· {depth}-hop</span>
+          {focusId && <span className="text-[var(--accent)]">· focus mode</span>}
           {typeFilter && (
             <span style={{ color: colorForEntityType(typeFilter) }}>
               · type:{typeFilter}
             </span>
           )}
+        </div>
+      )}
+      {isCapped && !isLoading && (
+        <div className="flex flex-wrap items-center gap-2 border-b border-[var(--state-attention)] bg-[var(--accent-subtle)] px-3 py-2 text-xs">
+          <span className="font-medium text-[var(--accent)]">
+            Hub — showing top {relations.length} / {relationsTotal} edges
+          </span>
+          <span className="text-muted-foreground">· too many connections to render clearly</span>
+          <span className="flex-1" />
+          <button
+            onClick={() => setDepth(1)}
+            className="rounded-md border border-[var(--state-attention)] bg-card px-2 py-1 font-mono text-xs text-foreground hover:bg-muted"
+          >
+            Switch to 1-hop
+          </button>
+          <button
+            onClick={clearFilters}
+            className="rounded-md border border-border bg-card px-2 py-1 font-mono text-xs text-muted-foreground hover:text-foreground"
+          >
+            Filter by type
+          </button>
         </div>
       )}
 
@@ -396,26 +362,14 @@ export function GraphExplorer() {
           )}
           {gatewayOk && entities.length > 0 && (
             <>
-              {viewMode === "3d" ? (
-                <GraphCanvas3D
-                  entities={entities}
-                  relations={relations}
-                  selectedId={effectiveSelectedId}
-                  focusId={focusId}
-                  centerId={centerId}
-                  onSelect={setSelectedId}
-                />
-              ) : (
-                <GraphCanvas
-                  entities={entities}
-                  relations={relations}
-                  selectedId={effectiveSelectedId}
-                  focusId={focusId}
-                  centerId={centerId}
-                  onSelect={setSelectedId}
-                />
-              )}
-              <div className="pointer-events-none absolute inset-0 z-[1] vignette" aria-hidden />
+              <GraphCanvas
+                entities={entities}
+                relations={relations}
+                selectedId={effectiveSelectedId}
+                focusId={focusId}
+                centerId={centerId}
+                onSelect={setSelectedId}
+              />
             </>
           )}
         </div>
@@ -440,18 +394,16 @@ export function GraphExplorer() {
           ) : (
             <HudCard className="m-3 flex flex-1 flex-col border-none bg-transparent shadow-none">
               <HudCardContent className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full border border-cyan-300/15 bg-accent/5">
-                  <GitBranch className="h-5 w-5 text-cyan-300/50" />
+                <div className="flex h-12 w-12 items-center justify-center rounded-full border border-border bg-accent/5">
+                  <GitBranch className="h-5 w-5 text-[var(--accent)]/50" />
                 </div>
                 <div>
                   <p className="font-mono text-[11px] font-medium text-foreground">
                     Select a node
                   </p>
                   <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
-                    Click any entity — it will glow gold and show connected edges.
-                    {viewMode === "3d"
-                      ? " Drag to orbit, scroll to zoom."
-                      : " Hover to preview connections."}
+                    Click any entity — it will highlight and show connected edges. Hover to preview
+                    connections.
                   </p>
                 </div>
               </HudCardContent>

@@ -24,6 +24,16 @@ export function AgentNode({ data }: NodeProps<Node<AgentNodeData>>) {
 
   const navigate = () => router.push(data.href);
 
+  // State-driven border — solid hex, ≥3:1 vs bg. No glow, no drift, no opacity-only state.
+  const containerBorder = data.active
+    ? "border-[var(--state-attention)] bg-card"
+    : data.alert
+      ? "border-[var(--state-degraded)] bg-card"
+      : online
+        ? "border-[var(--state-healthy)] bg-card"
+        : "border-[var(--state-offline)] bg-card";
+
+  // Offline is NOT opacity-45 — it's a distinct border + muted icon, still legible.
   return (
     <div
       onClick={navigate}
@@ -35,16 +45,11 @@ export function AgentNode({ data }: NodeProps<Node<AgentNodeData>>) {
       }}
       tabIndex={0}
       className={cn(
-        "group node-drift relative flex w-[140px] cursor-pointer flex-col items-center gap-1.5 rounded-xl border px-3 py-2.5 backdrop-blur transition-all",
-        !online && "opacity-45 saturate-50 hover:opacity-70",
-        online && "hover:scale-[1.04] hover:bg-card",
-        data.active
-          ? "node-active border-amber-400/40 bg-card/95"
-          : data.alert
-            ? "glow-border-gold border-amber-400/30 bg-card/85"
-            : online
-              ? "glow-border border-cyan-300/20 bg-card/85"
-              : "border-border/40 bg-card/50"
+        "group relative flex w-[148px] cursor-pointer flex-col items-center gap-1.5 rounded-xl border px-3 py-3 transition-colors",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
+        "hover:bg-[var(--bg-raised)]",
+        containerBorder,
+        !online && "bg-muted/30"
       )}
       role="button"
       aria-label={`Open ${data.label}${online ? "" : " (offline)"}`}
@@ -60,31 +65,33 @@ export function AgentNode({ data }: NodeProps<Node<AgentNodeData>>) {
         className={cn(
           "flex h-9 w-9 items-center justify-center rounded-lg",
           data.active
-            ? "bg-amber-400/15 text-amber-300"
+            ? "bg-[var(--accent-subtle)] text-[var(--accent)]"
             : data.alert
-              ? "bg-amber-400/15 text-amber-300"
+              ? "bg-amber-500/10 text-amber-300"
               : online
-                ? "bg-accent/10 text-accent"
-                : "bg-muted/40 text-muted-foreground"
+                ? "bg-emerald-500/10 text-emerald-300"
+                : "bg-muted text-muted-foreground"
         )}
       >
-        <Icon className="h-4.5 w-4.5" />
+        <Icon className="h-[18px] w-[18px]" />
       </div>
 
       <div className="flex flex-col items-center gap-0.5 text-center">
         <span
           className={cn(
             "font-mono text-[12px] font-semibold tracking-tight",
-            data.active || data.alert
-              ? "glow-text-gold text-amber-200"
-              : online
-                ? "glow-text text-cyan-100"
-                : "text-muted-foreground"
+            data.active
+              ? "text-[var(--accent)]"
+              : data.alert
+                ? "text-amber-200"
+                : online
+                  ? "text-foreground"
+                  : "text-muted-foreground"
           )}
         >
           {data.label}
         </span>
-        <span className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+        <span className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
           {data.desc}
         </span>
       </div>
@@ -92,17 +99,20 @@ export function AgentNode({ data }: NodeProps<Node<AgentNodeData>>) {
       {data.meta && (
         <span
           className={cn(
-            "mt-0.5 rounded-full border px-1.5 py-px font-mono text-[9px]",
+            "mt-0.5 rounded-md border px-1.5 py-px font-mono text-[11px]",
             data.active
-              ? "border-amber-400/30 bg-amber-400/10 text-amber-200"
-              : online
-                ? "border-cyan-300/20 bg-accent/5 text-cyan-200/80"
-                : "border-border bg-muted/70 text-muted-foreground"
+              ? "border-[var(--state-attention)] bg-[var(--accent-subtle)] text-[var(--accent)]"
+              : data.alert
+                ? "border-[var(--state-degraded)] bg-amber-500/10 text-amber-200"
+                : online
+                  ? "border-[var(--state-healthy)] bg-emerald-500/10 text-emerald-300"
+                  : "border-[var(--state-offline)] bg-muted text-muted-foreground"
           )}
         >
           {data.meta}
         </span>
       )}
+      {!online && <span className="font-mono text-[10px] text-muted-foreground">Offline</span>}
     </div>
   );
 }

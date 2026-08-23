@@ -1,0 +1,23 @@
+[project]
+name = "xnch-train"
+version = "0.1.0"
+description = "Local training subsystem worker (Phase 0: data pipeline + eval harness)"
+requires-python = ">=3.13"
+dependencies = [
+    "httpx>=0.28.1",
+    "asyncpg>=0.31.0",
+    "pydantic>=2.9",
+    "pydantic-settings>=2.6",
+    "typer>=0.12",
+]
+
+[project.scripts]
+xtrain = "xnch_train.cli:app"
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["xnch_train*"]

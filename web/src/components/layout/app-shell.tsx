@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Topbar } from "@/components/layout/topbar";
 import { SettingsModal } from "@/components/settings/settings-modal";
@@ -11,6 +12,7 @@ import { useHydrated } from "@/lib/hooks/use-hydrated";
 export function AppShell({ children }: { children: React.ReactNode }) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const hydrated = useHydrated();
+  const pathname = usePathname();
 
   return (
     <TooltipProvider delayDuration={250}>
@@ -20,7 +22,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <Sidebar />
             <div className="flex min-w-0 flex-1 flex-col">
               <Topbar onOpenSettings={() => setSettingsOpen(true)} />
-              <main className="min-h-0 flex-1 overflow-hidden">{children}</main>
+              <main className="min-h-0 flex-1 overflow-hidden">
+                <div key={pathname} className="page-enter h-full">
+                  {children}
+                </div>
+              </main>
             </div>
           </>
         ) : (

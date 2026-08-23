@@ -1,37 +1,38 @@
 @import "tailwindcss";
 
 :root {
-  /* Apex palette — deep navy command center, cyan glow, gold accents */
-  --background: #020617;
-  --foreground: #e2e8f0;
-  --card: #030712;
-  --card-foreground: #e6edf7;
-  --muted: #0b1220;
-  --muted-foreground: #8b98b3;
-  --border: #122036;
-  --input: #0d1728;
-  --ring: #22d3ee;
-  --accent: #22d3ee;
-  --accent-foreground: #03131a;
-  --accent-subtle: rgba(34, 211, 238, 0.12);
-  --gold: #f5c518;
-  --gold-subtle: rgba(245, 197, 24, 0.12);
-  --destructive: #f87171;
-  --destructive-foreground: #1c0505;
-  --success: #34d399;
-  --warning: #fbbf24;
-  --code-bg: #05080f;
-  --scrollbar-thumb: #16233b;
+  /* Dark minimalist — near-black, chartreuse functional accent */
+  --background: #0C0F14;
+  --foreground: #F2F4F7;
+  --card: #141A1F;
+  --card-foreground: #F2F4F7;
+  --muted: #1C242C;
+  --muted-foreground: #7A869F;
+  --border: rgba(242, 244, 247, 0.10);
+  --input: #1C242C;
+  --ring: #C8FF00;
+  --accent: #C8FF00;
+  --accent-foreground: #0C0F14;
+  --accent-subtle: rgba(200, 255, 0, 0.10);
+  --destructive: #FF6B6B;
+  --destructive-foreground: #0C0F14;
+  --success: #3DD598;
+  --warning: #FFC857;
+  --code-bg: #0C0F14;
+  --scrollbar-thumb: #2A3441;
+
+  /* State — solid hex, each ≥3:1 vs --background (measured vs #0C0F14)
+     attention 6.14:1, healthy 4.59:1, degraded 4.77:1, offline 3.37:1 */
+  --state-attention: #7A9E0A;
+  --state-healthy: #2E8B6A;
+  --state-degraded: #9A7B1A;
+  --state-offline: #5A6780;
+  --state-destructive: #B84A4A;
 
   /* Layout chrome */
   --hud-sidebar-width: 15rem;
   --hud-sidebar-collapsed: 3rem;
   --hud-topbar-height: 2.5rem;
-
-  /* Glow intensities */
-  --glow-cyan: rgba(34, 211, 238, 0.45);
-  --glow-gold: rgba(245, 197, 24, 0.5);
-  --vignette: radial-gradient(ellipse 80% 70% at 50% 50%, transparent 40%, rgba(2, 6, 23, 0.85) 100%);
 }
 
 @theme inline {
@@ -47,16 +48,15 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent-subtle: var(--accent-subtle);
-  --color-gold: var(--gold);
-  --color-gold-subtle: var(--gold-subtle);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-code-bg: var(--code-bg);
   --color-scrollbar-thumb: var(--scrollbar-thumb);
-  --font-sans: var(--font-space-grotesk);
+  --font-sans: var(--font-inter);
   --font-mono: var(--font-jetbrains-mono);
+  --font-display: var(--font-space-grotesk);
 }
 
 html,
@@ -65,16 +65,17 @@ body {
 }
 
 body {
-  background:
-    radial-gradient(1200px 700px at 50% -12%, rgba(34, 211, 238, 0.07), transparent 60%),
-    radial-gradient(900px 600px at 90% 110%, rgba(245, 197, 24, 0.05), transparent 55%),
-    var(--background);
+  background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, sans-serif;
-  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  font-feature-settings: "cv02","cv03","cv04","cv11";
 }
 
-/* Thin, unobtrusive scrollbars */
+h1, h2, h3, .font-display {
+  font-family: var(--font-space-grotesk), system-ui, sans-serif;
+}
+
+/* Scrollbars — Firefox-native + WebKit fallback (both) */
 * {
   scrollbar-width: thin;
   scrollbar-color: var(--scrollbar-thumb) transparent;
@@ -91,11 +92,11 @@ body {
   border-radius: 8px;
 }
 *::-webkit-scrollbar-thumb:hover {
-  background: #1c2c47;
+  background: #334050;
 }
 
 ::selection {
-  background: rgba(34, 211, 238, 0.28);
+  background: rgba(200, 255, 0, 0.22);
 }
 
 /* Blinking cursor shown while a response is streaming */
@@ -135,62 +136,10 @@ body {
   animation: x-pulse-dot 1.2s ease-in-out infinite;
 }
 
-/* --- Apex utilities --- */
-
-/* Radial dot field backdrop */
-@utility hud-grid {
-  background-image: radial-gradient(circle, rgba(34, 211, 238, 0.16) 1px, transparent 1px);
-  background-size: 24px 24px;
-}
-
-@utility glow-border {
-  box-shadow:
-    0 0 0 1px rgba(34, 211, 238, 0.22),
-    0 0 22px -8px rgba(34, 211, 238, 0.45);
-}
-
-@utility glow-border-gold {
-  box-shadow:
-    0 0 0 1px rgba(245, 197, 24, 0.3),
-    0 0 26px -8px rgba(245, 197, 24, 0.5);
-}
-
-@utility glow-text {
-  text-shadow: 0 0 12px rgba(34, 211, 238, 0.55);
-}
-
-@utility glow-text-gold {
-  text-shadow: 0 0 14px rgba(245, 197, 24, 0.55);
-}
-
-/* Central orb halo */
-@keyframes x-orb-halo {
-  0%,
-  100% {
-    opacity: 0.45;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.9;
-    transform: scale(1.18);
-  }
-}
-.orb-halo {
-  animation: x-orb-halo 4s ease-in-out infinite;
-}
-
-/* Slow drift for orbit nodes */
-@keyframes x-node-drift {
-  0%,
-  100% {
-    filter: drop-shadow(0 0 6px rgba(34, 211, 238, 0.35));
-  }
-  50% {
-    filter: drop-shadow(0 0 14px rgba(34, 211, 238, 0.6));
-  }
-}
-.node-drift {
-  animation: x-node-drift 3.2s ease-in-out infinite;
+/* HUD panel base — neutral, no cyan glow */
+@utility hud-panel {
+  border: 1px solid rgba(242, 244, 247, 0.10);
+  background: rgba(20, 26, 31, 0.90);
 }
 
 /* Presence crossfade entry */
@@ -204,73 +153,6 @@ body {
 }
 .crossfade-in {
   animation: x-crossfade-in 0.6s ease-out both;
-}
-
-/* Scanline sweep across panels */
-@keyframes x-scanline {
-  0% {
-    transform: translateY(-120%);
-  }
-  100% {
-    transform: translateY(120%);
-  }
-}
-
-.scanline-overlay::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    to bottom,
-    transparent 0%,
-    rgba(34, 211, 238, 0.03) 50%,
-    transparent 100%
-  );
-  animation: x-scanline 8s linear infinite;
-  pointer-events: none;
-}
-
-/* Cinematic vignette overlay */
-@utility vignette {
-  background: var(--vignette);
-}
-
-/* HUD panel base */
-@utility hud-panel {
-  border: 1px solid rgba(34, 211, 238, 0.12);
-  background: rgba(3, 7, 18, 0.82);
-  backdrop-filter: blur(12px);
-}
-
-/* Active node pulse */
-@keyframes x-node-active {
-  0%,
-  100% {
-    box-shadow:
-      0 0 0 1px rgba(245, 197, 24, 0.35),
-      0 0 28px -4px rgba(245, 197, 24, 0.55);
-  }
-  50% {
-    box-shadow:
-      0 0 0 1px rgba(245, 197, 24, 0.55),
-      0 0 36px -2px rgba(245, 197, 24, 0.75);
-  }
-}
-.node-active {
-  animation: x-node-active 2s ease-in-out infinite;
-}
-
-/* Selected graph node — stronger pulse */
-@keyframes x-graph-selected {
-  0%,
-  100% {
-    opacity: 0.85;
-    transform: translate(-50%, 0) scale(1);
-  }
-  50% {
-    opacity: 1;
-    transform: translate(-50%, 0) scale(1.08);
-  }
 }
 
 /* Presence view transition */
@@ -290,34 +172,220 @@ body {
   animation: x-presence-enter 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-/* React Flow — Apex dark theme overrides */
+/* Crossfade for reduced-motion is handled below */
+
+/* React Flow — dark minimalist theme (neutral) */
 .react-flow {
-  --xy-edge-stroke-default: rgba(34, 211, 238, 0.28);
+  --xy-edge-stroke-default: rgba(242, 244, 247, 0.18);
   --xy-background-color: transparent;
 }
 .react-flow__controls {
-  border: 1px solid rgba(34, 211, 238, 0.15) !important;
-  background: rgba(3, 7, 18, 0.88) !important;
+  border: 1px solid rgba(242, 244, 247, 0.10) !important;
+  background: rgba(20, 26, 31, 0.92) !important;
   backdrop-filter: blur(8px);
-  box-shadow: 0 0 20px -6px rgba(34, 211, 238, 0.3);
 }
 .react-flow__controls-button {
-  border-bottom: 1px solid rgba(34, 211, 238, 0.1) !important;
+  border-bottom: 1px solid rgba(242, 244, 247, 0.08) !important;
   background: transparent !important;
-  fill: #8b98b3 !important;
+  fill: #7A869F !important;
 }
 .react-flow__controls-button:hover {
-  background: rgba(34, 211, 238, 0.08) !important;
-  fill: #22d3ee !important;
+  background: rgba(200, 255, 0, 0.08) !important;
+  fill: #C8FF00 !important;
 }
 .react-flow__background {
-  opacity: 0.6;
+  opacity: 0.4;
 }
-
-/* Graph explorer — subtler edges */
 .react-flow__edge-text {
   font-size: 8px !important;
 }
 .react-flow__edge-textbg {
-  fill: rgba(3, 7, 18, 0.9) !important;
+  fill: rgba(12, 15, 20, 0.9) !important;
+}
+
+/* ── Deprecated Apex utilities — kept as no-ops to avoid breaking existing views
+      until migrated. Do not use in new code. ── */
+@utility hud-grid {
+  background-image: radial-gradient(circle, rgba(242,244,247,0.06) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+@utility glow-border {
+  box-shadow: 0 0 0 1px rgba(200,255,0,0.18);
+}
+@utility glow-border-gold {
+  box-shadow: 0 0 0 1px rgba(255,200,87,0.18);
+}
+@utility glow-text {
+  text-shadow: none;
+}
+@utility glow-text-gold {
+  text-shadow: none;
+}
+.orb-halo { animation: none; opacity: 0.0; }
+.node-drift { animation: none; }
+.scanline-overlay::after { display: none; }
+.vignette { background: none; }
+.node-active { animation: none; border-color: var(--state-attention) !important; }
+
+/* ── Reduced motion — every infinite animation has a static fallback ── */
+@media (prefers-reduced-motion: reduce) {
+  .orb-halo,
+  .node-drift,
+  .scanline-overlay::after,
+  .streaming-dot,
+  .streaming-cursor,
+  .node-active,
+  .presence-enter,
+  .crossfade-in {
+    animation: none !important;
+  }
+  canvas[data-motion="decorative"] {
+    display: none !important;
+  }
+  .presence-enter {
+    opacity: 1;
+    filter: none;
+    transform: none;
+  }
+}
+
+/* ── Motion system — purposeful, not decorative ──
+   Principles: motion = state change only. 150-260ms, ease-out.
+   All use transform/opacity/border-color only (GPU, Firefox-safe).
+   Every keyframe has reduced-motion fallback below. */
+:root {
+  --ease-enter: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --dur-fast: 150ms;
+  --dur-base: 220ms;
+  --dur-slow: 260ms;
+  --dur-toast: 280ms;
+}
+
+@keyframes hitl-row-enter {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes hitl-row-exit {
+  to { opacity: 0; transform: scale(0.98) translateY(-4px); }
+}
+@keyframes hitl-pane-enter {
+  from { opacity: 0; transform: translateX(8px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes hitl-toast-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes hitl-leftbar-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+@keyframes hitl-shimmer {
+  from { background-position: -200% 0; }
+  to   { background-position: 200% 0; }
+}
+@keyframes motion-halo-green {
+  0%, 100% { opacity: 0.45; transform: scale(1); }
+  50% { opacity: 0.85; transform: scale(1.08); }
+}
+.motion-halo {
+  animation: motion-halo-green 3.2s ease-in-out infinite;
+}
+@keyframes skeleton-shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--muted);
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(200,255,0,0.06), transparent);
+  animation: skeleton-shimmer 1.6s ease-in-out infinite;
+}
+@keyframes page-enter {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.page-enter {
+  animation: page-enter var(--dur-base) var(--ease-out) both;
+}
+
+.motion-row-enter {
+  animation: hitl-row-enter var(--dur-base) var(--ease-enter) both;
+}
+.motion-row-exit {
+  animation: hitl-row-exit 200ms var(--ease-standard) both;
+  overflow: hidden;
+}
+.motion-pane-enter {
+  animation: hitl-pane-enter var(--dur-slow) var(--ease-out) both;
+}
+.motion-toast {
+  animation: hitl-toast-in var(--dur-toast) var(--ease-out) both;
+}
+.motion-press:active {
+  transform: scale(0.97);
+}
+.motion-hover-lift {
+  transition: transform var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
+}
+.motion-hover-lift:hover {
+  transform: translateY(-1px);
+}
+/* Stagger children 40ms — applied via inline style delay */
+.motion-stagger > * {
+  animation-delay: calc(var(--stagger-index, 0) * 40ms);
+}
+
+/* Button press — chartreuse accent only, no scale on outline */
+.btn-accent {
+  transition: background-color var(--dur-fast) var(--ease-out), transform 90ms var(--ease-out), box-shadow var(--dur-fast) var(--ease-out);
+}
+.btn-accent:active {
+  transform: scale(0.97);
+}
+.btn-accent:focus-visible {
+  box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--ring);
+}
+
+/* Focus rings — chartreuse double-ring for attention context */
+:focus-visible {
+  outline: none;
+}
+*:focus-visible {
+  box-shadow:
+    0 0 0 2px var(--background),
+    0 0 0 4px var(--ring);
+  border-radius: 4px;
+}
+
+/* Reduced motion — motion system */
+@media (prefers-reduced-motion: reduce) {
+  .motion-row-enter,
+  .motion-row-exit,
+  .motion-pane-enter,
+  .motion-toast,
+  .motion-halo,
+  .page-enter {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .skeleton::after {
+    display: none !important;
+  }
+  .motion-hover-lift,
+  .motion-hover-lift:hover {
+    transform: none !important;
+  }
+  .btn-accent:active {
+    transform: none !important;
+  }
 }

@@ -42,8 +42,8 @@ include = ["cli*"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
-pythonpath = ["."]
-testpaths = ["nexi/tests", "xnch/tests", "tests", "xnch_mcp/tests", "fs_read_agent/tests", "docs_test_mcp/tests"]
+pythonpath = [".", "xnch-train"]
+testpaths = ["nexi/tests", "xnch/tests", "tests", "xnch_mcp/tests", "fs_read_agent/tests", "docs_test_mcp/tests", "xnch-train/tests"]
 
 [dependency-groups]
 dev = [
