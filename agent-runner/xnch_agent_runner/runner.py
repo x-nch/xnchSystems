@@ -119,10 +119,18 @@ def handle_once(cfg: RunnerConfig, spawn=None) -> str:
             timeout=cfg.timeout_s,
         )
         ok = proc.returncode == 0
+        output_path = str(workspace)
+        if ok:
+            # Conversational answers otherwise evaporate — keep them as an artifact.
+            answer = (proc.stdout or "").strip()
+            if answer:
+                resp_file = workspace / "response.md"
+                resp_file.write_text(answer[-50000:], encoding="utf-8")
+                output_path = str(resp_file)
         payload = {
             "outcome_status": "DONE" if ok else "FAILED",
             "exit_code": proc.returncode,
-            "output_path": str(workspace),
+            "output_path": output_path,
             **({} if ok else {"error": (proc.stderr or "")[-2000:]}),
         }
         word = "done" if ok else "failed"
