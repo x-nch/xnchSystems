@@ -3,7 +3,7 @@
 Deployment, rebuild, and verification for the **xnch MCP bridge** on gate7
 (xnch `:8001`, Nexi runtime via `POST /nexi/chat`).
 
-- Architecture deep-dive: [Nexi MCP Bridge — Architecture Guide](../guides/mcp-bridge.md) (Session 1)
+- Architecture deep-dive: [Nexi MCP Bridge — Architecture Guide](../architecture/mcp-bridge.md) (Session 1)
 - API reference: [`docs/reference/mcp-http-api.md`](../reference/mcp-http-api.md)
 - CLI reference: [`docs/guides/mcp-cli.md`](../guides/mcp-cli.md)
 - Copy-paste chat prompts: [`docs/guides/nexi-test-prompts.md`](../guides/nexi-test-prompts.md)
@@ -269,7 +269,7 @@ python -m cli mcp call am_memory_lesson_recall --arg query="MCP bridge" --arg li
 
 ## See also
 
-- [Nexi MCP Bridge — Architecture Guide](../guides/mcp-bridge.md) — request flow, actor/tier model, tool prefixing & audit, lifecycle
+- [Nexi MCP Bridge — Architecture Guide](../architecture/mcp-bridge.md) — request flow, actor/tier model, tool prefixing & audit, lifecycle
 - [MCP CLI reference](../guides/mcp-cli.md) — `python -m cli mcp servers|tools|call|test`
 - [Memory routing deploy runbook](memory-routing-deploy.md) — episodic vs agentmemory
 - [Web search deploy runbook](web-search-deploy.md) — SearXNG + `xnch_web_search`

@@ -1,35 +1,33 @@
-# Reference — xnch MCP
+# Reference Index
 
-HTTP API, tool catalog, and configuration for the xnch MCP layer on gate7 (`:8001`).
+Lookup material. Schemas live in code beside each handler; these pages are maps.
 
-## MCP
+| Page | Contents |
+|---|---|
+| [api-xnch](api-xnch.md) | xnch REST surface by router (:8001): session, memory, policy, verdict, execution, goals, governance, workflows/approvals, admin, voice |
+| [api-gateway-chat](api-gateway-chat.md) | `/v1/chat/completions`, `/nexi/chat(+stream)` tool loop, voice routes, nexi :8000 endpoints, muse proxy |
+| [auth-model](auth-model.md) | HS256 actor bearers, RS256 execution tokens, Hybrid-B gateway tokens, tool tiers, guards, header matrix |
+| [mcp-http-api](mcp-http-api.md) | `/mcp/*` endpoints, headers, curl examples |
+| [mcp-tools](mcp-tools.md) | native + bridged tool catalog, actor matrix, routing |
+| [mcp-config](mcp-config.md) | MCP-related `XNCH_*` env vars and YAML files |
+| [env-vars](env-vars.md) | exhaustive `XNCH_*` / `NEXI_*` / `XTRAIN_*` / `SCRAPER_*` + unprefixed |
+| [config-files](config-files.md) | `~/.xnch/*.yaml` inventory + compose-side config |
+| [cli-reference](cli-reference.md) | `python -m cli …`, `xtrain …`, scripts |
+| [tests](tests.md) | suites, commands, known pre-existing failures |
 
-| Doc | Contents |
-|-----|----------|
-| [mcp-tools.md](mcp-tools.md) | Native + bridged tool catalog, actor matrix, routing |
-| [mcp-http-api.md](mcp-http-api.md) | `/mcp/*` endpoints, headers, curl examples |
-| [mcp-config.md](mcp-config.md) | Env vars (`XNCH_*`) and YAML policy files |
-| [memory-routing.md](../guides/memory-routing.md) | Episodic vs agentmemory tool routing |
+Related elsewhere:
 
-## Related guides
+- Architecture: [overview](../architecture/overview.md) ·
+  [memory](../architecture/memory.md) · [workflows & HITL](../architecture/workflows-hitl.md) ·
+  [data model](../architecture/data-model.md) · [training](../architecture/training.md)
+- Guides: [quickstart dev](../guides/quickstart-dev.md) ·
+  [chat & tools](../guides/chat-and-tools.md) · [operate HITL](../guides/operate-hitl.md) ·
+  [build workflow](../guides/build-workflow.md) · [run eval](../guides/run-eval.md)
+- Runbooks: [restart Node A](../runbooks/restart-node-a.md) /
+  [Node B](../runbooks/restart-node-b.md) · [GPU window](../runbooks/gpu-window.md) ·
+  [e2e smoke](../runbooks/e2e-smoke.md) · [rollback](../runbooks/rollback.md)
+- Immutable records: [docs index](../index.md#immutable-records-link-only)
 
-| Doc | Contents |
-|-----|----------|
-| [MCP bridge architecture](../guides/mcp-bridge.md) | Request flow, server inventory, tiers |
-| [MCP CLI](../guides/mcp-cli.md) | `python -m cli mcp servers\|tools\|call\|test` |
-| [Nexi test prompts](../guides/nexi-test-prompts.md) | Copy-paste chat prompts for tool routing |
-| [Nexi voice architecture](../guides/nexi-voice-architecture.md) | Push-to-talk STT + TTS full loop |
-| [Nexi voice Mac client](../guides/nexi-voice-mac-client.md) | Run CLI + mic/speaker on MacBook; API on gate7 |
-| [Nexi voice test scenarios](../guides/nexi-voice-test-scenarios.md) | Smoke, STT/TTS, full loop, CLI, tool routing |
-| [MCP bridge deploy](../runbooks/mcp-bridge-deploy.md) | Gate7 bridge + CRG graph rebuild |
-| [Memory routing deploy](../runbooks/memory-routing-deploy.md) | Episodic vs agentmemory verify |
-| [Web search deploy](../runbooks/web-search-deploy.md) | SearXNG + `xnch_web_search` |
-
-## Architecture
-
-- [Architecture diagram suite](../architecture-suite.md) — system, infra, memory, MCP bridge
-- [mcp-bridge.mmd](../diagrams/mcp-bridge.mmd) — Nexi tool-loop sequence
-
-## OpenCode handoff
-
-- [misc/opencode/xnch-mcp-handoff.md](../../misc/opencode/xnch-mcp-handoff.md) — stdio MCP setup for editors
+Legacy diagram sources: [`diagrams/mcp-bridge.mmd`](../diagrams/mcp-bridge.mmd);
+the old single-file diagram suite has been superseded by
+[`architecture/`](../architecture/overview.md).

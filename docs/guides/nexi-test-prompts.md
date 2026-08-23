@@ -17,7 +17,7 @@ results vary with the model and live data.
 
 - Setup + verification: [MCP bridge deploy runbook](../runbooks/mcp-bridge-deploy.md)
 - Memory routing: [memory-routing-deploy.md](../runbooks/memory-routing-deploy.md)
-- Architecture: [Nexi MCP Bridge — Architecture Guide](mcp-bridge.md)
+- Architecture: [Nexi MCP Bridge — Architecture Guide](../architecture/mcp-bridge.md)
 - CLI reference: [mcp-cli.md](mcp-cli.md)
 
 ---
@@ -248,7 +248,7 @@ runbook](../runbooks/web-search-deploy.md).
 - [Memory routing guide](memory-routing.md)
 - [Memory routing deploy runbook](../runbooks/memory-routing-deploy.md)
 - [MCP CLI reference](mcp-cli.md)
-- [Nexi MCP Bridge — Architecture Guide](mcp-bridge.md)
+- [Nexi MCP Bridge — Architecture Guide](../architecture/mcp-bridge.md)
 - [MCP bridge deploy runbook](../runbooks/mcp-bridge-deploy.md)
 - [Web search deploy runbook](../runbooks/web-search-deploy.md)
 - [mcp-http-api.md](../reference/mcp-http-api.md) — memory tools + audit fields

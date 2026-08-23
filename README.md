@@ -1,236 +1,107 @@
-# XNCH / Nexi
+# xnchSystems
 
-Private AI orchestration platform. One man's infrastructure for autonomous agents. Solo-built, production-deployed on a two-node Kubernetes cluster. No cloud dependency for inference.
+Private AI orchestration platform: an agent that perceives, remembers, decides
+under explicit policy governance, acts through human-approved workflows, and
+learns from outcomes — solo-built, running entirely on two owned physical
+machines under a **no-k3s systemd regime**. No cloud dependency for inference.
 
-XNCH is the control plane (platform layer). Nexi is the product layer. Together they form a complete decision-and-memory system for an AI that perceives the world, remembers what matters, reasons about what to do, and acts — on its own hardware, under its own governance.
+- **xnch** (`xnch/` submodule) — control plane: REST API (:8001), authN/Z,
+  policy engine, memory tiers, goals, HITL verdict path, audit ledger, learning.
+- **nexi** (`nexi/` submodule) — decision engine (:8000): 10-step pipeline,
+  character/persona, goal driver, workflow executor.
 
-The codebase is a Python monorepo with two FastAPI services (Python 3.13+), Kubernetes deployment manifests, YAML policy definitions, scoring weights, and documentation. Everything runs on two physical nodes labeled i7 and i9.
+Two FastAPI services (Python 3.13+), a Next.js app (`web/`), the `xnch-train`
+eval pipeline, an MCP bridge (`xnch_mcp/`), and infra automation under
+`infra/no-k3s/`.
 
----
+## Two-minute architecture
 
-## Platform vs Product
+```mermaid
+flowchart LR
+    U["User<br/>(CLI · muse · voice · curl)"] --> X["xnch :8001<br/>Node A · control plane"]
+    X -->|"session/init"| N["nexi :8000<br/>Node B · decision engine"]
+    N -->|"memory · policy · verdict"| X
+    N --> LLM["litellm :4000"] --> V["vLLM Ornith :8082"]
+    X --> M[("Memory L0-L3")]
+    X --> W["workflows + approvals<br/>(HITL queue)"]
+    N -->|"claims APPROVED steps"| W
+    T["Langfuse :3000"] -.-> TR["xnch-train<br/>extract → eval → dry-run gate"]
+```
 
-**XNCH** (`xnch/`) is the platform layer: governance, memory, authorization, policy enforcement, perception, audit, and learning. It runs on the i7-memory node. Entrypoint is `xnch/main.py` (inside submodule). It owns the data, the secrets, the policies, and the historical record. Configuration is driven by environment variables prefixed `XNCH_*`.
+**Nodes** ([details](docs/architecture/topology.md)):
 
-**Nexi** (`nexi/`) is the product layer: decision engine, character and persona, LLM orchestration, proactivity, and context assembly. It runs on the i9-inference node. Entrypoint is `nexi/main.py` (inside submodule). It owns the model calls, the plan options, the execution pipeline. Configuration is driven by environment variables prefixed `NEXI_*`.
-
-The two services communicate over HTTP:
-- Nexi calls xnch at `NEXI_XNCH_BASE_URL` (default `http://localhost:8001`) for policy checks, memory reads, and verdicts.
-- xnch calls Nexi at `XNCH_NEXI_BASE_URL` (default `http://localhost:8000`) for session start and outcome callbacks.
-- They share a Redis instance — xnch connects over TCP, Nexi connects over a Unix socket (`/tmp/xnch-redis.sock`).
-
----
-
-## Hardware Topology
-
-Two physical nodes, each with a dedicated role enforced via Kubernetes node labels.
-
-### i7-node (label `role=memory`)
-
-| Service | Port | Purpose |
+| | Node A — `gate7` (192.168.50.1) | Node B — `xnch-core` (192.168.50.2) |
 |---|---|---|
-| PostgreSQL 15 + pgvector | 5432 | Episodic store, relationship store, quarantine store. 50Gi PVC via StatefulSet. |
-| Redis | 6379 (TCP) | KV cache, sensory buffer (L0), working memory (L1), session dedup, rate limiting. |
-| Langfuse | 3000 | LLM observability and tracing. |
-| LiteLLM proxy | 4000 | Model routing gateway for local and cloud LLMs. |
-| xnch server | 8001 | Control plane API, governance, policy engine, audit. |
-| Perception daemonset | — | Voice capture (Whisper), vision (Moondream2), file watching, attention signals. |
+| Runtime | Docker Compose + systemd | bare venv + systemd (no Docker) |
+| Runs | postgres-pgvector :5432 · redis :6379 · litellm :4000 · langfuse :3000 (+pg :5433) · searxng :8888 (loopback) · **xnch** :8001 · consolidation timer · tailscale funnel | **vllm-ornith** :8082 · **nexi** :8000 · exec-agent :8004 · fs-read-agent :8003 |
+| Notes | always on; WoL-wakes Node B | RTX 3090 sleeps when idle |
 
-### i9-node (label `role=inference`)
+## Repository layout
 
-| Service | Port | Purpose |
-|---|---|---|
-| vLLM + Gemma 4 26B | 8000 | Primary inference engine (~135 tok/s on RTX 3090). |
-| Nexi decision engine | 8001 | Pipeline: context assembly, option gen, scoring, selection, plan compilation. |
-| mem0 | — | Long-term agent memory layer. |
-| Zep | — | Long-term memory persistence and summarization. |
-
----
+```
+xnch/            submodule → github.com/x-nch/xnch   (control plane)
+nexi/            submodule → github.com/x-nch/nexi   (decision engine)
+web/             muse — Next.js UI: approvals queue, workflow builder,
+                 chat/memory/graph views; /api/gateway proxy to xnch
+xnch-train/      training data pipeline + eval harness (Phase 0: dry-run gate)
+xnch_mcp/        MCP server + federated bridge (native xnch_* tools, crg_/am_/doc_)
+cli/             Typer CLI client incl. voice loop (Mac client targets gate7)
+exec_agent/      Node B governed command runner (:8004)
+fs_read_agent/   Node B read-only file agent (:8003)
+scraper/         tiered web scraper service
+docs_test_mcp/   offline docs MCP server
+infra/no-k3s/    CURRENT deploy regime: compose, systemd units, boot scripts,
+                 e2e-test.sh, policy/config templates  (MIGRATION.md documents
+                 the k3s → direct migration + rollback)
+infra/k8s/       LEGACY k3s manifests — retired, kept for rollback history only
+scripts/         helper scripts (voice setup, deploy, audits)
+tests/           cross-service e2e suite
+docs/            this documentation tree (start at docs/index.md)
+misc/            historical notes/handoffs (not operating docs)
+```
 
 ## Quickstart
 
-### Prerequisites
-
-- k3s or Kubernetes cluster with two nodes and `kubectl` configured.
-- Nodes labeled correctly: `i7-node` with `role=memory`, `i9-node` with `role=inference`.
-- Secrets created in the `xnch-system` namespace.
-
-### First Boot
+Development first ([full guide](docs/guides/quickstart-dev.md)):
 
 ```bash
-# Label nodes
-kubectl label node i7-node role=memory
-kubectl label node i9-node role=inference
-
-# Create secrets (replace placeholder values)
-kubectl create secret generic postgres-secret -n xnch-system \
-  --from-literal=password='<your-pw>'
-kubectl create secret generic xnch-secret -n xnch-system \
-  --from-literal=auth_secret='<secret>'
-kubectl create secret generic litellm-secret -n xnch-system \
-  --from-literal=master_key='<key>'
-kubectl create secret generic langfuse-secret -n xnch-system \
-  --from-literal=nextauth_secret='<secret>' --from-literal=salt='<salt>'
-kubectl create secret generic huggingface-secret -n xnch-system \
-  --from-literal=token='<hf-token>'
-
-# Deploy in dependency order
-kubectl apply -f infra/k8s/namespaces.yaml
-kubectl apply -f infra/k8s/i7-node/
-kubectl apply -f infra/k8s/i9-node/
-kubectl apply -f infra/k8s/jobs/
-
-# Verify everything is running
-kubectl get all -n xnch-system
-kubectl get pods -n xnch-system -o wide
+git clone https://github.com/x-nch/xnchSystems && cd xnchSystems
+git submodule update --init --recursive
+uv sync --all-groups          # Python 3.13+; see docs/reference/tests.md for fresh-env caveats
+uv run python -m xnch.main    # control plane :8001 (needs Redis; Postgres for L2)
+uv run python -m nexi.main    # engine :8000
+pytest                        # tests (asyncio auto); see docs/reference/tests.md
 ```
 
-### Verify Nexi Is Live
+Production bring-up:
 
 ```bash
-# Nexi health endpoint
-curl http://<nexi-svc>:8001/health
-
-# xnch health endpoint (includes Redis state)
-curl http://<xnch-svc>:8000/health
-
-# Expected healthy response from xnch
-# {"status": "ok", "redis": "ok", "state_version": "v1.45.0", "version": "0.1.0"}
+# Node A
+cd ~/xnchSystems/infra/no-k3s/node-a && ./start-node-a.sh --wake-node-b --wait-node-b
+# Node B (or automatically woken above)
+cd ~/xnchSystems/infra/no-k3s/node-b && ./start-node-b.sh --install
+# back on Node A
+cd ~/xnchSystems/infra/no-k3s && ./e2e-test.sh
 ```
 
-### Development (local, no cluster)
+Env files live at `~/.xnch/xnch.env` (A) and `~/.xnch/nexi.env` (B); templates
+in `infra/no-k3s/shared/.env.example`. Exhaustive variable reference:
+[docs/reference/env-vars.md](docs/reference/env-vars.md).
 
-```bash
-# Start Redis
-redis-server &
+## Documentation
 
-# Start xnch (postgres required)
-uv run python -m xnch.main
+| I want to… | Go to |
+|---|---|
+| understand the system | [docs/architecture/overview](docs/architecture/overview.md) |
+| deploy / restart nodes | [guides/deploy-node-a](docs/guides/deploy-node-a.md) · [runbooks](docs/runbooks/restart-node-a.md) |
+| approve gated actions | [guides/operate-hitl](docs/guides/operate-hitl.md) |
+| automate multi-step work | [guides/build-workflow](docs/guides/build-workflow.md) · [architecture/workflows-hitl](docs/architecture/workflows-hitl.md) |
+| look up an API/env var/CLI | [docs/reference/](docs/reference/index.md) |
+| run eval baselines | [guides/run-eval](docs/guides/run-eval.md) |
+| use voice | [guides/voice](docs/guides/voice.md) |
+| handle GPU contention | [runbooks/gpu-window](docs/runbooks/gpu-window.md) |
 
-# Start nexi (requires xnch running)
-uv run python -m nexi.main
-```
+Decision records (immutable): [`docs/adr/`](docs/adr/) ·
+[`docs/superpowers/`](docs/superpowers/).
 
-Persistent volume claims are created automatically: `xnch-data` for the xnch server, `xnch-vault` for the perception daemonset, and `pgdata` (50Gi) for PostgreSQL via its StatefulSet.
-
----
-
-## Repository Layout
-
-```
-xnch/                              Git submodule → github.com/x-nch/xnch
-  main.py                          App entrypoint, lifespan wiring, scheduler registration
-  config.py                        XNCH_* environment variable definitions
-  routes/                          Session, memory, policy, verdict, execution, governance, auth, nexi_gateway
-  auth/                            RSA key pair generation, TokenSigner/Verifier, GovernanceStore
-  security/                        Trust model, injection guard, actor sandbox, memory write guard
-  memory/                          Sensory buffer (Redis), working memory (Redis), episodic store
-                                   (pgvector), pattern store (SQLite), graph store (agentmemory),
-                                   relationship store (PG), quarantine store (PG), KV cache (Redis),
-                                   database migrations
-  policy/                          YAML policy loader, policy engine (first-match-wins)
-  learning/                        Pattern extractor, score adapter, policy candidate generator
-  perception/                      Voice daemon, vision encoder, file watcher, attention filter
-  routing/                         Model classifier — routes to gemma4-local or claude-judgment
-  audit/                           EventLog (append-only JSONL), DecisionLedger (SHA-256 chain)
-  observability/                   Langfuse client for LLM call tracing
-  jobs/                            Consolidation job (daily CronJob)
-nexi/                              Git submodule → github.com/x-nch/nexi
-  main.py                          App entrypoint, /session/start, /callback/outcome
-  config.py                        NEXI_* environment variable definitions
-  character/                       Nexi persona YAML, cold start seeder, system prompt loader
-  pipeline/                        Intent interpreter, context assembler, option generator,
-                                   policy filter, evaluator, selector, plan compiler, dispatch
-  models/                          Pydantic models: intent, session, DAG, options, outcomes
-  adapters/                        ModelAdapter (LiteLLM + vLLM + llama.cpp fallback), XnchClient
-  proactivity/                     ProactivityEngine — pattern/consolidation/inference/learning alerts
-  utils/                           Audit helper, context signature
-infra/                             K8s manifests, Dockerfiles, infrastructure configuration
-  k8s/i7-node/                     PostgreSQL, Redis, Langfuse, LiteLLM, xnch, perception daemonset
-  k8s/i9-node/                     vLLM, Nexi, mem0, Zep
-  k8s/jobs/                        Consolidation CronJob, vault indexer
-  docker/                          xnch.Dockerfile, nexi.Dockerfile
-  openclaw/                        OpenClaw client config, start_nexi.sh
-docs/                              Architecture docs, operations guide, security reference
-scripts/                           Helper scripts, migration agent
-misc/                              Historical records, conversations, reports
-```
-
----
-
-## Environment Variables
-
-### XNCH_* — Control Plane Configuration (20 vars)
-
-Defined in `xnch/config.py` (inside xnch submodule).
-
-| Variable | Default | Description |
-|---|---|---|
-| `XNCH_BASE_DIR` | `~/.xnch` | Root data directory; contains `keys/`, `audit/`, `governance/`, `policies/`, `weights/` |
-| `XNCH_REDIS_URL` | `redis://localhost:6379/0` | Redis connection for KV cache, sensory buffer, working memory |
-| `XNCH_AUTH_SECRET` | `dev-secret-change-in-production` | Shared secret for HS256 bearer token verification |
-| `XNCH_TOKEN_TTL_MS` | `30000` | Default execution token TTL in milliseconds |
-| `XNCH_SESSION_TTL_S` | `120` | Session TTL in seconds |
-| `XNCH_RATE_LIMIT_PER_MINUTE` | `10` | Max requests per minute per actor |
-| `XNCH_NEXI_BASE_URL` | `http://localhost:8000` | Nexi service callback URL |
-| `XNCH_POSTGRES_URL` | `postgresql://localhost:5432/xnch` | PostgreSQL + pgvector connection string |
-| `XNCH_PATTERN_MIN_OBSERVATIONS` | `10` | Minimum episodes before pattern extraction triggers |
-| `XNCH_SCORE_ADAPTER_ACCURACY_THRESHOLD` | `0.6` | Minimum accuracy before score adaptation triggers |
-| `XNCH_LANGFUSE_PUBLIC_KEY` | `""` | Langfuse public key for observability (empty = disabled) |
-| `XNCH_LANGFUSE_SECRET_KEY` | `""` | Langfuse secret key (empty = disabled) |
-| `XNCH_LANGFUSE_HOST` | `https://cloud.langfuse.com` | Langfuse API host |
-| `XNCH_LITELLM_PROXY_URL` | `http://litellm:4000` | LiteLLM proxy base URL |
-| `XNCH_GRAPH_EXTRACTOR_MODEL` | `ollama/phi3:mini` | Model used for entity-relation extraction from episodes |
-| `XNCH_VAULT_DIR` | `~/.xnch/vault` | Perception vault directory for file watching |
-| `XNCH_PERCEPTION_REDIS_DB` | `0` | Redis DB used for perception signals |
-| `XNCH_ATTENTION_SILENCE_THRESHOLD_S` | `1.5` | Seconds of silence before voice input triggers an action |
-| `XNCH_ATTENTION_SCREEN_DIFF_THRESHOLD` | `0.15` | Pixel-diff fraction for screen-change detection |
-| `XNCH_ATTENTION_IDLE_TIMEOUT_S` | `600` | Seconds idle before memory consolidation triggers |
-
-### NEXI_* — Execution Engine Configuration (18 vars)
-
-Defined in `nexi/config.py` (inside nexi submodule).
-
-| Variable | Default | Description |
-|---|---|---|
-| `NEXI_XNCH_BASE_URL` | `http://localhost:8001` | xnch control plane API base URL |
-| `NEXI_XNCH_PUBLIC_KEY_PATH` | `~/.xnch/keys/public.pem` | Path to xnch's RS256 public key for token verification |
-| `NEXI_VLLM_PRIMARY_URL` | `http://localhost:8000/v1` | Primary vLLM inference endpoint |
-| `NEXI_VLLM_PRIMARY_TIMEOUT_S` | `30.0` | Primary vLLM request timeout |
-| `NEXI_VLLM_SECONDARY_URL` | `""` | Secondary vLLM endpoint (fallback, empty = disabled) |
-| `NEXI_VLLM_SECONDARY_TIMEOUT_S` | `45.0` | Secondary vLLM request timeout |
-| `NEXI_MODEL_ID` | `mistralai/Mistral-7B-Instruct-v0.3` | Default model identifier |
-| `NEXI_OPTIONS_COUNT` | `5` | Number of plan options generated per intent |
-| `NEXI_LITELLM_PROXY_URL` | `http://localhost:4000/v1` | LiteLLM proxy endpoint for chat completions |
-| `NEXI_LITELLM_PROXY_TIMEOUT_S` | `60.0` | LiteLLM proxy request timeout |
-| `NEXI_INTENT_CLASSIFIER_MODEL` | `gemma4-local` | Model used for intent classification |
-| `NEXI_SESSION_TTL_S` | `120` | Session TTL in seconds |
-| `NEXI_CLARIFICATION_TTL_S` | `120` | Clarification sub-session TTL |
-| `NEXI_EXECUTION_TOKEN_TTL_MS` | `30000` | Execution token validity in milliseconds |
-| `NEXI_REDIS_URL` | `unix:///tmp/xnch-redis.sock` | Shared Redis connection (Unix socket, same instance xnch uses) |
-| `NEXI_EXECUTION_RUNNER_URL` | `http://localhost:8002` | Execution runner service URL |
-| `NEXI_VLLM_HEALTH_URL` | `http://vllm-gemma4:8000/health` | vLLM health endpoint (used by proactivity engine) |
-| `NEXI_AUDIT_EVENTS_PATH` | `~/.xnch/audit/events.jsonl` | Audit event log file path |
-
-### No-Prefix — nexi_gateway Configuration (2 vars)
-
-Used by the nexi_gateway route in xnch for LiteLLM relay.
-
-| Variable | Default | Description |
-|---|---|---|
-| `LITELLM_BASE_URL` | `http://i7-node:4000` | LiteLLM proxy URL for chat completions |
-| `LITELLM_API_KEY` | `""` | LiteLLM API key (empty = no auth) |
-
----
-
-## Running Tests
-
-```bash
-git submodule update --init --recursive  # Clone submodules first
-pytest                                    # All tests (auto-asyncio mode)
-cd nexi && pytest tests                  # Nexi tests only
-cd xnch && pytest tests                  # xnch tests only
-cd nexi && pytest tests/test_evaluator.py  # Single test file
-```
-
-No dedicated lint or typecheck commands exist in this repository.
+> Where code and docs disagree, code wins — please flag the page.

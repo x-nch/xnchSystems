@@ -7,7 +7,7 @@ these endpoints.
 
 Base URL for all examples: `http://127.0.0.1:8001` (gate7).
 
-Related: [mcp-tools.md](mcp-tools.md), [mcp-config.md](mcp-config.md), [mcp-bridge architecture](../guides/mcp-bridge.md).
+Related: [mcp-tools.md](mcp-tools.md), [mcp-config.md](mcp-config.md), [mcp-bridge architecture](../architecture/mcp-bridge.md).
 
 ## Contents
 
@@ -292,7 +292,7 @@ defaults to `operator` and is used only for memory-write guarding).
 
 The loop advertises native + bridged tools (OpenAI schema) to the model and executes
 tool calls until the model returns text or `max_rounds` is reached (3 normally, **5
-when the bridge is active**). See [mcp-bridge architecture](../guides/mcp-bridge.md).
+when the bridge is active**). See [mcp-bridge architecture](../architecture/mcp-bridge.md).
 
 ```bash
 curl -s -X POST http://127.0.0.1:8001/nexi/chat \

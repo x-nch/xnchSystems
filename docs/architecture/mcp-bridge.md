@@ -264,6 +264,6 @@ How the model should use bridged tools:
 - Diagram: [`docs/diagrams/mcp-bridge.mmd`](../diagrams/mcp-bridge.mmd)
 - Handoff: [`misc/opencode/xnch-mcp-handoff.md`](../../misc/opencode/xnch-mcp-handoff.md)
 - [Reference index](../reference/index.md) — MCP tools, HTTP API, config
-- [Memory routing guide](memory-routing.md) — episodic vs agentmemory
+- [Memory routing guide](../guides/memory-routing.md) — episodic vs agentmemory
 - [Memory routing deploy](../runbooks/memory-routing-deploy.md)
 - Legacy notes: [`misc/notes/nexi-mcp-bridge.md`](../../misc/notes/nexi-mcp-bridge.md)
