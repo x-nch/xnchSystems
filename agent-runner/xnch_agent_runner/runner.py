@@ -88,7 +88,7 @@ def build_command(cfg: RunnerConfig, prompt: str) -> list[str]:
     return (
         shlex.split(cfg.agent_command)
         + shlex.split(cfg.agent_args)
-        + ["-p", prompt]
+        + ["--", prompt]  # positional message; -- guards leading-dash prompts
     )
 
 
