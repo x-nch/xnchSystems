@@ -3,7 +3,7 @@
 Environment variables and YAML files that configure the xnch MCP layer (native tools,
 external server bridge, governed fs/exec, and web search).
 
-Related: [mcp-tools.md](mcp-tools.md), [mcp-http-api.md](mcp-http-api.md), [mcp-bridge architecture](../guides/mcp-bridge.md).
+Related: [mcp-tools.md](mcp-tools.md), [mcp-http-api.md](mcp-http-api.md), [mcp-bridge architecture](../architecture/mcp-bridge.md).
 
 ## Contents
 

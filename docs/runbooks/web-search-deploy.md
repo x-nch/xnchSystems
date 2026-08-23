@@ -4,7 +4,7 @@ Deployment and operations for **SearXNG** (self-hosted metasearch on gate7,
 `127.0.0.1:8888`) and the native **`xnch_web_search`** tool. No commercial
 search API keys.
 
-- Architecture deep-dive: [Nexi MCP Bridge — Architecture Guide](../guides/mcp-bridge.md) (Session 1)
+- Architecture deep-dive: [Nexi MCP Bridge — Architecture Guide](../architecture/mcp-bridge.md) (Session 1)
 - API reference: [`docs/reference/mcp-http-api.md`](../reference/mcp-http-api.md)
 - CLI reference: [`docs/guides/mcp-cli.md`](../guides/mcp-cli.md)
 - Chat prompts: [`docs/guides/nexi-test-prompts.md`](../guides/nexi-test-prompts.md)
@@ -183,7 +183,7 @@ The `web_search_health` and `xnch_web_search` cases of
 
 - [Memory routing deploy runbook](memory-routing-deploy.md) — episodic vs agentmemory
 - [MCP bridge deploy runbook](mcp-bridge-deploy.md) — bridge servers, CRG graph, verification
-- [Nexi MCP Bridge — Architecture Guide](../guides/mcp-bridge.md)
+- [Nexi MCP Bridge — Architecture Guide](../architecture/mcp-bridge.md)
 - [MCP CLI reference](../guides/mcp-cli.md)
 - [Nexi test prompts](../guides/nexi-test-prompts.md)
 - API reference: [`docs/reference/mcp-http-api.md`](../reference/mcp-http-api.md)

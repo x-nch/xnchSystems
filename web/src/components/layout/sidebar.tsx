@@ -15,6 +15,7 @@ import {
   ShieldCheck,
   Workflow,
   Bot,
+  Gauge,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/button";
@@ -36,6 +37,7 @@ const NAV = [
   { href: "/graph", label: "Graph", icon: GitBranch },
   { href: "/tools", label: "Tools", icon: Wrench },
   { href: "/system", label: "System", icon: Activity },
+  { href: "/observability", label: "Observability", icon: Gauge },
 ];
 
 export function Sidebar() {

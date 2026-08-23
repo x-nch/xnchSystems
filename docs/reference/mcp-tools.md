@@ -4,7 +4,7 @@ Complete catalog of tools exposed through `xnch_mcp` on gate7 (`xnch :8001`).
 Tools are consumed two ways:
 
 - **Nexi runtime** — via the bridge + native tools in the `POST /nexi/chat` tool loop
-  (actor `nexi`). See [mcp-bridge architecture](../guides/mcp-bridge.md).
+  (actor `nexi`). See [mcp-bridge architecture](../architecture/mcp-bridge.md).
 - **OpenCode / Cursor** — direct stdio MCP (`python -m xnch_mcp` with
   `XNCH_ACTOR=opencode` in `opencode.jsonc`), which proxies to the same HTTP endpoints.
   OpenCode sees **native tools only** — bridged servers are not exposed to non-`nexi`/`operator`
@@ -89,7 +89,7 @@ Total: **13 native tools**.
 Bridged servers are declared in `~/.xnch/mcp-servers.yaml` and spawned as stdio
 subprocesses by `xnch_mcp.bridge`. Tools are re-registered as
 `{prefix}{original_name}` with the server's tier and actor list. Only `nexi` and
-`operator` are enabled actors. See [mcp-bridge architecture](../guides/mcp-bridge.md) for the request flow.
+`operator` are enabled actors. See [mcp-bridge architecture](../architecture/mcp-bridge.md) for the request flow.
 
 | Server | Prefix | Tier | Actors | Example tools |
 |--------|--------|------|--------|---------------|

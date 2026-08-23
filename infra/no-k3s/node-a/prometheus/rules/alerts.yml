@@ -1,0 +1,186 @@
+# xnchSystems alert rules — loaded via prometheus.yml rule_files glob.
+#
+# Conventions:
+#   labels: severity = warning | critical | security
+#           area     = hitl | gpu | memory-tier | infra
+#   annotations include a runbook pointer into docs/observability/.
+#
+# The security-severity HITL alerts page the operator through Alertmanager's
+# fast sub-route (group_wait 0s, short repeat); see ../alertmanager/.
+
+groups:
+  # ------------------------------------------------------------------ HITL
+  - name: hitl
+    rules:
+      - alert: HitlInterruptPendingTooLong
+        expr: max_over_time(xnch_hitl_oldest_pending_age_seconds[10m]) > 900
+        for: 0m
+        labels:
+          severity: warning
+          area: hitl
+        annotations:
+          summary: "HITL interrupt pending >15m with no operator decision"
+          description: >-
+            An EXECUTION proposal has been waiting on a human decision.
+            This is the "gate exists but nobody is watching it" condition.
+          runbook: docs/observability/README.md#hitl-alerts
+
+      - alert: HitlInterruptAbandoned
+        expr: max_over_time(xnch_hitl_oldest_pending_age_seconds[30m]) > 3600
+        for: 0m
+        labels:
+          severity: critical
+          area: hitl
+        annotations:
+          summary: "HITL interrupt pending >1h — possible abandoned approval"
+          description: >-
+            A proposed action has sat in the gate for over an hour. Either the
+            operator is away (expected on a solo deployment) or notifications
+            are not being received. Decide or reject explicitly.
+          runbook: docs/observability/README.md#hitl-alerts
+
+      - alert: HitlGateBypassFiring
+        expr: increase(xnch_hitl_gate_bypass_total{origin="goal_loop"}[5m]) > 0
+        for: 0m
+        labels:
+          severity: security
+          area: hitl
+        annotations:
+          summary: "HITL BYPASS: goal loop dispatched an EXECUTION outside the gate"
+          description: >-
+            xnch allowed an EXECUTION-intent verdict carrying a goal_id, i.e. a
+            decision that never passed the propose -> interrupt -> execute gate.
+            If the goal-loop bypass is believed closed, this firing means it is
+            NOT closed — investigate immediately.
+          runbook: docs/observability/README.md#hitl-alerts
+
+      - alert: HitlQueueBacklog
+        expr: xnch_hitl_pending_interrupts > 5
+        for: 10m
+        labels:
+          severity: warning
+          area: hitl
+        annotations:
+          summary: "HITL queue depth >5 sustained 10m"
+          description: "Approvals are accumulating faster than they are decided."
+          runbook: docs/observability/README.md#hitl-alerts
+
+  # ------------------------------------------------------------------- GPU
+  - name: gpu
+    rules:
+      - alert: VramHeadroomCritical
+        expr: >
+          DCGM_FI_DEV_FB_USED
+            / clamp_min(DCGM_FI_DEV_FB_USED + DCGM_FI_DEV_FB_FREE, 1)
+            > 0.97
+        for: 5m
+        labels:
+          severity: critical
+          area: gpu
+        annotations:
+          summary: "Node B VRAM >97% for 5m"
+          description: >-
+            vLLM reserves gpu-memory-utilization=0.95 at startup; usage above
+            ~97% of total leaves no headroom for activation spikes and risks an
+            OOM kill of Ornith. Check whether the Vision Media Stack is holding
+            memory simultaneously.
+          runbook: docs/observability/README.md#gpu-alerts
+
+      - alert: GpuTemperatureHigh
+        expr: DCGM_FI_DEV_GPU_TEMP > 83
+        for: 5m
+        labels:
+          severity: warning
+          area: gpu
+        annotations:
+          summary: "Node B GPU temperature >83C for 5m"
+          runbook: docs/observability/README.md#gpu-alerts
+
+      - alert: OrnithServiceDown
+        expr: node_systemd_unit_state{name="vllm-ornith.service",state="active",job="node-exporter-b"} == 0
+        for: 3m
+        labels:
+          severity: critical
+          area: gpu
+        annotations:
+          summary: "vllm-ornith.service not active for 3m"
+          description: "Inference is down; nexi decisions will fail or degrade."
+          runbook: docs/observability/README.md#gpu-alerts
+
+      - alert: GpuLockFlapping
+        expr: changes(node_systemd_unit_state{name="vllm-ornith.service",state="active",job="node-exporter-b"}[30m]) > 3
+        for: 0m
+        labels:
+          severity: warning
+          area: gpu
+        annotations:
+          summary: "Ornith unit state changed >3x in 30m — GPU lock contention"
+          description: >-
+            systemd Conflicts= between Ornith and the Vision Media Stack means
+            each handoff stops one workload and forces a full model reload.
+            Frequent transitions indicate the two stacks are fighting for the
+            GPU; every reload also re-reserves VRAM (OOM risk right after).
+          runbook: docs/observability/README.md#gpu-alerts
+
+  # ----------------------------------------------------------- memory tier
+  - name: memory-tier
+    rules:
+      - alert: MemoryTierProbeFailed
+        expr: xnch_memory_tier_up == 0
+        for: 2m
+        labels:
+          severity: critical
+          area: memory-tier
+        annotations:
+          summary: "Memory tier {{ $labels.tier }} failing deep health probe"
+          description: >-
+            Real round-trip check failing (Redis TTL canary / Postgres episodic
+            query / Kuzu write-read). Process may still be 'up' — this catches
+            functional breakage uptime checks miss.
+          runbook: docs/observability/README.md#memory-tier-alerts
+
+      - alert: MemoryTierProbeStale
+        expr: time() - xnch_memory_tier_last_success_unixtime > 300
+        for: 1m
+        labels:
+          severity: warning
+          area: memory-tier
+        annotations:
+          summary: "Deep-health probe for {{ $labels.tier }} has not succeeded in 5m"
+          description: "The background prober may have died even if the tier itself is fine."
+          runbook: docs/observability/README.md#memory-tier-alerts
+
+      - alert: ConsolidationFailing
+        expr: increase(xnch_consolidation_runs_total{result="failure"}[24h]) > 0
+        for: 0m
+        labels:
+          severity: warning
+          area: memory-tier
+        annotations:
+          summary: "Consolidation job failed within last 24h"
+          description: "Summarization/graph-extraction/decay did not complete; memory tiers will drift."
+          runbook: docs/observability/README.md#memory-tier-alerts
+
+  # ------------------------------------------------------------ infra meta
+  - name: infra-meta
+    rules:
+      - alert: CoreServiceUnreachable
+        expr: up{job=~"xnch-control-plane|nexi-engine"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          area: infra
+        annotations:
+          summary: "{{ $labels.job }} scrape target down for 2m"
+          runbook: docs/observability/README.md
+
+      - alert: ExporterDown
+        expr: up{job=~"node-exporter-.*|dcgm-node-b"} == 0
+        for: 5m
+        labels:
+          severity: warning
+          area: infra
+        annotations:
+          summary: "Exporter {{ $labels.job }} unreachable for 5m"
+          description: "Monitoring coverage is degraded; GPU/host blind spots possible."
+          runbook: docs/observability/README.md

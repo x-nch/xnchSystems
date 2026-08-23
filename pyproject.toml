@@ -4,9 +4,16 @@ version = "0.1.0"
 requires-python = ">=3.13"
 dependencies = [
     "aiosqlite>=0.22.1",
+    "apscheduler>=3.10",
     "asyncpg>=0.31.0",
+    "cryptography>=42",
     "httpx>=0.28.1",
     "kuzu>=0.11.3",
+    "prometheus-client>=0.21",
+    "pydantic>=2.7",
+    "pydantic-settings>=2.2",
+    "redis>=5.0",
+    "numpy>=1.26",
     "langchain-openai>=1.4.1",
     "langgraph>=1.2.9",
     "langgraph-checkpoint-postgres>=3.1.0",
@@ -49,6 +56,7 @@ testpaths = ["nexi/tests", "xnch/tests", "tests", "xnch_mcp/tests", "fs_read_age
 dev = [
     "pytest>=9.1.1",
     "pytest-asyncio>=1.4.0",
+    "fakeredis>=2.0",
 ]
 voice = [
     "faster-whisper>=1.0",

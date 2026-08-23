@@ -5,7 +5,7 @@ talks to `xnch :8001` (`/mcp/servers`, `/mcp/tools`, `/mcp/call`) as an actor, s
 it needs the xnch API up — not the LLM path.
 
 - Deploy + verification: [MCP bridge deploy runbook](../runbooks/mcp-bridge-deploy.md)
-- Architecture: [Nexi MCP Bridge — Architecture Guide](mcp-bridge.md)
+- Architecture: [Nexi MCP Bridge — Architecture Guide](../architecture/mcp-bridge.md)
 - API reference: [`docs/reference/mcp-http-api.md`](../reference/mcp-http-api.md)
 
 ---
