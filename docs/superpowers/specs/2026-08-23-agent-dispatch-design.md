@@ -61,7 +61,7 @@ Routes (mounted like workflows router):
 | Route | Auth | Body | Effect |
 |---|---|---|---|
 | `POST /agents/dispatch` | gateway token | `{prompt, workspace?}` | creates run `QUEUED`, returns row |
-| `POST /agents/dispatch/next` | gateway token | `{runner_id, ttl_s=120}` | claims oldest QUEUED → `RUNNING` + lease; `204` if none |
+| `POST /agents/dispatch/next` | gateway token | `{runner_id, ttl_s=1800}` (lease must outlive the worst-case agent run; no mid-run renewal in v0) | claims oldest QUEUED → `RUNNING` + lease; `204` if none |
 | `POST /agents/runs/{id}/outcome` | gateway token | `{outcome_status: DONE\|FAILED, exit_code?, output_path?, error?, renew_lease?: bool}` | completes or extends lease |
 | `GET /agents/runs` | open read | `?status=&limit=` | list runs |
 
