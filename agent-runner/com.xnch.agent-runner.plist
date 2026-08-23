@@ -15,7 +15,10 @@
     <dict>
         <key>XNCH_GATEWAY_URL</key><string>http://192.168.1.10:8001</string>
         <key>XNCH_GATEWAY_SECRET</key><string>PLACEHOLDER_SECRET</string>
-        <key>XNCH_RUNNER_ID</key><string>ck-mac</string>
+        <key>XNCH_AGENT_COMMAND</key><string>/Users/xnch/.opencode/bin/opencode</string>
+        <key>XNCH_AGENT_ARGS</key><string>run</string>
+        <key>PYTHONUNBUFFERED</key><string>1</string>
+		<key>XNCH_RUNNER_ID</key><string>ck-mac</string>
         <key>PYTHONPATH</key><string>PLACEHOLDER_REPO/agent-runner</string>
     </dict>
     <key>KeepAlive</key><true/>

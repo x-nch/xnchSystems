@@ -73,7 +73,7 @@ without outcome may be re-claimed (claimed again resets lease; v0 keeps same row
 - One file loop (~120 lines) + launchd plist; deps: `httpx` only.
 - Config via env (`~/.xnch-agent-runner.env`): `XNCH_GATEWAY_URL`,
   `XNCH_GATEWAY_SECRET`, `XNCH_RUNNER_ID` (default hostname), `XNCH_AGENT_COMMAND`
-  (default `opencode run`).
+  (default `opencode run [message..]`).
 - Loop: claim (long-poll friendly 5 s sleep when 204) → mkdir workspace →
   `subprocess.run(shlex.split(command) + ["-p", prompt], cwd=workspace, timeout=XNCH_RUNNER_TIMEOUT_S default 1800)`
   → post outcome with captured exit code; exceptions → FAILED with error text.

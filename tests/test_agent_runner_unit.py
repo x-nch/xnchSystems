@@ -69,7 +69,7 @@ def test_build_command_appends_prompt_flag():
         gateway_url="http://x", gateway_secret="s", runner_id="r",
         agent_command="opencode", agent_args="run", timeout_s=60, poll_s=1,
     )
-    assert R.build_command(cfg, "do thing") == ["opencode", "run", "-p", "do thing"]
+    assert R.build_command(cfg, "do thing") == ["opencode", "run", "--", "do thing"]
 
 
 def test_handle_once_done_path(fake_xnch, tmp_path):
