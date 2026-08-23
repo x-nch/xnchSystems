@@ -26,3 +26,8 @@ scripts/logs/
 .chroma_db/
 storage/
 SESSIONS
+
+# web lib layer — negate global gitignore's bare `lib/` pattern which would
+# otherwise silently drop web/src/lib/** from untracked adds
+!web/src/lib/
+!web/src/lib/**
