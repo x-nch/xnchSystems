@@ -31,9 +31,12 @@ the code as the schema. Auth column: `open` = no bearer required;
 |---|---|---|
 | POST `/memory/read` | actor | ContextManifest for pipeline (episodes, patterns, policy refs) |
 | POST `/memory/write` | actor | guard-checked writes (`validate_memory_write`) |
-| GET `/memory/graph/stats` · `/graph/tiers` | actor | tier counts, cross-tier edges |
-| GET `/memory/graph/entities` · `/relations` · `/subgraph` · `/all` | actor | paginated graph views (`tier=&search=&limit=&offset=`) |
+| GET `/memory/graph/stats` | actor | tier counts, cross-tier edges |
+| GET `/memory/graph/entities` · `/relations` · `/subgraph` | actor | paginated graph views (`tier=&search=&limit=&offset=`) |
 | GET `/memory/graph/stream` | actor | SSE live graph updates |
+
+> `tier_graph.py` additionally designs `/memory/graph/tiers` + `/all`
+> (unified cross-tier view) — docstring only, **not routed yet**.
 
 ## Nexi gateway & chat → see [api-gateway-chat](api-gateway-chat.md)
 

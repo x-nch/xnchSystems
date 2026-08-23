@@ -30,11 +30,12 @@ store (PG), goal store (SQLite), workflow/approval store. Schema: [data model](d
 
 ## Unified tier graph (`tier_graph.py`)
 
-Flattens L0–L3 into one node/edge model tagged by tier for muse's graph explorer:
-
-- `GET /memory/graph/tiers` — per-tier counts + cross-tier edge count.
-- `GET /memory/graph/all?tier=&search=&limit=&offset=` — paginated unified view.
-- Live updates: `GET /memory/graph/stream` (SSE, via `graph_broadcaster.py`).
+Flattens L0–L3 into one node/edge model tagged by tier. Live HTTP surface today:
+`GET /memory/graph/stats`, `/entities`, `/relations`, `/subgraph` (paginated,
+`tier=&search=&limit=&offset=`) and `GET /memory/graph/stream` (SSE via
+`graph_broadcaster.py`). The module additionally designs two convenience
+endpoints — `tiers` (per-tier counts + cross-tier edges) and `all` (unified
+paginated view) — documented in its docstring but **not routed yet**.
 
 Node id prefixes avoid collisions: `sensory:` `working:` `episode:` `semantic:`.
 Cross-tier edges: session ──`produced`──▶ episode (via `episodes.session_id`;

@@ -25,8 +25,10 @@ Callers of xnch :8001 authenticate as an **actor** with
 
 Issued by xnch on ALLOW verdicts (`auth/token.py`): RS256 over a 2048-bit keypair
 under `~/.xnch/keys/`, TTL `XNCH_TOKEN_TTL_MS` (30 s default), **jti replay
-protection**. nexi verifies via `GET /auth/public-key` material cached at
-`NEXI_XNCH_PUBLIC_KEY_PATH`. Required by `/execution/*`.
+protection**. Enforcement point is xnch itself on `/execution/*`; nexi forwards
+the token unchanged — `NEXI_XNCH_PUBLIC_KEY_PATH` (`~/.xnch/keys/public.pem`)
+is provisioned in nexi config but no JWT decode exists in nexi code today
+(code-verified 2026-08-23).
 
 ## 3. Gateway Hybrid-B — short-lived HMAC (workflows/approvals writes)
 

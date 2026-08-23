@@ -57,5 +57,11 @@ gate is dry-run-only Phase 0; checkpoint promotion requires HITL.
 ## Open questions at ship time
 
 - Where should muse be hosted long-term (Vercel vs gate7)? Docs cover both.
+  *(Resolved same-day: muse runs on the operator's Mac — docs updated.)*
 - ADR's `Conflicts=` group: implement units or amend ADR status?
-- Submodule-side READMEs (xnch/, nexi/) intentionally untouched.
+- Submodule-side READMEs (xnch/, nexi/): initially out of scope; authored
+  later the same day via parallel technical-writer agents. Integration review
+  corrected three over-statements against code: `/memory/graph/tiers|all` are
+  docstring-designed but unrouted; nexi holds no JWT-decode path (token
+  enforcement lives in xnch `/execution/*`); workflow executor emits
+  SUCCESS|FAILURE only (API additionally accepts PARTIAL).

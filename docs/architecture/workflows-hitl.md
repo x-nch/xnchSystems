@@ -38,8 +38,9 @@ Serialized loop, survives transient errors:
    takes an `APPROVED` step, or a due `RETRYING` step, or a stale `CLAIMED`
    whose `lease_expires_at` has passed. No work → `204`.
 2. Execute the claimed step through one pipeline pass.
-3. Report `POST /workflows/steps/{uuid}/outcome` with
-   `SUCCESS | PARTIAL | FAILURE`.
+3. Report `POST /workflows/steps/{uuid}/outcome`. The API accepts
+   `SUCCESS | PARTIAL | FAILURE`, but the nexi executor emits only
+   `SUCCESS` or `FAILURE` today.
    - `SUCCESS/PARTIAL` ⇒ step `DONE`.
    - `FAILURE` ⇒ `RETRYING` with backoff until `max_retries`, then `FAILED`.
 4. Lease release is **implicit by expiry** — there is no explicit release

@@ -53,8 +53,9 @@ the policy engine regardless of what nexi decided locally. Outcomes:
 path — see [workflows & HITL](workflows-hitl.md).
 
 Execution tokens: RS256, 2048-bit keypair under `~/.xnch/keys/`, jti replay
-protection, TTL `XNCH_TOKEN_TTL_MS`. nexi verifies with the public key
-(`NEXI_XNCH_PUBLIC_KEY_PATH`). Full model: [auth reference](../reference/auth-model.md).
+protection, TTL `XNCH_TOKEN_TTL_MS`; enforced by xnch on `/execution/*` (nexi
+forwards the token; it holds no JWT-decode path today). Full model:
+[auth reference](../reference/auth-model.md).
 
 ## Outcome writeback
 
