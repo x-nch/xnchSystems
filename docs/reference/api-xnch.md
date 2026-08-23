@@ -45,9 +45,9 @@ the code as the schema. Auth column: `open` = no bearer required;
 | Method & path | Auth | Purpose |
 |---|---|---|
 | GET `/governance/weights` | actor | current scoring weights |
-| POST `/governance/weights/propose` · `/approve` | actor | weight change proposals (HITL) |
+| POST `/governance/weights/propose` · `/approve` | actor | weight change proposals (HITL); approve runs a fitness regression gate vs the active config — regressions rejected unless `force=true` |
 | POST `/governance/actors` | actor | register actors |
-| GET `/governance/policy-candidates` | actor | learning-loop candidates |
+| GET `/governance/policy-candidates` | actor | learning-loop candidates (review only — no programmatic promotion path; live rules load from `policies/*.yaml` via the PolicyLoader, so promotion = human review then a manual YAML edit) |
 | POST `/governance/pipeline/invoke` · `/resume`; GET `/governance/pipeline/{thread_id}` | actor | optional LangGraph pipeline w/ interrupts (`XNCH_LANGGRAPH_PIPELINE`) |
 | POST `/admin/consolidate` | actor | consolidation pass (timer calls this) |
 | POST `/admin/reseed-identity` | actor | cold-start identity facts |

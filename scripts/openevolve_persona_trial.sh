@@ -2,6 +2,15 @@
 # OpenEvolve trial scaffold for nexi/character/persona.yaml (offline CLI only).
 # Prerequisite: loop-2 harness fitness (nexi/eval) must exist — it does.
 # Target model: qwen2.5-vl-7b (production resident). Escalate to ornith only if plateau.
+#
+# STATUS (2026-08-24): scaffold only — never run to completion, `openevolve` is
+# NOT a dependency, and no evolved artifact has ever touched production. Output
+# stays in $WORKDIR (/tmp). Promotion contract if this is ever run for real:
+#   propose (evolved variant in WORKDIR) -> nexi eval harness regression run vs
+#   current persona.yaml -> human review -> manual edit of persona.yaml via a
+#   reviewed commit. NEVER silent write-back or auto-promotion of a "better-
+#   scoring" variant — same rule as the weight-promotion gate and the planned
+#   xnch-train weight gate.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
