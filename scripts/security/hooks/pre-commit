@@ -1,13 +1,21 @@
 #!/bin/zsh
-# Pre-commit secret scan (2026-08-24 audit U1).
+# Pre-commit secret scan (2026-08-24 audit U1; hardened same day: fail-closed).
 # Wired via `git config core.hooksPath scripts/security/hooks` in the parent
-# repo and both submodules. Fails the commit on detected secrets in staged
-# changes; warns (but allows) if gitleaks itself is missing.
+# repo and both submodules. Fails the commit when secrets are detected in
+# staged changes — and also when gitleaks itself is unavailable, because an
+# unscannable commit is indistinguishable from a clean one. To commit on a
+# machine without gitleaks anyway (throwaway VM, CI sandbox), set
+# XNCH_ALLOW_NO_GITLEAKS=1 explicitly.
 
 if ! command -v gitleaks >/dev/null 2>&1; then
-  print -u2 "WARNING: gitleaks not installed — skipping pre-commit secret scan."
-  print -u2 "         Install with: brew install gitleaks"
-  exit 0
+  if [[ "${XNCH_ALLOW_NO_GITLEAKS}" == "1" ]]; then
+    print -u2 "gitleaks not installed; XNCH_ALLOW_NO_GITLEAKS=1 — skipping scan."
+    exit 0
+  fi
+  print -u2 "COMMIT BLOCKED: gitleaks is not installed."
+  print -u2 "Install it with: brew install gitleaks"
+  print -u2 "(or export XNCH_ALLOW_NO_GITLEAKS=1 to skip deliberately)"
+  exit 1
 fi
 
 gitleaks git --pre-commit --staged --no-banner --redact -v
