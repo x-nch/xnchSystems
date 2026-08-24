@@ -138,6 +138,11 @@ export const workflowEndpoints = {
     apiRequest<ApprovalDTO>(`/approvals/${id}/decide`, {
       method: "POST",
       body,
-      headers: { "Idempotency-Key": crypto.randomUUID() },
+      headers: {
+        "Idempotency-Key": crypto.randomUUID(),
+        // muse is the operator console; xnch requires this role on
+        // elevated-risk approvals (2026-08-24 audit P1).
+        "X-Actor-Role": "admin",
+      },
     }),
 };
