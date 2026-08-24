@@ -99,9 +99,20 @@ Secrets below are placeholders; never commit real values.
 | `XNCH_LANGGRAPH_PIPELINE` | `false` | enable LangGraph pipeline + interrupts |
 | `XNCH_HITL_EXECUTION_MODE` | `always` | when to interrupt |
 | `XNCH_HITL_RISK_THRESHOLD` | `0.5` | risk gate threshold |
-| `XNCH_GATEWAY_SECRET` | `""` NOTE empty = Hybrid-B write-gate OPEN | HMAC secret shared with muse proxy |
+| `XNCH_GATEWAY_SECRET` | `""` NOTE empty = gated routes **503 fail-closed** | HMAC secret shared with muse proxy |
+| `XNCH_ALLOW_OPEN_GATEWAY` | `false` | explicit opt-out restoring open-gate behavior when no secret is set (throwaway dev only) |
 | `XNCH_WORKFLOW_EXECUTOR_ENABLED` | `false` | true = approve leaves steps APPROVED for nexi claim |
 | `XNCH_WORKFLOW_STEP_CLAIM_LEASE_S` | `120` | claim lease TTL |
+
+### Agent dispatch & goal auto-dispatch
+
+| Variable | Default | Description |
+|---|---|---|
+| `XNCH_GOAL_DISPATCH_ENABLED` | `false` | cron files goal_step approvals from the active goal's simulation_plan; approve spawns an agent_run for the Mac runner |
+| `XNCH_GOAL_DISPATCH_CRON_MINUTE` | `30` | minute-of-hour the dispatch tick fires |
+| `XNCH_GOAL_DISPATCH_GOAL_ID` | job-search goal | the single goal the cron scopes to |
+| `XNCH_GOAL_DISPATCH_ALLOWED_ACTIONS` | `""` (empty) | comma-separated keywords vs plan-entry action text. Fail-closed: only matches file `low`; empty/everything else files `elevated` (admin role required to decide) |
+| `XNCH_AGENTS_DIRECT_DISPATCH_ENABLED` | `false` | kill-switch on `POST /agents/dispatch` — approval-bypass path, deny-by-default (audit F7) |
 
 ### Voice
 

@@ -62,6 +62,19 @@ the code as the schema. Auth column: `open` = no bearer required;
 
 Goal driver loop on nexi side is gated by `NEXI_GOAL_DRIVER_ENABLED` (default off).
 
+## Agent dispatch (`/agents/*`)
+
+All methods — reads included — require the Hybrid-B gateway token (or service key). Run `result_text`/`error` are secret-redacted at the storage boundary (session-ingest redactor) before any endpoint can serve them.
+
+| Method & path | Auth | Purpose |
+|---|---|---|
+| POST `/agents/dispatch` | gateway | queue a run for the Mac runner. **403 unless `XNCH_AGENTS_DIRECT_DISPATCH_ENABLED=1`** — approval-bypass path, deny-by-default |
+| POST `/agents/dispatch/next` | gateway | runner claims oldest QUEUED (lease-based); writes CLAIMED step_event when linked to a goal approval |
+| POST `/agents/runs/{id}/outcome` | gateway | terminal DONE/FAILED + exit code + redacted result_text/error; back-pressures goal step-outcome |
+| GET `/agents/runs/{id}` · GET `/agents/runs?status=` | gateway | run detail / list |
+
+Goal-driven auto-dispatch: cron files goal_step approvals from the active goal's plan; every approval carries `risk_class` (`low` only on explicit allowlist match, else `elevated`). Deciding an `elevated` approval requires header `X-Actor-Role: admin`.
+
 ## Workflows & approvals → table in [workflows architecture](../architecture/workflows-hitl.md#api-surface)
 
 ## Voice (`/nexi/voice/*`)
