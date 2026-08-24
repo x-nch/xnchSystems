@@ -13,6 +13,18 @@ export const maxDuration = 300;
  */
 const GATED_PREFIXES = ["workflows", "approvals", "agents"];
 
+/**
+ * Which proxied paths require a minted X-Gateway-Token. Since the
+ * 2026-08-24 audit, reads on gated prefixes are gated too: agent-run
+ * detail carries raw model output. Chat/SSE/system traffic stays open.
+ */
+export function isGatedGatewayPath(path: string[], method: string): boolean {
+  return (
+    GATED_PREFIXES.includes(path[0] ?? "") &&
+    !["HEAD", "OPTIONS"].includes(method.toUpperCase())
+  );
+}
+
 function mintGatewayToken(secret: string, ttlS = 300): string {
   const expiry = String(Math.floor(Date.now() / 1000) + ttlS);
   const sig = createHmac("sha256", secret).update(expiry).digest("hex");
@@ -51,9 +63,7 @@ export async function proxyGateway(
   const method = request.method.toUpperCase();
 
   const gatewaySecret = process.env.XNCH_GATEWAY_SECRET ?? "";
-  const isGated =
-    GATED_PREFIXES.includes(path[0] ?? "") &&
-    !["GET", "HEAD", "OPTIONS"].includes(method);
+  const isGated = isGatedGatewayPath(path, method);
   if (gatewaySecret && isGated) {
     headers.set("X-Gateway-Token", mintGatewayToken(gatewaySecret));
   }

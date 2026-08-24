@@ -27,6 +27,11 @@ scripts/logs/
 storage/
 SESSIONS
 
+# agent-run deliverables (never commit run output to the repo)
+/response.md
+/recommended-roles.md
+/xnch-agents/
+
 # web lib layer — negate global gitignore's bare `lib/` pattern which would
 # otherwise silently drop web/src/lib/** from untracked adds
 !web/src/lib/

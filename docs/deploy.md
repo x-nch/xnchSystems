@@ -40,8 +40,9 @@ touches them (gitlink-only bumps usually don't) — do NOT blanket-stash operato
    ```bash
    curl -s http://192.168.1.10:8001/health          # {"status":"ok",...}
    curl -s http://192.168.50.2:8000/health          # nexi ok
+   ssh node-a 'grep -c XNCH_GATEWAY_SECRET ~/.xnch/xnch.env'   # must be 1 — empty secret = gated routes 503
    # route-specific probe for whatever shipped, e.g.:
-   curl -s "http://192.168.1.10:8001/agents/runs?limit=1"
+   TOKEN=$(...)  # mint per docs/runbooks; reads are token-gated since 2026-08-24
    ```
 5. **Rollback**: pre-deploy pins recorded in `~/xnchSystems.rollback.txt` per node;
    `git checkout -f <old-pin> && git submodule update --init --recursive` + service
@@ -52,6 +53,9 @@ touches them (gitlink-only bumps usually don't) — do NOT blanket-stash operato
 | Footgun | Symptom | Fix |
 |---|---|---|
 | Detached HEAD + pull | silent no-op / tracking error | checkout branch first (THE RULE) |
+| Empty `XNCH_GATEWAY_SECRET` on node-a | every gated route (agents/approvals/workflows, reads AND writes) returns **503** | set the secret in `~/.xnch/xnch.env`; `XNCH_ALLOW_OPEN_GATEWAY=1` only for throwaway dev |
+| muse decides 403 on elevated approvals | xnch requires `X-Actor-Role: admin`; old muse build omits it | deploy web alongside/after the xnch hardening branch |
+| Dispatched run picks wrong LLM provider | workspace `opencode.json` policy (written by agent-runner) denies all but `xnch-litellm` → node-a LiteLLM → node-b vllm ornith; do not bypass with raw `-m <provider/model>` flags — that proposal was rejected (LiteLLM-audit-trail rule) | keep `XNCH_AGENT_ARGS=run --agent xnch-dispatch`, `XNCH_ALLOW_UNSCOPED_AGENT=0` |
 | zsh eats unquoted `?` | `no matches found: ...?x=y` | quote curl URLs |
 | launchd PATH | `No such file or directory: opencode` | absolute binary path in plist `EnvironmentVariables` |
 | Python buffering under launchd | empty runner.log | `PYTHONUNBUFFERED=1` in plist |
