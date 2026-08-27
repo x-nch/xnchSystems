@@ -1,0 +1,127 @@
+app:
+  description: Minimal importable xnchSystems skeleton — extend nodes yourself.
+  icon: 🤖
+  icon_background: '#FFEAD5'
+  mode: workflow
+  name: xnchSystems Template
+  use_icon_as_answer_icon: false
+kind: app
+version: 0.1.5
+workflow:
+  conversation_variables: []
+  environment_variables: []
+  features: {}
+  graph:
+    edges:
+    - data:
+        isInIteration: false
+        sourceType: start
+        targetType: llm
+      id: e-start-llm
+      source: n-start
+      sourceHandle: source
+      target: n-llm
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: llm
+        targetType: end
+      id: e-llm-end
+      source: n-llm
+      sourceHandle: source
+      target: n-end
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    nodes:
+    - data:
+        desc: Workflow inputs.
+        selected: false
+        title: Start
+        type: start
+        variables:
+        - label: query
+          max_length: 2000
+          options: []
+          required: true
+          type: text-input
+          variable: query
+      height: 116
+      id: n-start
+      position:
+        x: 80
+        y: 280
+      positionAbsolute:
+        x: 80
+        y: 280
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        context:
+          enabled: false
+          variableSelector: []
+        desc: Placeholder model — swap provider/model to your own (e.g. OpenAI-compatible litellm endpoint).
+        model:
+          completion_params:
+            temperature: 0.7
+          mode: chat
+          name: gpt-4o-mini
+          provider: openai
+        prompt_template:
+        - id: p-system
+          role: system
+          text: You are a helpful assistant.
+        - id: p-user
+          role: user
+          text: '{{#n-start.query#}}'
+        selected: false
+        title: LLM
+        type: llm
+        variables: []
+        vision:
+          enabled: false
+      height: 98
+      id: n-llm
+      position:
+        x: 380
+        y: 280
+      positionAbsolute:
+        x: 380
+        y: 280
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        desc: ''
+        outputs:
+        - value_selector:
+          - n-llm
+          - text
+          variable: result
+        selected: false
+        title: End
+        type: end
+      height: 90
+      id: n-end
+      position:
+        x: 680
+        y: 280
+      positionAbsolute:
+        x: 680
+        y: 280
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    viewport:
+      x: 0
+      y: 0
+      zoom: 1
