@@ -211,3 +211,10 @@ Do NOT import from sibling packages with absolute paths (e.g. `from xnch.X impor
 - `.cursorrules` — Contains MCP tool reference (see above section).
 - `.claude/` — Claude-specific instructions.
 - `opencode.jsonc` / `.opencode.json` — Opencode config.
+
+## Skill Scope
+
+Engineering-only. Marketing/SEO/growth skills (global `~/.agents/skills`,
+`~/.claude/skills`) are out of scope for this repo — see
+`.opencode/rules/skills-scope.md`. Use the `review-loop` skill + `reviewer` agent
+for code review.
