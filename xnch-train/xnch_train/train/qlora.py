@@ -1,8 +1,11 @@
 """QLoRA SFT trainer for Ornith customization (Phase 1)."""
 from __future__ import annotations
 
+import argparse
 import json
 import logging
+import sys
+import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -33,6 +36,17 @@ def _load_records(dataset_dir: Path) -> list[str]:
             if line.strip():
                 out.append(line.strip())
     return out
+
+
+def _record_text(line: str) -> str:
+    """Extract training text from a JSONL record line, tolerating malformed input."""
+    try:
+        obj = json.loads(line)
+    except json.JSONDecodeError:
+        return ""
+    if not isinstance(obj, dict):
+        return ""
+    return str(obj.get("text") or obj.get("output") or "")
 
 
 def _fake_sft(base_model: str, dataset_dir: Path, out_dir: Path, r: int) -> SftResult:
@@ -88,6 +102,7 @@ def run_sft(
         bias="none",
         task_type="CAUSAL_LM",
     )
+    train_dataset = [{"text": _record_text(line)} for line in records]
     trainer = SFTTrainer(
         model=model,
         tokenizer=tokenizer,
@@ -99,7 +114,7 @@ def run_sft(
             optim="paged_adamw_8bit",
             logging_steps=10,
         ),
-        train_dataset=records,
+        train_dataset=train_dataset,
         peft_config=lora_config,
         max_seq_length=2048,
         dataset_text_field="text",
@@ -108,3 +123,48 @@ def run_sft(
     final_loss = float(result.training_loss) if getattr(result, "training_loss", None) is not None else 0.0
     trainer.save_model(out_dir / "adapter")
     return SftResult(adapter_dir=out_dir / "adapter", metrics={"train_loss": final_loss})
+
+
+def _build_cli_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description="Run QLoRA SFT on a scrubbed dataset.")
+    parser.add_argument("--base", required=True, help="Base model name or path.")
+    parser.add_argument("--dataset", type=Path, default=None, help="Dataset dir with scrub_manifest.json.")
+    parser.add_argument("--out", type=Path, required=True, help="Output dir for the adapter.")
+    parser.add_argument(
+        "--fake-dataset",
+        type=int,
+        default=0,
+        metavar="N",
+        help="Generate a temporary fake dataset of N records and run with fake=True (no GPU).",
+    )
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
+    """CLI entrypoint: `python -m xnch_train.train.qlora`. Returns process exit code."""
+    args = _build_cli_parser().parse_args(argv)
+    if args.fake_dataset:
+        dataset_dir = _make_fake_dataset(args.fake_dataset)
+        result = run_sft(base_model=args.base, dataset_dir=dataset_dir, out_dir=args.out, fake=True)
+    else:
+        if args.dataset is None:
+            print("error: --dataset is required when --fake-dataset is not given", file=sys.stderr)
+            return 2
+        result = run_sft(base_model=args.base, dataset_dir=args.dataset, out_dir=args.out, fake=False)
+    print(result.metrics)
+    return 0
+
+
+def _make_fake_dataset(n: int) -> Path:
+    """Create a temp dataset dir with N fake records and a valid scrub_manifest.json."""
+    ds = Path(tempfile.mkdtemp(prefix="xtrain-fake-ds-"))
+    with (ds / "records.jsonl").open("w") as fh:
+        for _ in range(n):
+            fh.write('{"text":"hi"}\n')
+    (ds / "scrub_manifest.json").write_text('{"version":"1"}')
+    return ds
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+

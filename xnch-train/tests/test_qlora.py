@@ -2,6 +2,7 @@
 import pytest
 
 from xnch_train.train import SftResult, run_sft
+from xnch_train.train.qlora import _record_text
 
 
 def test_run_sft_writes_adapter_and_metrics(tmp_path: pytest.TempPathFactory) -> None:
@@ -46,3 +47,16 @@ def test_qlora_imports_without_torch() -> None:
     import xnch_train.train.qlora as qlora  # noqa: F401
     importlib.reload(qlora)
     assert "torch" not in sys.modules, "torch was imported during trainer import"
+
+
+def test_record_text_reads_text_field() -> None:
+    assert _record_text('{"text":"hi"}') == "hi"
+
+
+def test_record_text_falls_back_to_output() -> None:
+    assert _record_text('{"output":"the answer"}') == "the answer"
+
+
+def test_record_text_tolerates_malformed_line() -> None:
+    assert _record_text("not json at all") == ""
+    assert _record_text('{"no":"text key here"}') == ""
