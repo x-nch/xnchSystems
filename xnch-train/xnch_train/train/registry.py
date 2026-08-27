@@ -1,6 +1,7 @@
 """Immutable checkpoint registry + retention (Node B NVMe hygiene)."""
 from __future__ import annotations
 
+import shutil
 import sqlite3
 from pathlib import Path
 
@@ -92,5 +93,11 @@ class CheckpointRegistry:
         return evicted
 
     def quota_warning(self, threshold_pct: float = 90.0) -> bool:
-        # TODO(Task 7): wire shutil.disk_usage on XTRAIN_CHECKPOINT_DIR parent.
-        return False
+        """Return True when the checkpoint volume exceeds ``threshold_pct`` used.
+
+        Backed by ``shutil.disk_usage`` on the directory holding the registry
+        and checkpoints. Wired to the ``XtTrainDiskQuota`` Prometheus alert in
+        ``infra/no-k3s/node-a/prometheus/rules/alerts.yml``.
+        """
+        total, used, _free = shutil.disk_usage(self._db.parent)
+        return (used / total * 100.0) > threshold_pct

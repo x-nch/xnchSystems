@@ -5,6 +5,7 @@ from .qlora import SftResult, run_sft
 from .registry import CheckpointID, CheckpointRegistry
 from .cycle import run_cycle
 from .promote import promote
+from .observability import CycleTracer, GpuPoller
 
 __all__ = [
     "SftResult",
@@ -17,4 +18,6 @@ __all__ = [
     "emit_promotion_proposal",
     "run_cycle",
     "promote",
+    "CycleTracer",
+    "GpuPoller",
 ]

@@ -161,6 +161,51 @@ groups:
           description: "Summarization/graph-extraction/decay did not complete; memory tiers will drift."
           runbook: docs/observability/README.md#memory-tier-alerts
 
+  # ------------------------------------------------------ xtrain checkpoint
+  - name: xtrain
+    rules:
+      - alert: XtTrainDiskQuota
+        # The xnch-train checkpoint dir lives on the Node B NVMe. CheckpointRegistry
+        # exposes the same threshold via CheckpointRegistry.quota_warning(); this
+        # alert is the operator-facing mirror of that Python check (Task 7).
+        expr: >
+          (
+            node_filesystem_avail_bytes{mountpoint=~".*/xtrain.*"}
+              / clamp_min(node_filesystem_size_bytes{mountpoint=~".*/xtrain.*"}, 1)
+          ) * 100 < 10
+        for: 10m
+        labels:
+          severity: warning
+          area: gpu
+        annotations:
+          summary: "xtrain checkpoint volume <10% free for 10m"
+          description: >-
+            The xnch-train checkpoint directory (Node B NVMe) has less than 10%
+            free space for 10 minutes. CheckpointRegistry.quota_warning(90.0)
+            will already be firing; older candidates risk eviction mid-cycle.
+            Trim retained checkpoints or expand the volume before the next cycle.
+          runbook: docs/observability/README.md#gpu-alerts
+
+      - alert: XtTrainCheckpointQuota
+        # Catch-all for the host root if the xtrain-specific mountpoint label is
+        # absent (single-volume Node B builds). Mirrors quota_warning semantics.
+        expr: >
+          (
+            node_filesystem_avail_bytes{job="node-exporter-b",mountpoint="/"}
+              / clamp_min(node_filesystem_size_bytes{job="node-exporter-b",mountpoint="/"}, 1)
+          ) * 100 < 10
+        for: 10m
+        labels:
+          severity: warning
+          area: gpu
+        annotations:
+          summary: "Node B root volume <10% free for 10m (xtrain checkpoints)"
+          description: >-
+            Fallback quota alarm for the Node B root volume when the dedicated
+            xtrain checkpoint mountpoint label is not exported. Mirrors
+            CheckpointRegistry.quota_warning(90.0).
+          runbook: docs/observability/README.md#gpu-alerts
+
   # ------------------------------------------------------------ infra meta
   - name: infra-meta
     rules:
