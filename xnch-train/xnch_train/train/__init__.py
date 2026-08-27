@@ -3,6 +3,7 @@ from .goal import GoalClient, claim_goal, emit_promotion_proposal
 from .merge import merge_and_requant
 from .qlora import SftResult, run_sft
 from .registry import CheckpointID, CheckpointRegistry
+from .cycle import run_cycle
 
 __all__ = [
     "SftResult",
@@ -13,4 +14,5 @@ __all__ = [
     "GoalClient",
     "claim_goal",
     "emit_promotion_proposal",
+    "run_cycle",
 ]
