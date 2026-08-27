@@ -107,3 +107,25 @@ servers:
       - resolve-library-id
       - query-docs
     deny_tools: []
+  superpowers:
+    enabled: true
+    actors:
+      - nexi
+      - operator
+    tier: T0_READ
+    tool_prefix: sp_
+    command: /usr/bin/node
+    args:
+      - /home/x-nch/xnchSystems/mcp/superpowers-mcp/build/index.js
+    env:
+      SUPERPOWERS_SKILLS_DIR: /home/x-nch/xnchSystems/skills/superpowers/skills
+      SUPERPOWERS_USE_LOCAL_SKILLS: "true"
+    allow_tools:
+      - list_skills
+      - use_skill
+      - get_skill_file
+      - recommend_skills
+      - compose_workflow
+      - validate_workflow
+      - semantic_search_skills
+    deny_tools: []

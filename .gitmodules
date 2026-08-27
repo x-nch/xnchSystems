@@ -6,3 +6,9 @@
 	path = nexi
 	url = https://github.com/x-nch/nexi.git
 	branch = master
+[submodule "skills/superpowers"]
+	path = skills/superpowers
+	url = https://github.com/obra/superpowers.git
+[submodule "mcp/superpowers-mcp"]
+	path = mcp/superpowers-mcp
+	url = https://github.com/erophames/superpowers-mcp.git

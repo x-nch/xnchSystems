@@ -124,6 +124,9 @@ start_consolidation_timer() {
   return 1
 }
 
+step "Build superpowers-mcp bridge server"
+"$REPO_ROOT/scripts/build-superpowers-mcp.sh"
+
 step "systemd: xnch + consolidation"
 sudo systemctl enable xnch.service consolidation.timer
 sudo systemctl start xnch.service
