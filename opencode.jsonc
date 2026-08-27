@@ -13,14 +13,8 @@
         "qwen2.5-vl-7b": {
           "name": "Qwen2.5-VL-7B (local)",
           "attachment": true,
-          "modalities": {
-            "input": ["text", "image"],
-            "output": ["text"]
-          },
-          "limit": {
-            "context": 16384,
-            "output": 4096
-          },
+          "modalities": { "input": ["text", "image"], "output": ["text"] },
+          "limit": { "context": 16384, "output": 4096 },
           "tool_call": true
         }
       }
@@ -29,35 +23,33 @@
   "mcp": {
     "code-review-graph": {
       "type": "local",
-      "command": [
-        "uvx",
-        "code-review-graph",
-        "serve",
-        "--repo",
-        "/home/x-nch/xnchSystems"
-      ]
+      "command": ["uvx", "code-review-graph", "serve", "--repo", "/Users/xnch/xnchSystems"]
     },
     "xnch": {
       "type": "local",
-      "command": [
-        "/home/x-nch/xnchSystems/.venv/bin/python",
-        "-m",
-        "xnch_mcp"
-      ],
+      "command": ["/Users/xnch/xnchSystems/.venv/bin/python", "-m", "xnch_mcp"],
+      "env": { "XNCH_BASE_URL": "http://127.0.0.1:8001", "XNCH_ACTOR": "opencode" }
+    },
+    "superpowers": {
+      "type": "local",
+      "command": ["node", "./mcp/superpowers-mcp/build/index.js"],
       "env": {
-        "XNCH_BASE_URL": "http://127.0.0.1:8001",
-        "XNCH_ACTOR": "opencode"
+        "SUPERPOWERS_SKILLS_DIR": "./skills/superpowers/skills",
+        "SUPERPOWERS_USE_LOCAL_SKILLS": "true"
       }
     },
-    "figma": {
+    "agentmemory": {
       "type": "local",
-      "command": [
-        "npx",
-        "-y",
-        "@figma-developer-mcp/figma-developer-mcp",
-        "--figma-api-key",
-        "{env:FIGMA_API_KEY}"
-      ]
+      "command": ["npx", "-y", "@agentmemory/mcp"],
+      "env": {
+        "AGENTMEMORY_URL": "http://localhost:3111",
+        "AGENTMEMORY_SECRET": "xnch-agentmemory-secret"
+      }
+    },
+    "langchain-docs": {
+      "type": "remote",
+      "url": "https://docs.langchain.com/mcp",
+      "enabled": true
     }
   }
 }
