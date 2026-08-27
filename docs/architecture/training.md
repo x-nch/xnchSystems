@@ -63,3 +63,21 @@ propose→interrupt→execute HITL, inside exclusive GPU windows
 ([gpu-window runbook](../runbooks/gpu-window.md)). Training cycles are modeled
 as Goals via the existing GoalStore. None of this is implemented yet — the gate
 stays dry-run until those phases land.
+
+## Phase 1 environment
+
+Node B isolated QLoRA training venv, bootstrapped by
+[`infra/no-k3s/node-b/scripts/setup-xtrain-venv.sh`](../../infra/no-k3s/node-b/scripts/setup-xtrain-venv.sh)
+(idempotent; runs against Node B's system `python3.13`).
+
+| Item | Value |
+|---|---|
+| Venv path | `~/venvs/xtrain` (override via `XTRAIN_VENV`) |
+| Pinfile | `$VENV/requirements.lock` (pinned via `pip freeze`) |
+| torch / transformers / peft / trl | `2.4.1` / `4.46.1` / `0.13.2` / `0.11.0` |
+| CUDA toolchain | 12.1 wheel index (`--extra-index-url …/whl/cu121`), matches vllm-ornith |
+| Phase-1 gate G1 | LoRA-over-`gptq_marlin` is checked against this pin |
+
+Later tasks invoke training through `~/venvs/xtrain/bin/python -m xnch_train.train.qlora`.
+Step 2 (bootstrap run) and Step 3 (CUDA smoke test) are executed on Node B hardware,
+not in this repo.
