@@ -1,5 +1,6 @@
-"""xnch-train CLI — extract, validate-dataset, suite, baseline."""
+"""xnch-train CLI — extract, validate-dataset, suite, baseline, cycle."""
 import asyncio
+import os
 from pathlib import Path
 from typing import Annotated, Optional
 
@@ -13,6 +14,9 @@ from .extract.pg_extract import PgExtractor
 from .models.manifest import build_scrub_manifest, validate_dataset
 from .models.records import TrainingRecord
 from .scrub.scrubber import Scrubber
+from .train.cycle import run_cycle
+from .train.goal import GoalClient
+from .train.promote import promote
 
 app = typer.Typer(help="xnch-train Phase 0: data pipeline + eval harness")
 
@@ -127,6 +131,47 @@ def baseline_cmd(
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(report.model_dump_json(indent=2), encoding="utf-8")
     typer.echo(f"wrote baseline report for {checkpoint_id} to {out}")
+
+
+_XTRAIN_BASE_URL_ENV = "XTRAIN_XNCH_BASE_URL"
+
+
+@app.command("cycle")
+def cycle_cmd(
+    out: Annotated[Path, typer.Option(help="Cycle output directory")],
+    base: Annotated[str, typer.Option(help="Base model name or path")],
+    dataset: Annotated[Path, typer.Option(help="Scrubbed dataset directory")],
+    goal_id: Annotated[Optional[str], typer.Option()] = None,
+    autonomous: Annotated[bool, typer.Option()] = False,
+) -> None:
+    """Run one training cycle: Train → Merge → Register → Propose."""
+    client = GoalClient(
+        base_url=os.environ.get(_XTRAIN_BASE_URL_ENV, "http://localhost:8080")
+    )
+    result = run_cycle(
+        client,
+        base_model=base,
+        dataset_dir=dataset,
+        out_dir=out,
+        goal_id=goal_id,
+        autonomous=autonomous,
+    )
+    typer.echo(result if result is not None else "no goal")
+
+
+@app.command("promote")
+def promote_cmd(
+    checkpoint_id: Annotated[str, typer.Argument()],
+    registry_db: Annotated[Optional[Path], typer.Option()] = None,
+    current_link: Annotated[Optional[Path], typer.Option()] = None,
+) -> None:
+    """Promote a registered checkpoint: flip symlink + smoke (fake-safe)."""
+    promote(
+        checkpoint_id,
+        registry_db=registry_db,
+        current_link=current_link,
+    )
+    typer.echo(f"promoted {checkpoint_id}")
 
 
 if __name__ == "__main__":
