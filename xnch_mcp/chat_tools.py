@@ -88,8 +88,8 @@ def _max_tool_rounds() -> int:
     if pool is not None and pool.started and pool.has_enabled_servers:
         return settings.mcp_max_tool_rounds_with_bridge
     return settings.mcp_max_tool_rounds
-LITELLM_BASE = os.environ.get("LITELLM_BASE_URL", settings.litellm_proxy_url)
-LITELLM_API_KEY = os.environ.get("LITELLM_API_KEY", os.environ.get("LITELLM_MASTER_KEY", ""))
+OPENCODE_GO_BASE = os.environ.get("OPENCODE_GO_BASE_URL", settings.opencode_go_api_url)
+OPENCODE_GO_API_KEY = os.environ.get("OPENCODE_GO_API_KEY", settings.opencode_go_api_key)
 
 
 async def chat_with_tools(
@@ -107,7 +107,9 @@ async def chat_with_tools(
     tools = list_openai_tools(actor_role)
     trace_id = str(uuid4())
     actor = ActorContext(actor_role=actor_role, trace_id=trace_id, session_id=session_id)
-    headers = {"Authorization": f"Bearer {LITELLM_API_KEY}"} if LITELLM_API_KEY else {}
+    headers = {"Content-Type": "application/json"}
+    if OPENCODE_GO_API_KEY:
+        headers["Authorization"] = f"Bearer {OPENCODE_GO_API_KEY}"
 
     last_message: dict[str, Any] = {}
     last_tool_result: dict[str, Any] | None = None
@@ -115,7 +117,7 @@ async def chat_with_tools(
     forced = False
     force_answer = False
     prev_tool_sig: str | None = None
-    async with httpx.AsyncClient(base_url=LITELLM_BASE, timeout=120.0) as client:
+    async with httpx.AsyncClient(base_url=OPENCODE_GO_BASE, timeout=120.0) as client:
         for round_idx in range(max_rounds):
             payload: dict[str, Any] = {
                 "model": model_name,
