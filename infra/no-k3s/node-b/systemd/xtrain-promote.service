@@ -1,0 +1,18 @@
+[Unit]
+Description=xtrain — Promote Window (symlink flip + vLLM restart + smoke)
+After=network-online.target
+Conflicts=vllm-ornith.service vision-media.service xtrain-cycle.service
+StartLimitIntervalSec=0
+
+[Service]
+Type=oneshot
+User=x-nch
+WorkingDirectory=/home/x-nch/xnchSystems/xnch-train
+Environment=PYTHONPATH=/home/x-nch/xnchSystems/xnch-train
+ExecStart=/home/x-nch/xnchSystems/xnch-train/.venv/bin/python -m xnch_train.promote %i
+TimeoutStartSec=3600
+Restart=no
+StandardOutput=journal
+
+[Install]
+WantedBy=multi-user.target

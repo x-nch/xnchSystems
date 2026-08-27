@@ -1,0 +1,23 @@
+[Unit]
+Description=xtrain — Ornith QLoRA cycle (Train Window; stops serving by design)
+After=nvidia-ready.service
+Wants=nvidia-ready.service
+Conflicts=vllm-ornith.service vision-media.service
+StartLimitIntervalSec=0
+
+[Service]
+Type=oneshot
+User=x-nch
+WorkingDirectory=/home/x-nch/xnchSystems/xnch-train
+EnvironmentFile=/home/x-nch/.xnch/xtrain.env
+Environment=PYTHONPATH=/home/x-nch/xnchSystems/xnch-train
+ExecStartPre=/home/x-nch/xnchSystems/xnch-train/scripts/xtrain-preflight.sh
+ExecStart=/home/x-nch/venvs/xtrain/bin/python -m xnch_train.train.cycle %i
+ExecStartPost=/home/x-nch/xnchSystems/xnch-train/scripts/xtrain-restart-vllm.sh
+TimeoutStartSec=14400
+Restart=no
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
