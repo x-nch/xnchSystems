@@ -1,19 +1,20 @@
 """Adapter merge + GPTQ requant: fake path and lazy-import contract."""
 import sys
+from pathlib import Path
 
 import pytest
 
 from xnch_train.train.merge import merge_and_requant
 
 
-def test_merge_fake_returns_dir_with_marker(tmp_path: pytest.TempPathFactory) -> None:
+def test_merge_fake_returns_dir_with_marker(tmp_path: Path) -> None:
     out = merge_and_requant(
         adapter_dir=tmp_path / "adapter",
         base_model="b",
         out_dir=tmp_path / "o",
         fake=True,
     )
-    assert isinstance(out, __import__("pathlib").Path)
+    assert isinstance(out, Path)
     assert (out / "requant.done").is_file()
 
 

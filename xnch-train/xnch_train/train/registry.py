@@ -61,7 +61,7 @@ class CheckpointRegistry:
     def retain(self, max_candidates: int = 2) -> list[str]:
         """Keep the `max_candidates` newest checkpoints; evict (delete) the rest.
 
-        Returns the list of evicted checkpoint ids (oldest first).
+        Returns the evicted checkpoint ids (order: newest non-retained first).
         """
         cur = self._conn.cursor()
         keep = [
@@ -85,5 +85,5 @@ class CheckpointRegistry:
         return evicted
 
     def quota_warning(self, threshold_pct: float = 90.0) -> bool:
-        # dummy until Task 7 wires shutil.disk_usage on XTRAIN_CHECKPOINT_DIR parent.
+        # TODO(Task 7): wire shutil.disk_usage on XTRAIN_CHECKPOINT_DIR parent.
         return False
