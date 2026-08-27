@@ -16,6 +16,7 @@ from .models.records import TrainingRecord
 from .scrub.scrubber import Scrubber
 from .train.cycle import run_cycle
 from .train.goal import GoalClient
+from .train.promote import promote
 
 app = typer.Typer(help="xnch-train Phase 0: data pipeline + eval harness")
 
@@ -156,6 +157,21 @@ def cycle_cmd(
         autonomous=autonomous,
     )
     typer.echo(result if result is not None else "no goal")
+
+
+@app.command("promote")
+def promote_cmd(
+    checkpoint_id: Annotated[str, typer.Argument()],
+    registry_db: Annotated[Optional[Path], typer.Option()] = None,
+    current_link: Annotated[Optional[Path], typer.Option()] = None,
+) -> None:
+    """Promote a registered checkpoint: flip symlink + smoke (fake-safe)."""
+    promote(
+        checkpoint_id,
+        registry_db=registry_db,
+        current_link=current_link,
+    )
+    typer.echo(f"promoted {checkpoint_id}")
 
 
 if __name__ == "__main__":

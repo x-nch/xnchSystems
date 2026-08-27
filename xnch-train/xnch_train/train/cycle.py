@@ -16,6 +16,14 @@ import logging
 import os
 from pathlib import Path
 
+try:
+    import fcntl
+
+    _HAVE_FCNTL = True
+except ImportError:  # pragma: no cover - non-Linux dev envs
+    fcntl = None  # type: ignore[assignment]
+    _HAVE_FCNTL = False
+
 from .goal import GoalClient, claim_goal, emit_promotion_proposal
 from .merge import merge_and_requant
 from .qlora import run_sft
@@ -25,6 +33,7 @@ logger = logging.getLogger(__name__)
 
 _XTRAIN_BASE_URL_ENV = "XTRAIN_XNCH_BASE_URL"
 _DEFAULT_BASE_URL = "http://localhost:8080"
+_LOCK_NAME = ".cycle.lock"
 
 
 def run_cycle(
@@ -42,59 +51,97 @@ def run_cycle(
     cycle must fail safe and never take the GPU). All heavy steps use
     ``fake=True`` so this is hardware-free.
     """
-    ckpt_id: str | None = None
-    merged: Path | None = None
+    lock = _acquire_lock(out_dir)
     try:
-        if not autonomous:
-            gid = claim_goal(
-                client,
-                objective="Phase 1 training cycle",
-                max_steps=10,
-                lease_owner="xtrain",
+        ckpt_id: str | None = None
+        merged: Path | None = None
+        try:
+            if not autonomous:
+                gid = claim_goal(
+                    client,
+                    objective="Phase 1 training cycle",
+                    max_steps=10,
+                    lease_owner="xtrain",
+                )
+                if not gid:
+                    logger.warning("no Goal claimed; aborting cycle (fail-safe)")
+                    return None
+
+            sft = run_sft(
+                base_model=base_model,
+                dataset_dir=dataset_dir,
+                out_dir=out_dir / "adapter",
+                fake=True,
             )
-            if not gid:
-                logger.warning("no Goal claimed; aborting cycle (fail-safe)")
-                return None
+            merged = merge_and_requant(
+                adapter_dir=sft.adapter_dir,
+                base_model=base_model,
+                out_dir=out_dir / "merged",
+                fake=True,
+            )
+            ckpt_id = f"ckpt-{datetime.date.today().isoformat()}-{goal_id or 'manual'}"
 
-        sft = run_sft(
-            base_model=base_model,
-            dataset_dir=dataset_dir,
-            out_dir=out_dir / "adapter",
-            fake=True,
-        )
-        merged = merge_and_requant(
-            adapter_dir=sft.adapter_dir,
-            base_model=base_model,
-            out_dir=out_dir / "merged",
-            fake=True,
-        )
-        ckpt_id = f"ckpt-{datetime.date.today().isoformat()}-{goal_id or 'manual'}"
+            reg = CheckpointRegistry(out_dir / "registry.sqlite")
+            reg.register(ckpt_id, merged, datetime.date.today().isoformat())
 
-        reg = CheckpointRegistry(out_dir / "registry.sqlite")
-        reg.register(ckpt_id, merged, datetime.date.today().isoformat())
+            emit_promotion_proposal(
+                client,
+                {
+                    "type": "checkpoint.promotion",
+                    "checkpoint_id": ckpt_id,
+                    "goal_id": goal_id,
+                    "source": "xnch-train.cycle",
+                },
+            )
+            return ckpt_id
+        except Exception:
+            logger.exception("cycle failed; leaving no orphan checkpoint")
+            # Registration is the last successful step, so a failure here means
+            # nothing was registered. Enforce quota hygiene and return None so the
+            # systemd unit stays idle (Restart=no). Cleanup is best-effort.
+            if ckpt_id is not None:
+                try:
+                    reg = CheckpointRegistry(out_dir / "registry.sqlite")
+                    reg.retain()
+                except Exception:
+                    pass
+            return None
+    finally:
+        _release_lock(lock)
 
-        emit_promotion_proposal(
-            client,
-            {
-                "type": "checkpoint.promotion",
-                "checkpoint_id": ckpt_id,
-                "goal_id": goal_id,
-                "source": "xnch-train.cycle",
-            },
-        )
-        return ckpt_id
-    except Exception:
-        logger.exception("cycle failed; leaving no orphan checkpoint")
-        # Registration is the last successful step, so a failure here means
-        # nothing was registered. Enforce quota hygiene and return None so the
-        # systemd unit stays idle (Restart=no). Cleanup is best-effort.
-        if ckpt_id is not None:
-            try:
-                reg = CheckpointRegistry(out_dir / "registry.sqlite")
-                reg.retain()
-            except Exception:
-                pass
-        return None
+
+def _acquire_lock(out_dir: Path) -> tuple[Path, object]:
+    """Acquire an exclusive in-process lock for ``out_dir``.
+
+    Uses ``fcntl.flock`` on Linux (Node B). On platforms without fcntl a
+    sentinel file is ``touch``-created instead so dev/test still runs.
+    Returns ``(lock_path, fd_or_None)`` for the release step.
+    """
+    out_dir.mkdir(parents=True, exist_ok=True)
+    lock_path = out_dir / _LOCK_NAME
+    if _HAVE_FCNTL:
+        fd = os.open(str(lock_path), os.O_CREAT | os.O_RDWR, 0o600)
+        try:
+            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except OSError:
+            os.close(fd)
+            raise
+        return lock_path, fd
+    lock_path.touch()
+    return lock_path, None
+
+
+def _release_lock(lock: tuple[Path, object]) -> None:
+    """Release the lock acquired by ``_acquire_lock`` (best-effort)."""
+    lock_path, fd = lock
+    try:
+        if _HAVE_FCNTL and fd is not None:
+            fcntl.flock(fd, fcntl.LOCK_UN)
+            os.close(fd)
+        if lock_path.exists():
+            lock_path.unlink()
+    except OSError:
+        pass
 
 
 def main(argv: list[str] | None = None) -> int:

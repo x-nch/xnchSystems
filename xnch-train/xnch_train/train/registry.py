@@ -51,6 +51,13 @@ class CheckpointRegistry:
         self._conn.commit()
         return checkpoint_id
 
+    def get_path(self, checkpoint_id: str) -> Path | None:
+        """Return the registered path for a checkpoint id, or None if absent."""
+        row = self._conn.execute(
+            "SELECT path FROM checkpoints WHERE checkpoint_id=?", (checkpoint_id,)
+        ).fetchone()
+        return Path(row[0]) if row else None
+
     def current(self) -> str | None:
         """Return the newest checkpoint id by (date DESC, rowid DESC), or None if empty."""
         row = self._conn.execute(
