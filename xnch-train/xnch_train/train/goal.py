@@ -32,7 +32,7 @@ class GoalClient:
         gid = r.json().get("goal_id")
         if not gid:
             return None
-        self._c.post("/goals/claim", json={"lease_owner": lease_owner})
+        self._c.post("/goals/claim", json={"lease_owner": lease_owner}).raise_for_status()
         return gid
 
     def emit_proposal(self, proposal: dict) -> None:

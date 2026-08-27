@@ -19,6 +19,8 @@ def _make_transport() -> tuple[httpx.MockTransport, list[httpx.Request]]:
         captured.append(request)
         if request.url.path == "/goals":
             return httpx.Response(200, json={"goal_id": "g-1"})
+        if request.url.path == "/goals/claim":
+            return httpx.Response(200, json={})
         if request.url.path == "/policy/verdict":
             return httpx.Response(200, json={})
         return httpx.Response(404, json={"error": "not found"})
