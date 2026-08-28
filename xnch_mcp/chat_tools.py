@@ -127,17 +127,26 @@ async def chat_with_tools(
             }
             if tools:
                 payload["tools"] = tools
-                payload["tool_choice"] = "auto"
-                if force_answer:
-                    # Model repeated a tool call — make it answer with the results.
-                    payload["tool_choice"] = "none"
-                elif forced:
+                # OpenCode Go (deepseek-v4-pro, thinking mode) accepts only
+                # tool_choice "auto" or "none". "required" and forced
+                # function-name values are rejected with
+                # "Thinking mode does not support this tool_choice" (HTTP 400),
+                # which surfaced as "LiteLLM unavailable". Keep "auto" for the
+                # tool-forcing retry and nudge via an explicit instruction
+                # instead of a hard tool_choice (unsupported in thinking mode).
+                payload["tool_choice"] = "none" if force_answer else "auto"
+                if forced and not force_answer:
                     forced_tool = _force_tool(messages)
-                    payload["tool_choice"] = (
-                        {"type": "function", "function": {"name": forced_tool}}
-                        if forced_tool
-                        else "required"
-                    )
+                    if forced_tool:
+                        messages = messages + [
+                            {
+                                "role": "user",
+                                "content": (
+                                    f"You must call the {forced_tool} tool now "
+                                    f"to fulfill this request."
+                                ),
+                            }
+                        ]
 
             resp = await client.post(
                 "/chat/completions",
