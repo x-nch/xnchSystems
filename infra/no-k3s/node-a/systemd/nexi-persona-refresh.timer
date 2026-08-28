@@ -1,0 +1,17 @@
+[Unit]
+Description=Regenerate Nexi dynamic persona + capabilities every 5 minutes
+Documentation=https://github.com/x-nch/nexi
+# Do not pull in local-fs.target (avoids failure when USB /var mount times out).
+DefaultDependencies=no
+After=network.target xnch.service
+Wants=xnch.service
+Before=timers.target shutdown.target
+Conflicts=shutdown.target
+
+[Timer]
+# Every 5 minutes: minute 0,5,10,15,... of every hour.
+OnCalendar=*:0/5
+Persistent=true
+
+[Install]
+WantedBy=timers.target

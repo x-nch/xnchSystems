@@ -1,0 +1,22 @@
+[Unit]
+Description=Nexi Dynamic Persona + Capabilities Refresh
+Documentation=https://github.com/x-nch/nexi
+After=network.target xnch.service
+Wants=xnch.service
+# Do not pull in local-fs.target (matches consolidation.timer / USB mount timeout).
+DefaultDependencies=no
+Before=timers.target shutdown.target
+Conflicts=shutdown.target
+
+[Service]
+Type=oneshot
+User=x-nch
+WorkingDirectory=/home/x-nch/xnchSystems
+EnvironmentFile=/home/x-nch/.xnch/xnch.env
+Environment=PYTHONPATH=/home/x-nch/xnchSystems/xnch:/home/x-nch/xnchSystems
+ExecStart=/home/x-nch/xnchSystems/.venv/bin/python -m nexi.character.refresh
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
