@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import re
 from typing import Any
 from uuid import uuid4
 
@@ -34,7 +35,13 @@ _TOOL_SYSTEM_PROMPT = (
     "read a file, or perform any action covered by a tool, CALL the tool "
     "immediately. Do not claim you lack tool access and do not give the user "
     "instructions to do it themselves — you can do it. If a tool call fails, "
-    "report the error and try a reasonable alternative."
+    "report the error and try a reasonable alternative.\n\n"
+    "File routing rules: if the user gives you a concrete path (e.g. "
+    "/home/x-nch/…, a resume/CV, or 'the file at …'), call xnch_fs_read with "
+    "that exact path directly. Do NOT call xnch_fs_glob to discover a file "
+    "whose path you already have — globbing is only for when you genuinely do "
+    "not know where a file lives. To open a resume/CV you were asked to check, "
+    "use xnch_fs_read on its path."
 )
 
 # Small models sometimes ignore tools and answer with prose. If a request
@@ -56,6 +63,19 @@ _TOOL_FORCE_MAP: tuple[tuple[str, tuple[str, ...]], ...] = (
 )
 
 
+_PATH_RE = re.compile(r"(?:^|[\s:\"'`])(/(?:home/[\w.-]+|opt|usr|var|etc|tmp|root|data)[\w./\-]*)")
+
+# When a request clearly needs a specific tool, force that exact function on
+# the retry instead of tool_choice="required" (small models pick the wrong tool
+# under a generic "required"). Ordered; first keyword match wins.
+
+
+def _extract_local_path(text: str) -> str | None:
+    """Return the first concrete filesystem path mentioned, if any."""
+    m = _PATH_RE.search(text)
+    return m.group(1) if m else None
+
+
 def _force_tool(messages: list[dict[str, Any]]) -> str | None:
     for msg in reversed(messages):
         if msg.get("role") == "user":
@@ -63,6 +83,10 @@ def _force_tool(messages: list[dict[str, Any]]) -> str | None:
             if not isinstance(text, str):
                 return None
             lowered = text.lower()
+            if _extract_local_path(text) is not None and any(
+                k in lowered for k in ("read", "check", "open", "show", "cat", "open_resume", "view", "review")
+            ):
+                return "xnch_fs_read"
             for tool, keywords in _TOOL_FORCE_MAP:
                 if any(k in lowered for k in keywords):
                     return tool

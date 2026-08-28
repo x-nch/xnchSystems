@@ -2,7 +2,12 @@
 
 from __future__ import annotations
 
-from xnch_mcp.chat_tools import _final_text, _fmt_tool_result
+from xnch_mcp.chat_tools import (
+    _extract_local_path,
+    _final_text,
+    _fmt_tool_result,
+    _force_tool,
+)
 
 
 def test_fmt_web_search_results():
@@ -55,3 +60,35 @@ def test_final_text_surfaces_tool_result_when_model_empty():
 def test_final_text_no_result_returns_fallback():
     msg = {"content": ""}
     assert _final_text(msg, None) == "Tool completed but produced no summary."
+
+
+def test_extract_local_path_home():
+    text = "please check /home/x-nch/PavanKalle_resume.docx"
+    assert _extract_local_path(text) == "/home/x-nch/PavanKalle_resume.docx"
+
+
+def test_extract_local_path_none_for_prose():
+    assert _extract_local_path("check the resume please") is None
+    assert _extract_local_path("run the status command") is None
+    assert _extract_local_path("find exec config") is None
+
+
+def test_force_tool_routes_concrete_path_to_fs_read():
+    msgs = [
+        {
+            "role": "user",
+            "content": "check /home/x-nch/PavanKalle_Cloud_Infra_Platform_Engineer_Resume.docx",
+        }
+    ]
+    assert _force_tool(msgs) == "xnch_fs_read"
+
+
+def test_force_tool_path_requires_read_verb():
+    # A path alone, without a read/check/view intent, should not force fs_read.
+    msgs = [{"role": "user", "content": "/home/x-nch/foo.txt details later"}]
+    assert _force_tool(msgs) is None
+
+
+def test_force_tool_falls_back_to_search_keyword():
+    msgs = [{"role": "user", "content": "search the web for latest news"}]
+    assert _force_tool(msgs) == "xnch_web_search"
