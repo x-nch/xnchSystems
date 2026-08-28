@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import zipfile
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock
 
@@ -101,3 +102,40 @@ async def test_remote_dispatch(fs_setup: tuple[FsReadService, Path]) -> None:
     result = await svc.read("node-b", "nexi/main.py")
     assert result["content"] == "remote"
     remote.read.assert_awaited_once()
+
+
+def _write_docx(path: Path, paragraphs: list[str]) -> None:
+    nsmap = {
+        "w": "http://schemas.openxmlformats.org/wordprocessingml/2006/main",
+    }
+    body = "".join(
+        f'<w:p><w:r><w:t>{p}</w:t></w:r></w:p>' for p in paragraphs
+    )
+    document = (
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+        f'<w:document xmlns:w="{nsmap["w"]}">{body}</w:document>'
+    )
+    with zipfile.ZipFile(path, "w") as zf:
+        zf.writestr("word/document.xml", document)
+        zf.writestr("[Content_Types].xml", "")
+
+
+def test_local_read_docx_extracts_text(fs_setup: tuple[FsReadService, Path]) -> None:
+    svc, root = fs_setup
+    doc = root / "resume.docx"
+    _write_docx(doc, ["Software Engineer", "Builds pipelines and APIs"])
+    backend = LocalFsBackend(svc._policy, "node-a")
+    result = backend.read("resume.docx")
+    assert result["encoding"] == "extracted"
+    assert "Software Engineer" in result["content"]
+    assert "Builds pipelines" in result["content"]
+
+
+def test_local_read_binary_falls_back_to_base64(fs_setup: tuple[FsReadService, Path]) -> None:
+    svc, root = fs_setup
+    blob = root / "blob.bin"
+    blob.write_bytes(b"\x00\x01\x02\x80\xff")
+    backend = LocalFsBackend(svc._policy, "node-a")
+    result = backend.read("blob.bin")
+    # Non-UTF8, non-office binary must keep the base64 behaviour.
+    assert result["encoding"] == "base64"

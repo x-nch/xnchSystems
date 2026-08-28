@@ -113,6 +113,7 @@ async def chat_with_tools(
 
     last_message: dict[str, Any] = {}
     last_tool_result: dict[str, Any] | None = None
+    last_tool_name: str | None = None
     messages = merge_tool_system_prompt(messages, _TOOL_SYSTEM_PROMPT)
     forced = False
     force_answer = False
@@ -180,8 +181,9 @@ async def chat_with_tools(
                 except Exception as exc:
                     logger.warning("Tool %s failed: %s", call["name"], exc)
                     result = {"error": str(exc)}
-                if call["name"] == "xnch_web_search" and isinstance(result, dict):
+                if isinstance(result, dict):
                     last_tool_result = result
+                    last_tool_name = call["name"]
                 messages.append(
                     tool_result_message(call.get("id", call["name"]), call["name"], result)
                 )
@@ -192,19 +194,39 @@ async def chat_with_tools(
                 forced = False
                 force_answer = True
 
-    return _final_text(last_message, last_tool_result)
+    return _final_text(last_message, last_tool_result, last_tool_name)
 
 
-def _final_text(last_message: dict[str, Any], last_tool_result: dict[str, Any] | None) -> str:
+def _fmt_tool_result(result: dict[str, Any]) -> str:
+    """Render a structured tool result as short readable text."""
+    if results := result.get("results"):
+        top = results[0]
+        title = top.get("title") or ""
+        url = top.get("url") or ""
+        return f"Top result: {title} — {url}" if (title or url) else str(result)
+    if result.get("encoding") == "extracted":
+        return f"Extracted text:\n{result.get('content', '')}"
+    if (content := result.get("content")) is not None:
+        text = str(content)
+        if len(text) > 2000:
+            text = text[:2000] + "…"
+        return text
+    if (stdout := result.get("stdout")):
+        return str(stdout)
+    if (error := result.get("error")):
+        return f"Tool error: {error}"
+    return str(result)
+
+
+def _final_text(
+    last_message: dict[str, Any],
+    last_tool_result: dict[str, Any] | None,
+    last_tool_name: str | None = None,
+) -> str:
     text = strip_thinking(last_message.get("content") or "").strip()
     if text:
         return text
     if last_tool_result:
-        items = last_tool_result.get("results") or []
-        if items:
-            top = items[0]
-            return (
-                f"Top result: {top.get('title', '')} — {top.get('url', '')}"
-            )
-        return "Search completed but returned no results."
+        labeled = f"[{last_tool_name}] {_fmt_tool_result(last_tool_result)}" if last_tool_name else _fmt_tool_result(last_tool_result)
+        return labeled or "Tool completed but produced no summary."
     return "Tool completed but produced no summary."

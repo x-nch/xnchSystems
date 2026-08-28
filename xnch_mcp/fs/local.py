@@ -4,6 +4,10 @@ from __future__ import annotations
 
 import base64
 import mimetypes
+import shutil
+import subprocess
+import zipfile
+import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -27,6 +31,82 @@ def _stat_entry(path: Path) -> dict[str, object]:
         "mtime": datetime.fromtimestamp(st.st_mtime, tz=timezone.utc).isoformat(),
         "is_symlink": path.is_symlink(),
     }
+
+
+_OFFICE_SUFFIXES = {".doc", ".docx", ".odt", ".rtf", ".pdf"}
+_DOCX_NS = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
+
+
+def _extract_docx(path: Path) -> str:
+    """Extract plain text from a .docx (a zip of WordprocessingML XML)."""
+    parts: list[str] = []
+    with zipfile.ZipFile(path) as zf:
+        for name in zf.namelist():
+            if not name.endswith(".xml") or "word/" not in name:
+                continue
+            try:
+                root = ET.fromstring(zf.read(name))
+            except ET.ParseError:
+                continue
+            for para in root.iter(f"{_DOCX_NS}p"):
+                text = "".join(
+                    t.text or "" for t in para.iter(f"{_DOCX_NS}t")
+                )
+                if text.strip():
+                    parts.append(text)
+    return "\n".join(parts).strip()
+
+
+def _extract_doc(path: Path) -> str | None:
+    """Extract text from legacy binary .doc via available system tools."""
+    for tool in ("antiword", "catdoc"):
+        exe = shutil.which(tool)
+        if exe is None:
+            continue
+        try:
+            proc = subprocess.run(
+                [exe, str(path)],
+                capture_output=True,
+                timeout=30,
+                check=False,
+            )
+        except (subprocess.TimeoutExpired, OSError):
+            continue
+        if proc.returncode == 0:
+            text = proc.stdout.decode("utf-8", errors="replace").strip()
+            if text:
+                return text
+    return None
+
+
+def _extract_rtf(path: Path) -> str | None:
+    """Extract text from .rtf using the platform textutil (macOS) if available."""
+    exe = shutil.which("textutil")
+    if exe is None:
+        return None
+    try:
+        proc = subprocess.run(
+            [exe, "-convert", "txt", "-stdout", str(path)],
+            capture_output=True,
+            timeout=30,
+            check=False,
+        )
+    except (subprocess.TimeoutExpired, OSError):
+        return None
+    if proc.returncode == 0:
+        return proc.stdout.decode("utf-8", errors="replace").strip()
+    return None
+
+
+def _office_text(path: Path, suffix: str) -> str | None:
+    """Return extracted text for an office document, or None if unsupported."""
+    if suffix == ".docx":
+        return _extract_docx(path)
+    if suffix == ".doc":
+        return _extract_doc(path)
+    if suffix == ".rtf":
+        return _extract_rtf(path)
+    return None
 
 
 class LocalFsBackend:
@@ -92,13 +172,22 @@ class LocalFsBackend:
         if truncated:
             data = data[:max_bytes]
 
-        encoding = "utf-8"
-        content: str
+        classic_content: str
         try:
-            content = data.decode("utf-8")
+            classic_content = data.decode("utf-8")
+            encoding = "utf-8"
+            office_text = None
         except UnicodeDecodeError:
             encoding = "base64"
-            content = base64.b64encode(data).decode("ascii")
+            classic_content = base64.b64encode(data).decode("ascii")
+            office_text = None
+            suffix = resolved.suffix.lower()
+            if offset == 0 and suffix in _OFFICE_SUFFIXES:
+                office_text = _office_text(resolved, suffix)
+
+        content = office_text if office_text is not None else classic_content
+        if office_text is not None:
+            encoding = "extracted"
 
         mime, _ = mimetypes.guess_type(str(resolved))
         return {
