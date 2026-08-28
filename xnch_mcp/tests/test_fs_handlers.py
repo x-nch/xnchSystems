@@ -139,3 +139,35 @@ def test_local_read_binary_falls_back_to_base64(fs_setup: tuple[FsReadService, P
     result = backend.read("blob.bin")
     # Non-UTF8, non-office binary must keep the base64 behaviour.
     assert result["encoding"] == "base64"
+
+
+def test_glob_prunes_noise_dirs(fs_setup: tuple[FsReadService, Path]) -> None:
+    svc, root = fs_setup
+    # Real file at top level and inside a normal subdir.
+    (root / "PavanKalle_resume.docx").write_bytes(b"real")
+    (root / "docs").mkdir()
+    (root / "docs" / "cv.docx").write_bytes(b"real2")
+    # Noise trees that must be pruned.
+    (root / ".venv").mkdir()
+    (root / ".venv" / "noise.docx").write_bytes(b"noise1")
+    (root / "node_modules").mkdir()
+    (root / "node_modules" / "noise.docx").write_bytes(b"noise2")
+
+    backend = LocalFsBackend(svc._policy, "node-a")
+    result = backend.glob("**/*.docx")
+
+    names = {e["name"] for e in result["matches"]}
+    assert "noise.docx" not in names  # pruned
+    assert "PavanKalle_resume.docx" in names
+    assert "cv.docx" in names
+
+
+def test_glob_recursive_extends_beyond_single_level(fs_setup: tuple[FsReadService, Path]) -> None:
+    svc, root = fs_setup
+    (root / "a").mkdir()
+    (root / "a" / "b").mkdir()
+    (root / "a" / "b" / "target.log").write_text("x")
+    backend = LocalFsBackend(svc._policy, "node-a")
+    result = backend.glob("**/target.log")
+    names = {e["name"] for e in result["matches"]}
+    assert "target.log" in names

@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import base64
 import mimetypes
+import os
+import re
 import shutil
 import subprocess
 import zipfile
@@ -35,6 +37,90 @@ def _stat_entry(path: Path) -> dict[str, object]:
 
 _OFFICE_SUFFIXES = {".doc", ".docx", ".odt", ".rtf", ".pdf"}
 _DOCX_NS = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
+
+# Directories that add huge volume, no useful glob results (virtual envs,
+# VCS metadata, dependency/build trees). Pruned from recursive traversals.
+_NOISE_DIRS = {
+    ".venv", "venv", "env", ".git", ".hg", ".svn", "node_modules",
+    "__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache",
+    "build", "dist", ".tox", ".nox", ".next", ".cache", ".gradle",
+}
+
+
+def _inherits_star(pattern: str) -> bool:
+    """True if the pattern uses recursive globbing (**)."""
+    return "**" in pattern
+
+
+def _compile_glob(pattern: str) -> re.Pattern[str]:
+    """Compile a pathlib-style glob (with **) to a regex over slash paths.
+
+    ``**`` matches across directory separators (zero or more); ``*`` and ``?``
+    do not cross ``/``. Handles character classes (``[...]``).
+    """
+    tokens: list[str] = []
+    i = 0
+    n = len(pattern)
+    while i < n:
+        c = pattern[i]
+        if c == "*":
+            if pattern.startswith("**", i):
+                tokens.append("(?:.*/)?")
+                i += 2
+                if i < n and pattern[i] == "/":
+                    i += 1
+            else:
+                tokens.append("[^/]*")
+                i += 1
+        elif c == "?":
+            tokens.append("[^/]")
+            i += 1
+        elif c == "[":
+            j = i + 1
+            if j < n and pattern[j] in "!^":
+                j += 1
+            if j < n and pattern[j] == "]":
+                j += 1
+            while j < n and pattern[j] != "]":
+                j += 1
+            if j < n:
+                cls = pattern[i + 1:j]
+                if cls.startswith("!"):
+                    cls = "^" + cls[1:]
+                tokens.append(f"[{cls}]")
+                i = j + 1
+            else:
+                tokens.append(re.escape(c))
+                i += 1
+        else:
+            tokens.append(re.escape(c))
+            i += 1
+    return re.compile("".join(tokens) + r"\Z")
+
+
+def _iter_glob_pruned(root: Path, pattern: str) -> list[Path]:
+    """Glob results for a recursive (**) pattern, pruning noise directories.
+
+    Path.glob cannot prune directories during recursion, so scanning a
+    pattern like ``**/*.doc`` from a root containing many .venv/node_modules
+    trees floods the result cap with dependency noise. Walk the tree
+    manually, skip noise dirs, and match each relative path.
+    """
+    rx = _compile_glob(pattern)
+    matches: list[Path] = []
+    for dirpath, dirnames, filenames in os.walk(root, followlinks=False):
+        # Prune noise dirs in place so os.walk does not descend into them.
+        dirnames[:] = [
+            d for d in dirnames
+            if d not in _NOISE_DIRS and not d.startswith(".")
+        ]
+        rel_dir = os.path.relpath(dirpath, root)
+        for side, names in (("dir", dirnames), ("file", filenames)):
+            for name in names:
+                rel = f"{rel_dir}/{name}" if rel_dir != "." else name
+                if rx.match(rel):
+                    matches.append(Path(dirpath) / name)
+    return matches
 
 
 def _extract_docx(path: Path) -> str:
@@ -229,12 +315,14 @@ class LocalFsBackend:
 
         host_policy = self._policy.hosts[self._host]
         matches: list[dict[str, object]] = []
+        recursive = _inherits_star(pattern)
 
         for root in host_policy.roots:
             root_path = root.expanduser().resolve()
             if not root_path.exists():
                 continue
-            for hit in root_path.glob(pattern):
+            hits = _iter_glob_pruned(root_path, pattern) if recursive else list(root_path.glob(pattern))
+            for hit in hits:
                 try:
                     resolved = self._policy.resolve(self._host, str(hit))
                 except FsAccessDenied:
