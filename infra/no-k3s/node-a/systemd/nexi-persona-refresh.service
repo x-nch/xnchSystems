@@ -14,7 +14,7 @@ User=x-nch
 WorkingDirectory=/home/x-nch/xnchSystems
 EnvironmentFile=/home/x-nch/.xnch/xnch.env
 Environment=PYTHONPATH=/home/x-nch/xnchSystems/xnch:/home/x-nch/xnchSystems
-ExecStart=/home/x-nch/xnchSystems/.venv/bin/python -m nexi.character.refresh
+ExecStart=/home/x-nch/xnchSystems/xnch/.venv/bin/python -m nexi.character.refresh
 StandardOutput=journal
 StandardError=journal
 
