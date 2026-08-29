@@ -36,3 +36,6 @@ SESSIONS
 # otherwise silently drop web/src/lib/** from untracked adds
 !web/src/lib/
 !web/src/lib/**
+
+# git worktrees
+.worktrees/
