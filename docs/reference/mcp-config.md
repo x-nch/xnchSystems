@@ -20,7 +20,7 @@ Related: [mcp-tools.md](mcp-tools.md), [mcp-http-api.md](mcp-http-api.md), [mcp-
 ## Env vars
 
 Settings come from `xnch/config.py` (`BaseSettings`, `env_prefix="XNCH_"`, loads
-`.env`). Env vars override YAML defaults; explicit env (e.g. `LITELLM_API_KEY`)
+`.env`). Env vars override YAML defaults; explicit env (e.g. `OPENCODE_GO_API_KEY`)
 overrides settings.
 
 ### MCP bridge
@@ -70,8 +70,8 @@ overrides settings.
 |---------|---------|---------|---------|
 | `XNCH_BASE_URL` | `xnch_mcp/stdio_server.py` | `http://127.0.0.1:8001` | HTTP backend for the stdio MCP server |
 | `XNCH_ACTOR` | `xnch_mcp/auth.py` | `external` | Actor role for the stdio server (set `opencode`) |
-| `LITELLM_BASE_URL` | `xnch_mcp/chat_tools.py` | `settings.litellm_proxy_url` | LiteLLM proxy base for the tool loop |
-| `LITELLM_API_KEY` / `LITELLM_MASTER_KEY` | `xnch_mcp/chat_tools.py` | `""` | Auth for the chat loop |
+| `OPENCODE_GO_BASE_URL` | `xnch_mcp/chat_tools.py` | *(falls back to `XNCH_OPENCODE_GO_API_URL`)* | Hosted OpenCode Go base for the tool loop |
+| `OPENCODE_GO_API_KEY` | `xnch_mcp/chat_tools.py` | *(falls back to `XNCH_OPENCODE_GO_API_KEY`)* | Bearer key for the hosted chat loop |
 
 Restart xnch after changing any of these:
 

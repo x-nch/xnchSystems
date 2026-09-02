@@ -71,8 +71,10 @@ EPISODE_PREDICTION_UPDATE` → early re-extraction of patterns when flagged.
   `/governance/pipeline/invoke|resume|{thread_id}` with HITL interrupts;
   interrupt mode/risk threshold via `XNCH_HITL_EXECUTION_MODE`,
   `XNCH_HITL_RISK_THRESHOLD`.
-- **Chat tool-loop** (default conversational surface): `/v1/chat/completions`
-   and `/nexi/chat(+ /stream)` bypass the plan pipeline; they run recall +
-   hosted OpenCode Go chat + MCP tools. See [chat & tools guide](../guides/chat-and-tools.md).
+- **Chat tool-loop** (default conversational surface): `/nexi/chat(+ /stream)`
+  bypasses the plan pipeline; it runs recall + hosted OpenCode Go chat + MCP
+  tools. `/v1/chat/completions` instead forwards into nexi `POST
+  /session/start` — the plan pipeline — behind an OpenAI-compatible wrapper.
+  See [chat & tools guide](../guides/chat-and-tools.md).
 - **Goal driver**: autonomous loop claiming goals — `NEXI_GOAL_DRIVER_ENABLED`
   (off by default). See [goals API](../reference/api-xnch.md#goals).

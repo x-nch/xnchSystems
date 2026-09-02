@@ -106,8 +106,8 @@ flowchart TB
     XNCH --> STT
     XNCH --> TTS
     XNCH --> SB
-    XNCH -->|"chat_with_tools"| LLM_PROXY
-    LLM_PROXY --> VLLM
+    XNCH -->|"chat_with_tools"| GO["OpenCode Go<br/>(hosted DeepSeek V4)"]
+    GO -.->|"configured fallback"| VLLM
     XNCH -.->|"session/memory via existing paths"| NEXI
 ```
 
