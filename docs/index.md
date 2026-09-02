@@ -20,7 +20,7 @@ physical nodes under a **no-k3s systemd regime**, plus the surrounding packages
 | `xnch` | Control plane package/submodule (REST API on :8001). Env prefix `XNCH_`. |
 | `nexi` | Decision engine package/submodule (:8000). Env prefix `NEXI_`. |
 | `muse` | Next.js web app in `web/` — approvals queue, workflow builder, gateway proxy. |
-| `xnch-train` | Local training data pipeline + eval harness (Phase 0: dry-run gate only). |
+| `xnch-train` | Local training data pipeline + eval harness (Phase 0: dry-run gate; Phase 1: QLoRA train→merge→register→promote cycle). |
 | Hybrid-B | Short-lived HMAC gateway tokens gating `/workflows/*` + `/approvals/*` writes. See [auth model](reference/auth-model.md). |
 | HITL | Human-in-the-loop: propose → interrupt → approve/reject via the verdict path and approvals queue. |
 

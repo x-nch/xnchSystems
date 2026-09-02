@@ -81,3 +81,32 @@ Node B isolated QLoRA training venv, bootstrapped by
 Later tasks invoke training through `~/venvs/xtrain/bin/python -m xnch_train.train.qlora`.
 Step 2 (bootstrap run) and Step 3 (CUDA smoke test) are executed on Node B hardware,
 not in this repo.
+
+## Phase 1 — training cycle (2026-08-27)
+
+The full Train → Merge → Register → Propose loop is orchestrated end-to-end:
+
+| Stage | Module | Notes |
+|-------|--------|-------|
+| Train | `train/qlora.py` | QLoRA SFT of Ornith-1.0-35B; G1 resolution included (`1ce8a38`) |
+| Merge | `train/merge.py` | Adapter merge + GPTQ requantization to a serving artifact (`a218c61`) |
+| Register | `train/registry.py` | Immutable checkpoint registry — registered checkpoints are never mutated (`a218c61`) |
+| Propose | `client.py` | Goal claim via `POST /goals/claim` (raise_for_status enforced, `07b7c2a`) + HITL promotion proposal through the standard approval path (`362e9e5`) |
+
+Cycle execution is GPU-exclusive: cycle and promote units are scheduled with GPU
+conflict wiring (3-way conflicts, `3ea7514`), guarded by a cycle lockfile
+(`_acquire_lock`, `train/cycle.py`), so two cycles cannot run concurrently.
+
+### CLI
+
+```bash
+uv run xtrain cycle      # full Train→Merge→Register→Propose orchestration (b132795)
+uv run xtrain promote    # symlink flip + smoke check + rollback (58a982e)
+```
+
+`promote` flips the serving symlink to the newly registered checkpoint, runs a smoke
+check, and can roll back. Cycle telemetry (traces, GPU contention, disk-quota alarm)
+is emitted per cycle (`11418c3`).
+
+Hardware gating for Node B is covered in the
+[Node B hardware-gate runbook](../runbooks/node-b-hardware-gate.md).
