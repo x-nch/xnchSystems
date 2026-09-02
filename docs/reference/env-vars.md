@@ -185,6 +185,8 @@ Secrets below are placeholders; never commit real values.
 | `NEXI_PROBE_INTERVAL_S` / `NEXI_PROBE_TIMEOUT_S` | `60` / `2.0` | infra probes |
 | `NEXI_XNCH_TOOLS_ENDPOINT` | `/nexi/tools` | tools endpoint path |
 | `NEXI_CAPABILITY_AUTO_REFRESH` | `true` | toggle background refresh |
+| `NEXI_PERSONA_AUTO_REFRESH` | `true` | Reload persona overlay automatically on change (`persona_auto_refresh`) |
+| `NEXI_PERSONA_GENERATED_PATH` | `~/.xnch/nexi-persona.generated.yaml` | Rendered persona overlay path |
 
 ### Goal driver & workflow executor
 

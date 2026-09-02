@@ -31,6 +31,8 @@ inference, nexi for option generation and per-task model selection
 enables API-side caching, `c375d47`). Local vLLM/LiteLLM tiers remain as
 configured fallbacks; chat locks to `XNCH_LLM_MODEL_ID`.
 
+Persona is dynamic & realtime — see [nexi persona guide](../guides/nexi-persona.md).
+
 ## One-minute dataflow
 
 ```mermaid
