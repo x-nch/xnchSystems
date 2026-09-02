@@ -8,6 +8,9 @@ Audience: operator (the human in the loop). Sources:
 Approvals are the single queue where gated actions wait for a human decision:
 workflow steps, and other producers surfaced with `producer_type`.
 
+Workflows are HITL-gated server-side as of 2026-08-24 (`fb82192`): approval
+requirements are enforced by xnch regardless of which client drives the run.
+
 ## Where to work the queue
 
 **muse (preferred):** run `cd web && npm run dev` (or the deployed instance) →

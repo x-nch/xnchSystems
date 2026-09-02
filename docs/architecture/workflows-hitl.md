@@ -28,6 +28,11 @@ Approval semantics depend on the executor flag:
 
 Reject ⇒ approval `REJECTED` and the produced step cancelled.
 
+Server-side enforcement (2026-08-24): HITL gating is enforced by xnch itself, not
+only by the UI — workflows that require approval cannot advance past a gated step
+server-side (`fb82192`). Clients must not (and cannot) bypass the gate by calling
+advance routes directly.
+
 ## Executor claim-lease semantics (`nexi/workflow/executor.py`)
 
 Serialized loop, survives transient errors:

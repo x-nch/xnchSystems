@@ -66,6 +66,13 @@ muse queue or curl — full walkthrough:
 The `/workflows` page in muse creates definitions and starts runs through the
 same API (signed by the proxy) — use it when you want forms instead of curl.
 
+## Canvas builder (2026-08-24)
+
+The Muse UI (`web/`) ships a drag-and-drop workflow canvas: nodes are placed by
+dragging, connections are drawn between node ports, and the graph is saved through
+the same gateway-gated workflow API the JSON path uses (`a059090`). Both authoring
+paths produce identical workflow definitions — mixed editing is safe.
+
 ## Troubleshooting
 
 | Symptom | Check |
