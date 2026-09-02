@@ -16,8 +16,8 @@ node. Templates: `infra/no-k3s/shared/*.example.yaml`. Sources: config paths in
 | `~/.xnch/policies/*.yaml` | A | `policies_dir` | policy-engine rule packs (first-match-wins; candidates land here via governance approval) |
 | `~/.xnch/nexi-capabilities.generated.yaml` | B | `NEXI_CAPABILITIES_GENERATED_PATH` | auto-refreshed capability manifest (do not hand-edit) |
 
-- xnch inference routing: `XNCH_OPENCODE_GO_*` + `XNCH_LLM_*` in `xnch/config.py` (see [env-vars](env-vars.md#xnch_))
-- nexi inference routing: `NEXI_OPENCODE_GO_*` in `nexi/config.py` (see [env-vars](env-vars.md#nexi_))
+- xnch inference routing: `XNCH_OPENCODE_GO_*` + `XNCH_LLM_*` in `xnch/config.py` (see [env-vars](env-vars.md))
+- nexi inference routing: `NEXI_OPENCODE_GO_*` in `nexi/config.py` (see [env-vars](env-vars.md))
 
 Node-A compose-side config (not `~/.xnch`):
 

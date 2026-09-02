@@ -38,8 +38,8 @@ flowchart LR
     U["User<br/>(CLI · muse · curl)"] --> X["xnch :8001<br/>control plane"]
     X -->|"session/init"| N["nexi :8000<br/>decision engine"]
     N -->|"memory read · policy · verdict"| X
-    N -->|"options/outcomes"| LLM["litellm :4000"]
-    LLM --> V["vLLM Ornith :8082"]
+    N -->|"options/outcomes"| LLM["OpenCode Go<br/>(hosted DeepSeek V4)"]
+    LLM -.->|"configured fallback"| V["local vLLM/LiteLLM tiers"]
     X --> M[("Memory tiers<br/>L0-L3")]
     W["Workflows/HITL"] -->|"claim APPROVED steps"| N
     T["Langfuse traces"] -.-> TR["xnch-train<br/>eval + datasets"]
@@ -59,8 +59,8 @@ Deeper flows:
 
 1. **Governed autonomy** — nothing executes without a verdict; humans approve
    gated actions via the same propose→interrupt→decide path.
-2. **Local-first** — inference on own GPU (Ornith); cloud escape hatch exists
-   but is never default.
+2. **Local-first** — hosted OpenCode Go (DeepSeek V4) serves inference by default;
+   local vLLM/LiteLLM tiers remain as configured fallbacks.
 3. **Fail-open memory, fail-closed authority** — stores may be unavailable;
    policy/verdict decisions may not be skipped.
 4. **Audit everything** — append-only event log + SHA-256-chained decision ledger.

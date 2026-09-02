@@ -21,7 +21,7 @@ Hosted-API liveness is exposed via `GET /system/llm-status`, probing `XNCH_LLM_S
 |---|---|---|
 | GET `/health` | open | liveness + Redis + bridge summary |
 | GET `/system/state` | actor | `system_state_version` / `policy_version` (session/init must match or 409) |
-| GET `/system/llm-status` | actor | probes vLLM Ornith (`XNCH_LLM_STATUS_URL`) |
+| GET `/system/llm-status` | actor | hosted-API liveness probe (`XNCH_LLM_STATUS_URL`, OpenCode Go) |
 
 ## Session & decision loop
 

@@ -142,10 +142,10 @@ Secrets below are placeholders; never commit real values.
 |---|---|---|
 | `NEXI_XNCH_BASE_URL` | `http://localhost:8001` | xnch API base (Node B uses `http://192.168.50.1:8001`) |
 | `NEXI_XNCH_PUBLIC_KEY_PATH` | `~/.xnch/keys/public.pem` | RS256 public key for execution-token verification |
-| `NEXI_VLLM_PRIMARY_URL` | `http://192.168.50.2:8082/v1` | primary vLLM (Ornith) endpoint |
-| `NEXI_VLLM_PRIMARY_TIMEOUT_S` | `30.0` | primary timeout |
+| `NEXI_VLLM_PRIMARY_URL` | `""` | legacy fallback vLLM (Ornith) endpoint (kept for rollback; unused by default) |
+| `NEXI_VLLM_PRIMARY_TIMEOUT_S` | `30.0` | legacy fallback timeout |
 | `NEXI_VLLM_SECONDARY_URL` / `_TIMEOUT_S` | `""` / `45.0` | optional fallback vLLM |
-| `NEXI_MODEL_ID` | `ornith-1.0-35b` | served model id |
+| `NEXI_MODEL_ID` | `deepseek-v4-pro` | model id used for hosted generation (OpenCode Go) |
 | `NEXI_OPTIONS_COUNT` | `5` | plan options per intent |
 | `NEXI_OPENCODE_GO_API_URL` | `https://opencode.ai/zen/go/v1` | Base URL for option/model generation via OpenCode Go (`92bd45a`) |
 | `NEXI_OPENCODE_GO_API_KEY` | *(empty)* | Bearer key for the OpenCode Go API |
@@ -159,8 +159,8 @@ Secrets below are placeholders; never commit real values.
 | `NEXI_LITELLM_PROXY_URL` | `http://localhost:4000/v1` | LiteLLM chat endpoint (Node B: `http://192.168.50.1:4000/v1`) |
 | `NEXI_LITELLM_PROXY_TIMEOUT_S` | `60.0` | proxy timeout |
 | `NEXI_LITELLM_API_KEY` | `""` | proxy key if required |
-| `NEXI_INTENT_CLASSIFIER_MODEL` | `ornith` | intent classifier |
-| `NEXI_REFLECTION_MODEL` / `_ENABLED` | `ornith` / `true` | post-decision reflection call |
+| `NEXI_INTENT_CLASSIFIER_MODEL` | `deepseek-v4-pro` | intent classifier (hosted, same model as generation) |
+| `NEXI_REFLECTION_MODEL` / `_ENABLED` | `deepseek-v4-pro` / `true` | post-decision reflection call |
 
 ### Sessions, redis, execution
 
