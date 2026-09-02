@@ -6,6 +6,15 @@ the code as the schema. Auth column: `open` = no bearer required;
 `actor` = actor bearer token; `gateway` = gateway access
 ([Hybrid-B](auth-model.md#gateway-hybrid-b)) or service key.
 
+## Inference routing (2026-08-27)
+
+Gateway inference calls are served by the **OpenCode Go API** (hosted DeepSeek V4) at
+`XNCH_OPENCODE_GO_API_URL`, authenticated with `XNCH_OPENCODE_GO_API_KEY`. Local-first
+routing sits on top of this (`3d54e21`): hosted is the default path; local vLLM/LiteLLM
+endpoints remain configurable fallbacks. Chat always uses the configured
+`XNCH_LLM_MODEL_ID` (`deepseek-v4-pro`) rather than an internal routing label.
+Hosted-API liveness is exposed via `GET /system/llm-status`, probing `XNCH_LLM_STATUS_URL`.
+
 ## System
 
 | Method & path | Auth | Purpose |

@@ -37,9 +37,12 @@ Secrets below are placeholders; never commit real values.
 | `XNCH_LANGFUSE_PUBLIC_KEY` / `_SECRET_KEY` | `""` (disabled) | Langfuse tracing creds |
 | `XNCH_LANGFUSE_HOST` | `https://cloud.langfuse.com` | Langfuse host |
 | `XNCH_LITELLM_PROXY_URL` | `http://litellm:4000` | LiteLLM proxy base |
-| `XNCH_LLM_STATUS_URL` | `http://192.168.50.2:8082/health` | vLLM health probe |
-| `XNCH_LLM_MODEL_ID` | `ornith-1.0-35b` | expected served model name |
-| `XNCH_LLM_PROBE_TIMEOUT_S` | `3.0` | probe timeout |
+| `XNCH_OPENCODE_GO_API_URL` | `https://opencode.ai/zen/go/v1` | Base URL of the OpenCode Go API (hosted DeepSeek V4) used for gateway inference calls (`fcdedf1`) |
+| `XNCH_OPENCODE_GO_API_KEY` | *(empty)* | Bearer key for the OpenCode Go API; required when hosted inference is in use |
+| `XNCH_OPENCODE_GO_API_TIMEOUT_S` | `60.0` | Per-call timeout (seconds) for OpenCode Go requests |
+| `XNCH_LLM_STATUS_URL` | `https://opencode.ai/zen/go/v1/models` | Endpoint probed by the `/system/llm-status` availability check |
+| `XNCH_LLM_MODEL_ID` | `deepseek-v4-pro` | Model id used for chat — chat uses this configured id, never a routing label (`51a315c`) |
+| `XNCH_LLM_PROBE_TIMEOUT_S` | `5.0` | Timeout for the llm-status probe |
 | `XNCH_GRAPH_EXTRACTOR_MODEL` | `ornith` | consolidation extractor model (`llama_cpp/<file>` opts into local backend) |
 | `XNCH_GRAPH_EXTRACTOR_PROVIDER_HINT` | `""` | provider hint for extraction |
 
@@ -144,6 +147,10 @@ Secrets below are placeholders; never commit real values.
 | `NEXI_VLLM_SECONDARY_URL` / `_TIMEOUT_S` | `""` / `45.0` | optional fallback vLLM |
 | `NEXI_MODEL_ID` | `ornith-1.0-35b` | served model id |
 | `NEXI_OPTIONS_COUNT` | `5` | plan options per intent |
+| `NEXI_OPENCODE_GO_API_URL` | `https://opencode.ai/zen/go/v1` | Base URL for option/model generation via OpenCode Go (`92bd45a`) |
+| `NEXI_OPENCODE_GO_API_KEY` | *(empty)* | Bearer key for the OpenCode Go API |
+| `NEXI_OPENCODE_GO_API_TIMEOUT_S` | `60.0` | Per-call timeout (seconds) |
+| `NEXI_OPENCODE_GO_MODELS` | *(empty)* | Optional override of the opencode-go model catalog (JSON list of dicts); empty = catalog default |
 
 ### LiteLLM & classification
 

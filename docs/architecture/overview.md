@@ -24,6 +24,13 @@ Supporting packages: `cli/` (voice-capable CLI client), `xnch_mcp/` (MCP bridge 
 native tool server), `exec_agent/` + `fs_read_agent/` (Node B side-effect/read
 agents), `scraper/`, `docs_test_mcp/`, root `tests/` e2e suite.
 
+Model routing (2026-08-27): both services call the OpenCode Go hosted API
+(`opencode.ai/zen/go/v1`, DeepSeek V4) for LLM work — xnch for gateway/chat
+inference, nexi for option generation and per-task model selection
+(`NEXI_OPENCODE_GO_MODELS` catalog override; stable-prefix prompt segmentation
+enables API-side caching, `c375d47`). Local vLLM/LiteLLM tiers remain as
+configured fallbacks; chat locks to `XNCH_LLM_MODEL_ID`.
+
 ## One-minute dataflow
 
 ```mermaid
