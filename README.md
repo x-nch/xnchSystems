@@ -45,6 +45,7 @@ web/             muse — Next.js UI: approvals queue, workflow builder,
                  chat/memory/graph views; /api/gateway proxy to xnch
 xnch-train/      training data pipeline + eval harness (Phase 0: dry-run gate)
 xnch_mcp/        MCP server + federated bridge (native xnch_* tools, crg_/am_/doc_)
+agent-runner/    Mac-side opencode dispatch runner + launchd template
 cli/             Typer CLI client incl. voice loop (Mac client targets gate7)
 exec_agent/      Node B governed command runner (:8004)
 fs_read_agent/   Node B read-only file agent (:8003)

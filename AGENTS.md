@@ -1,11 +1,16 @@
 ## Multi-Repo Structure
 
-- `xnch/` — git submodule → github.com/x-nch/xnch (control plane API: REST routes, auth, memory, policy, learning)
-- `nexi/` — git submodule → github.com/x-nch/nexi (execution engine: FastAPI, decision/policy pipeline)
-- `infra/` — k3s manifests, Docker, systemd, mem0, zep
-- `docs/` — Architecture docs, runbooks, diagrams
-- `scripts/` — Helper scripts, migration agent
-- `misc/` — Historical records, conversations, reports
+- `xnch/` — git submodule → github.com/x-nch/xnch (control plane API: REST routes, auth, memory, policy, learning; no-k3s deploy under `infra/no-k3s/`)
+- `nexi/` — git submodule → github.com/x-nch/nexi (execution engine: FastAPI, decision/policy pipeline, dynamic persona)
+- `web/` — Next.js muse UI (chat, HITL approvals, drag-and-drop workflow canvas)
+- `xnch_mcp/` — MCP server + federated bridge (`xnch_*` native tools, `crg_`/`am_`/`doc_` passthroughs)
+- `xnch-train/` — training data pipeline + eval harness (Phase 0 gates; Phase 1 QLoRA cycle)
+- `agent-runner/` — stdlib dispatch runner (Mac-side opencode runner pulling from xnch) + launchd template
+- `scraper/` — tiered web scraper service (Playwright; pgvector store)
+- `infra/` — no-k3s deployment: systemd units, docker-compose, observability stack, wake/start scripts
+- `docs/` — architecture docs, runbooks, guides, reference
+- `scripts/` — helper scripts, migration agent
+- `misc/` — historical records, conversations, reports
 - Root `pyproject.toml` requires Python 3.13+ (packages specify `>=3.11`, align to 3.13)
 
 **Entrypoints:**
