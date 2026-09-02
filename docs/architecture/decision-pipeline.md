@@ -10,7 +10,8 @@ Audience: devs. Sources: `nexi/pipeline/`, `nexi/main.py`,
    (`NEXI_INTENT_CLASSIFIER_MODEL`).
 2. **load_context** — nexi → xnch `POST /memory/read` for a ContextManifest
    (episodes, patterns, policy refs).
-3. **generate_options** — ModelAdapter via LiteLLM/vLLM Ornith,
+3. **generate_options** — ModelAdapter via the hosted OpenCode Go API
+   (`NEXI_OPENCODE_GO_*`; local vLLM/LiteLLM tiers as configured fallbacks),
    `NEXI_OPTIONS_COUNT` options.
 4. **PolicyFilter** — nexi → xnch `POST /policy/check` per option.
 5. **Evaluator** — scoring + simulation.
@@ -27,14 +28,14 @@ sequenceDiagram
     participant U as User
     participant X as xnch :8001
     participant N as nexi :8000
-    participant L as litellm :4000
-    participant V as vLLM :8082
+    participant L as OpenCode Go<br/>(hosted DeepSeek V4)
+    participant V as local vLLM/LiteLLM<br/>(fallback)
     U->>X: POST /session/init
     X->>X: auth, dedup, rate limit
     X->>N: POST /session/start
     N->>X: POST /memory/read (manifest)
     N->>L: generate_options
-    L->>V: inference
+    L -.-> V: configured fallback
     N->>X: POST /policy/check ×options
     N->>X: POST /verdict
     X-->>N: execution_token + audit_ref
@@ -71,7 +72,7 @@ EPISODE_PREDICTION_UPDATE` → early re-extraction of patterns when flagged.
   interrupt mode/risk threshold via `XNCH_HITL_EXECUTION_MODE`,
   `XNCH_HITL_RISK_THRESHOLD`.
 - **Chat tool-loop** (default conversational surface): `/v1/chat/completions`
-  and `/nexi/chat(+ /stream)` bypass the plan pipeline; they run recall +
-  LiteLLM + MCP tools. See [chat & tools guide](../guides/chat-and-tools.md).
+   and `/nexi/chat(+ /stream)` bypass the plan pipeline; they run recall +
+   hosted OpenCode Go chat + MCP tools. See [chat & tools guide](../guides/chat-and-tools.md).
 - **Goal driver**: autonomous loop claiming goals — `NEXI_GOAL_DRIVER_ENABLED`
   (off by default). See [goals API](../reference/api-xnch.md#goals).

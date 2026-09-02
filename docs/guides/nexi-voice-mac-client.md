@@ -30,7 +30,7 @@ flowchart TB
     MAC -->|"XNCH_BASE_URL :8001"| G7W
     G7W --- G7N
     NBW --- NBN
-    G7N -->|"LiteLLM"| NBN
+    G7N --- NBN
 ```
 
 **Mac `XNCH_BASE_URL`:** use gate7 on the **home LAN**, not the node link:
@@ -39,8 +39,8 @@ flowchart TB
 export XNCH_BASE_URL=http://192.168.1.10:8001
 ```
 
-You do **not** need `192.168.50.2` on the Mac for voice — gate7 proxies chat to
-node-b over the `50.x` link internally.
+You do **not** need `192.168.50.2` on the Mac for voice — gate7 calls the hosted
+OpenCode Go API (DeepSeek V4) for the LLM step.
 
 ```mermaid
 flowchart LR
@@ -52,15 +52,15 @@ flowchart LR
         API["xnch :8001"]
         STT[faster-whisper]
         TTS[Piper]
-        LLM[LiteLLM]
     end
-    subgraph Core["xnch-core via 50.x"]
-        VLLM[vLLM Ornith]
+    subgraph Hosted["OpenCode Go (hosted)"]
+        LLM[DeepSeek V4]
     end
     MIC --> CLI
     CLI -->|"192.168.1.10"| API
-    API --> STT --> LLM --> TTS
-    LLM --> VLLM
+    API --> STT
+    API --> LLM
+    API --> TTS
     API --> CLI --> MIC
 ```
 
@@ -231,7 +231,7 @@ Gate7 voice deploy runbook: docs/runbooks/voice-deploy.md
 | Mic capture / speaker playback | **Mac** (`cli/voice_io.py`, sounddevice) |
 | STT (faster-whisper) | **gate7** |
 | TTS (Piper) | **gate7** |
-| LLM + MCP tools | **gate7** → LiteLLM → **node-b** Ornith |
+| LLM + MCP tools | hosted OpenCode Go (DeepSeek V4), called from **gate7** |
 
 Latency includes one HTTP round trip per turn (audio up, JSON+audio down). Typical
 warm path: 5–20s depending on utterance length and LLM.

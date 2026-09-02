@@ -36,14 +36,14 @@ Secrets below are placeholders; never commit real values.
 |---|---|---|
 | `XNCH_LANGFUSE_PUBLIC_KEY` / `_SECRET_KEY` | `""` (disabled) | Langfuse tracing creds |
 | `XNCH_LANGFUSE_HOST` | `https://cloud.langfuse.com` | Langfuse host |
-| `XNCH_LITELLM_PROXY_URL` | `http://litellm:4000` | LiteLLM proxy base |
+| `XNCH_LITELLM_PROXY_URL` | *(empty)* | Legacy: local LiteLLM fallback (kept for rollback; unused by default) |
 | `XNCH_OPENCODE_GO_API_URL` | `https://opencode.ai/zen/go/v1` | Base URL of the OpenCode Go API (hosted DeepSeek V4) used for gateway inference calls (`fcdedf1`) |
 | `XNCH_OPENCODE_GO_API_KEY` | *(empty)* | Bearer key for the OpenCode Go API; required when hosted inference is in use |
 | `XNCH_OPENCODE_GO_API_TIMEOUT_S` | `60.0` | Per-call timeout (seconds) for OpenCode Go requests |
 | `XNCH_LLM_STATUS_URL` | `https://opencode.ai/zen/go/v1/models` | Endpoint probed by the `/system/llm-status` availability check |
 | `XNCH_LLM_MODEL_ID` | `deepseek-v4-pro` | Model id used for chat — chat uses this configured id, never a routing label (`51a315c`) |
 | `XNCH_LLM_PROBE_TIMEOUT_S` | `5.0` | Timeout for the llm-status probe |
-| `XNCH_GRAPH_EXTRACTOR_MODEL` | `ornith` | consolidation extractor model (`llama_cpp/<file>` opts into local backend) |
+| `XNCH_GRAPH_EXTRACTOR_MODEL` | `deepseek-v4-pro` | consolidation extractor model (hosted OpenCode Go DeepSeek V4; `llama_cpp/<file>` opts into local backend) |
 | `XNCH_GRAPH_EXTRACTOR_PROVIDER_HINT` | `""` | provider hint for extraction |
 
 ### Perception
@@ -156,7 +156,7 @@ Secrets below are placeholders; never commit real values.
 
 | Variable | Default | Description |
 |---|---|---|
-| `NEXI_LITELLM_PROXY_URL` | `http://localhost:4000/v1` | LiteLLM chat endpoint (Node B: `http://192.168.50.1:4000/v1`) |
+| `NEXI_LITELLM_PROXY_URL` | *(empty)* | Legacy: local LiteLLM fallback (kept for rollback; unused by default) |
 | `NEXI_LITELLM_PROXY_TIMEOUT_S` | `60.0` | proxy timeout |
 | `NEXI_LITELLM_API_KEY` | `""` | proxy key if required |
 | `NEXI_INTENT_CLASSIFIER_MODEL` | `deepseek-v4-pro` | intent classifier (hosted, same model as generation) |
@@ -173,7 +173,7 @@ Secrets below are placeholders; never commit real values.
 | `NEXI_VLLM_HEALTH_URL` | `http://192.168.50.2:8082/health` | proactivity health check |
 | `NEXI_AUDIT_EVENTS_PATH` | `~/.xnch/audit/events.jsonl` | local audit mirror |
 
-### Capabilities auto-refresh
+### Capabilities & persona auto-refresh
 
 | Variable | Default | Description |
 |---|---|---|
@@ -226,8 +226,7 @@ Secrets below are placeholders; never commit real values.
 
 | Variable | Where | Purpose |
 |---|---|---|
-| `LITELLM_BASE_URL` | xnchat relay config | LiteLLM URL used by `/v1/chat/completions` relay |
-| `LITELLM_API_KEY` | same | proxy auth (empty = none) |
+| `LITELLM_API_KEY` | `infra/openclaw`, `infra/zep` | LiteLLM proxy auth for auxiliary tooling (not the chat relay) |
 | `XNCH_GATEWAY_URL` | muse (`web/`) | gateway proxy target; default `http://192.168.1.10:8001` |
 | `XNCH_GATEWAY_SECRET` | muse + xnch | Hybrid-B minting secret (must match both sides) |
 | `POSTGRES_PASSWORD`, `LANGFUSE_*`, `LITELLM_MASTER_KEY` | Node A compose env (`~/.xnch/xnch.env`) | container secrets — templates in `infra/no-k3s/shared/.env.example` |

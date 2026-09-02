@@ -66,7 +66,7 @@ Response shape:
 ## GET /mcp/tools/openai
 
 List tools in OpenAI function-calling schema (used by `chat_with_tools` to build the
-`tools` payload for LiteLLM).
+`tools` payload for the hosted model request).
 
 ```bash
 curl -s http://127.0.0.1:8001/mcp/tools/openai -H 'X-Actor-Role: nexi' \
@@ -301,7 +301,7 @@ curl -s -X POST http://127.0.0.1:8001/nexi/chat \
 ```
 
 ```json
-{"response": "...", "model_used": "nexi-ornith", "session_id": "sess-demo"}
+{"response": "...", "model_used": "deepseek-v4-pro", "session_id": "sess-demo"}
 ```
 
 Supporting memory endpoints (pgvector — same store as `xnch_memory_recall`):

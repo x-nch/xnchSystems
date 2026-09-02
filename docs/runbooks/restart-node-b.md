@@ -25,7 +25,7 @@ curl -sf http://localhost:8000/health
 journalctl -u nexi.service -n 50 --no-pager         # on failure
 ```
 
-Requires Node A reachable (xnch :8001, redis, postgres, litellm) and
+Requires Node A reachable (xnch :8001, redis, postgres) and
 `PYTHONPATH` covering both `nexi/` and `xnch/` dirs — both are set in the unit;
 do not override casually.
 

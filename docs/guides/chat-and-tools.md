@@ -13,7 +13,7 @@ Audience: users/devs driving the agent. Sources: `xnch/routes/chat.py`,
 | CLI REPL | `uv run xnch-cli chat --new-session` | interactive sessions with persisted context |
 | CLI one-shot | `uv run xnch-cli chat "..."` | scripted probes |
 | HTTP | `POST /nexi/chat` / `/nexi/chat/stream` | apps, muse, SSE clients |
-| OpenAI clients | `POST /v1/chat/completions` (`model: qwen3-xml`) | plain completions via litellm relay — no memory/tools |
+| OpenAI clients | `POST /v1/chat/completions` | OpenAI-compatible surface; forwards to the nexi pipeline (hosted inference; L1 turns recorded) |
 | Voice | `cli voice talk` or `/nexi/voice/chat` | push-to-talk loop ([voice](voice.md)) |
 
 ## What the tool loop can touch
@@ -31,10 +31,11 @@ behavior with the copy-paste catalog: [nexi-test-prompts](nexi-test-prompts.md).
 
 ## Model routing
 
-`classify_request` picks between local ornith and the judgment path; intent
-classification uses `NEXI_INTENT_CLASSIFIER_MODEL`; consolidation's extractor
-uses `XNCH_GRAPH_EXTRACTOR_MODEL`. All default to local-first
-([env reference](../reference/env-vars.md)).
+Chat locks to `XNCH_LLM_MODEL_ID`; voice requests additionally route via
+`classify_request`. Intent classification uses `NEXI_INTENT_CLASSIFIER_MODEL`;
+consolidation's extractor uses `XNCH_GRAPH_EXTRACTOR_MODEL`. All are served by
+the hosted OpenCode Go API (DeepSeek V4) by default, with local tiers as
+configured fallbacks ([env reference](../reference/env-vars.md)).
 
 ## Memory behavior in chat
 

@@ -114,7 +114,7 @@ Run the bridge integration suite.
 
 ```bash
 "$PY" -m cli mcp test --skip-chat     # 11 tool-level cases; no LLM needed
-"$PY" -m cli mcp test                 # + 2 live /nexi/chat tool-loop cases (needs LiteLLM/Ornith)
+"$PY" -m cli mcp test                 # + 2 live /nexi/chat tool-loop cases (needs OpenCode Go access)
 "$PY" -m cli mcp test --skip-chat --json
 ```
 

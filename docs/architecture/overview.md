@@ -4,7 +4,7 @@ Audience: everyone. Sources: code graph (527 files / 3.2k nodes),
 [diagram suite §1](../architecture-suite.md), package entrypoints
 (`xnch/main.py`, `nexi/main.py`, `web/src/app`, `xnch-train/xnch_train/cli.py`).
 
-xnchSystems is a local-first AI orchestration platform: an agent that perceives,
+xnchSystems is a self-hosted AI orchestration platform: an agent that perceives,
 remembers, decides under explicit policy governance, acts on real systems through
 human-approved workflows, and improves from recorded outcomes — running entirely
 on two owned physical machines ([topology](topology.md)).
@@ -16,7 +16,7 @@ on two owned physical machines ([topology](topology.md)).
 | **xnch control plane** | Node A, :8001 (`xnch/` submodule) | REST API, authN/Z, policy engine, memory tiers L0–L3, goals, verdict/HITL path, audit ledger, learning loop, consolidation |
 | **nexi decision engine** | Node B, :8000 (`nexi/` submodule) | 10-step decision pipeline, character/persona, proactivity, goal driver, workflow executor |
 | **Workflows + HITL** | xnch API + muse UI | workflow definitions/runs/steps, unified approvals queue, claim-lease executor |
-| **xnch-train** | any (datasets on Node A FS) | extract→scrub→dataset→eval harness→dry-run promotion gate |
+| **xnch-train** | any (datasets on Node A FS) | Phase 0: extract→scrub→dataset→eval harness→dry-run promotion gate; Phase 1: QLoRA Train→Merge→Register→Propose cycle |
 | **muse web app** | `web/` (Next.js, runs on the operator's Mac) | approvals queue, workflow builder, chat/memory/graph/system views, gateway proxy |
 | **infra** | `infra/no-k3s/` | two-node systemd/compose regime, LiteLLM routing, Langfuse, SearXNG |
 
@@ -61,7 +61,7 @@ Deeper flows:
 
 1. **Governed autonomy** — nothing executes without a verdict; humans approve
    gated actions via the same propose→interrupt→decide path.
-2. **Local-first** — hosted OpenCode Go (DeepSeek V4) serves inference by default;
+2. **Hosted-first inference, local fallback** — hosted OpenCode Go (DeepSeek V4) serves inference by default;
    local vLLM/LiteLLM tiers remain as configured fallbacks.
 3. **Fail-open memory, fail-closed authority** — stores may be unavailable;
    policy/verdict decisions may not be skipped.

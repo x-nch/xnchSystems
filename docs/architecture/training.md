@@ -52,7 +52,7 @@ All commands require `XTRAIN_PSEUDONYMIZE_SECRET`. Verified in
 
 ## Configuration
 
-Env prefix `XTRAIN_`: see [env-vars reference](../reference/env-vars.md#xtrain_)
+Env prefix `XTRAIN_`: see [env-vars reference](../reference/env-vars.md)
 (`dataset_dir`, `postgres_url`, `langfuse_*`, `pseudonymize_secret`,
 `gate_epsilon`, `serving_regression_bound_pct`, `extract_page_size`).
 

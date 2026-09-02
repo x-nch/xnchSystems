@@ -1,6 +1,6 @@
 # xnchSystems Documentation
 
-Operating documentation for a solo-operated, local-first AI orchestration platform:
+Operating documentation for a solo-operated, self-hosted AI orchestration platform:
 the **xnch** control plane and the **nexi** decision engine, deployed across two
 physical nodes under a **no-k3s systemd regime**, plus the surrounding packages
 (`xnch-train`, `muse` web app, `xnch_mcp` bridge, `cli` voice client).
@@ -16,7 +16,7 @@ physical nodes under a **no-k3s systemd regime**, plus the surrounding packages
 | Term | Meaning |
 |---|---|
 | **Node A** | `gate7` (legacy alias `i7-node`), `192.168.50.1`. Control plane, memory layer, observability. Docker compose + systemd. |
-| **Node B** | `xnch-core` (legacy alias `i9-node`), `192.168.50.2`. Inference (vLLM Ornith :8082) + nexi engine (:8000). Bare venv + systemd, no Docker. WoL-wakeable. |
+| **Node B** | `xnch-core` (legacy alias `i9-node`), `192.168.50.2`. Local fallback inference (vLLM Ornith :8082) + nexi engine (:8000). Bare venv + systemd, no Docker. WoL-wakeable. |
 | `xnch` | Control plane package/submodule (REST API on :8001). Env prefix `XNCH_`. |
 | `nexi` | Decision engine package/submodule (:8000). Env prefix `NEXI_`. |
 | `muse` | Next.js web app in `web/` — approvals queue, workflow builder, gateway proxy. |

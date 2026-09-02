@@ -51,7 +51,7 @@ the model.
 ```
 POST /nexi/chat ──► chat_with_tools ──► list_openai_tools (native ∪ bridged)
                        │                      │
-                       │                      └── LiteLLM /chat/completions
+                       │                      └── OpenCode Go /chat/completions
                        ▼
                  parse tool_calls (OpenAI JSON or <tool_call>{json}</tool_call> XML)
                        │
@@ -70,7 +70,7 @@ POST /nexi/chat ──► chat_with_tools ──► list_openai_tools (native �
                  tool_result_message → append → next round
 ```
 
-1. **`chat_with_tools`** (`xnch_mcp/chat_tools.py`) runs the LiteLLM chat loop with
+1. **`chat_with_tools`** (`xnch_mcp/chat_tools.py`) runs the hosted OpenCode Go chat loop with
    `actor_role="nexi"`. Tools come from `list_openai_tools("nexi")`, which merges the
    native registry (`xnch_mcp/registry.py` `_all_tools()`) with every tool in the
    bridge pool (`McpBridgePool.all_tools()`).

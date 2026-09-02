@@ -60,7 +60,7 @@ sequenceDiagram
     participant XNCH as xnch :8001
     participant STT as faster-whisper (CPU)
     participant SB as SensoryBuffer L0
-    participant LLM as LiteLLM → vLLM Ornith
+    participant LLM as OpenCode Go<br/>(hosted DeepSeek V4)
     participant TTS as Piper (CPU)
 
     U->>CLI: hold Space (push-to-talk)
@@ -83,8 +83,9 @@ sequenceDiagram
 
 ## Deployment topology
 
-Voice inference stays on **gate7 (node-a)** — CPU only. LLM inference stays on
-**node-b** via existing LiteLLM → vLLM path. No new services on node-b for v1.
+Voice inference stays on **gate7 (node-a)** — CPU only. LLM inference is the
+hosted OpenCode Go API (DeepSeek V4), called from gate7. No new services on
+node-b for v1.
 
 ```mermaid
 flowchart TB
@@ -94,7 +95,6 @@ flowchart TB
         STT["faster-whisper base<br/>CPU int8"]
         TTS["Piper<br/>CPU"]
         SB["SensoryBuffer<br/>Redis L0"]
-        LLM_PROXY["LiteLLM :4000"]
     end
 
     subgraph NodeB["xnch-core — 192.168.50.2"]

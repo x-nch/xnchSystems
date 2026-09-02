@@ -1,8 +1,8 @@
 flowchart TB
     REQ["POST /nexi/chat<br/>actor=nexi"]
-    CWT["chat_with_tools<br/>LiteLLM tool loop (rounds 3→5)"]
+    CWT["chat_with_tools<br/>hosted tool loop (rounds 3→5)"]
     TOOLS["list_openai_tools<br/>native ∪ bridged"]
-    LLM["LiteLLM → vLLM Ornith"]
+    LLM["OpenCode Go<br/>(hosted DeepSeek V4)"]
     PARSE{"parse tool_calls<br/>OpenAI JSON / <tool_call> XML"}
     INVOKE["invoke_tool"]
     GUARD{"actor may use?<br/>tier ≤ max · allowed_actors"}

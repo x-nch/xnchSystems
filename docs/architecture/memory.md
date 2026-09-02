@@ -55,8 +55,9 @@ match in `raw_text`, ≤8 edges/episode).
 ## Consolidation & learning loops
 
 **Consolidation (daily, systemd timer):**
-fetch recent episodes → `graph_extractor` (LiteLLM `ornith`; opt-in local
-llama.cpp via `XNCH_GRAPH_EXTRACTOR_MODEL=llama_cpp/<file>`) → triple
+fetch recent episodes → `graph_extractor` (hosted OpenCode Go DeepSeek V4 via
+`XNCH_GRAPH_EXTRACTOR_MODEL`; opt-in local llama.cpp via `llama_cpp/<file>`) →
+triple
 extraction → Kuzu + relationship upserts → decay scoring + archive below
 threshold 0.1.
 

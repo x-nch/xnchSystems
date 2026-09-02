@@ -7,10 +7,12 @@ Sources: `xnch/routes/chat.py`, `xnch/routes/nexi_gateway.py`,
 
 ### `POST /v1/chat/completions`
 
-OpenAI-compatible relay: request is forwarded to LiteLLM
-(`LITELLM_BASE_URL`, key `LITELLM_API_KEY`), so any OpenAI-speaking client can
-use local models (`model: "qwen3-xml"` public alias → litellm routes to
-`ornith-1.0-35b` on Node B). No memory, no tools — pure completion relay.
+OpenAI-compatible surface on xnch: Bearer-authenticated like the rest of the
+API; the actor is resolved, a session context is built, and the turn is
+forwarded to nexi `POST /session/start` (`XNCH_NEXI_BASE_URL`). Inference runs
+inside nexi via the hosted OpenCode Go API (DeepSeek V4); the nexi response is
+wrapped in a `chat.completion` shape (requested `model` echoed) and both turns
+are appended to L1 working memory.
 
 ### `POST /nexi/chat` — the agent surface
 
@@ -20,9 +22,11 @@ Full tool-loop chat:
 2. Context assembly: L1 working turns (20) + L2 semantic recall (top_k 5,
    min score 0.35) + L3 entity connections + sensory tail → system prompt
    (persona + capability summary).
-3. Model routing: `classify_request` picks local ornith vs judgment model.
-4. LiteLLM chat with tools = native `xnch_*` ∪ bridged `{crg_,am_,doc_}` —
-   round cap 3, or 5 while bridge servers are connected
+3. Model: chat locks to `XNCH_LLM_MODEL_ID` — hosted DeepSeek V4 via the
+   OpenCode Go API (`xnch_mcp/chat_tools.py` reads `XNCH_OPENCODE_GO_*`); voice
+   requests additionally route through `classify_request`.
+4. Hosted chat-with-tools loop — tools = native `xnch_*` ∪ bridged
+   `{crg_,am_,doc_}` — round cap 3, or 5 while bridge servers are connected
    ([bridge flow](../architecture/mcp-bridge.md#request-flow)).
 5. Turns appended to L1; conversation episode written to L2 after guard.
 

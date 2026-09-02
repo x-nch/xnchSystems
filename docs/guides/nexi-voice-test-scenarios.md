@@ -167,7 +167,7 @@ curl -s -X POST "$API/nexi/voice/chat" \
 |------|---------|
 | Whisper cold start | 10–30s first call |
 | STT (2–3s clip) | &lt;1s warm |
-| LLM (Ornith via LiteLLM) | 1–5s |
+| LLM (hosted chat tool loop) | 1–5s |
 | Piper TTS (~1 sentence) | &lt;2s |
 | End-to-end voice chat | 3–15s warm |
 

@@ -3,7 +3,8 @@
 Private AI orchestration platform: an agent that perceives, remembers, decides
 under explicit policy governance, acts through human-approved workflows, and
 learns from outcomes — solo-built, running entirely on two owned physical
-machines under a **no-k3s systemd regime**. No cloud dependency for inference.
+machines under a **no-k3s systemd regime**. Inference is hosted-first
+(OpenCode Go, DeepSeek V4) with local vLLM/LiteLLM tiers as fallback.
 
 - **xnch** (`xnch/` submodule) — control plane: REST API (:8001), authN/Z,
   policy engine, memory tiers, goals, HITL verdict path, audit ledger, learning.
@@ -21,11 +22,12 @@ flowchart LR
     U["User<br/>(CLI · muse · voice · curl)"] --> X["xnch :8001<br/>Node A · control plane"]
     X -->|"session/init"| N["nexi :8000<br/>Node B · decision engine"]
     N -->|"memory · policy · verdict"| X
-    N --> LLM["litellm :4000"] --> V["vLLM Ornith :8082"]
+    N -->|"options · chat"| LLM["OpenCode Go<br/>(hosted DeepSeek V4)"]
+    LLM -.->|"configured fallback"| V["local vLLM/LiteLLM tiers"]
     X --> M[("Memory L0-L3")]
     X --> W["workflows + approvals<br/>(HITL queue)"]
     N -->|"claims APPROVED steps"| W
-    T["Langfuse :3000"] -.-> TR["xnch-train<br/>extract → eval → dry-run gate"]
+    T["Langfuse :3000"] -.-> TR["xnch-train<br/>Phase 0 gates + Phase 1 QLoRA cycle"]
 ```
 
 **Nodes** ([details](docs/architecture/topology.md)):
@@ -43,7 +45,7 @@ xnch/            submodule → github.com/x-nch/xnch   (control plane)
 nexi/            submodule → github.com/x-nch/nexi   (decision engine)
 web/             muse — Next.js UI: approvals queue, workflow builder,
                  chat/memory/graph views; /api/gateway proxy to xnch
-xnch-train/      training data pipeline + eval harness (Phase 0: dry-run gate)
+xnch-train/      training data pipeline + eval harness (Phase 0 gates; Phase 1 QLoRA cycle)
 xnch_mcp/        MCP server + federated bridge (native xnch_* tools, crg_/am_/doc_)
 agent-runner/    Mac-side opencode dispatch runner + launchd template
 cli/             Typer CLI client incl. voice loop (Mac client targets gate7)
