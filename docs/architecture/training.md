@@ -6,9 +6,10 @@ design record), [Phase 0 plan](../superpowers/plans/2026-08-22-training-subsyste
 Package README: [`xnch-train/README.md`](../../xnch-train/README.md).
 
 `xnch-train` turns recorded system signal into evaluated training datasets —
-**Phase 0 scope only**: extraction, scrubbing, dataset authoring, eval harness,
-and a **dry-run promotion gate**. No weight training happens yet, and nothing is
-promoted without human approval through the standard HITL path.
+Phase 0 (shipped): extraction, scrubbing, dataset authoring, eval harness, and
+a **dry-run promotion gate**. Phase 1 (implemented 2026-08-27) adds the QLoRA
+Train → Merge → Register → Propose cycle (see below). Nothing is promoted
+without human approval through the standard HITL path.
 
 ## Pipeline
 
@@ -21,7 +22,7 @@ flowchart LR
     DW --> MF["manifest sign-off<br/>validate-dataset"]
     MF --> EV["eval harness<br/>qwen3_xml parser · metrics · suites(temporal split)"]
     EV --> GATE{"promotion_gate<br/>DRY-RUN ONLY"}
-    GATE -->|"report only"| HITL["HITL proposal<br/>(future phases)"]
+    GATE -->|"report only"| HITL["HITL proposal<br/>(implemented, Phase 1)"]
 ```
 
 Stages (packages under `xnch-train/xnch_train/`):
@@ -55,14 +56,15 @@ Env prefix `XTRAIN_`: see [env-vars reference](../reference/env-vars.md#xtrain_)
 (`dataset_dir`, `postgres_url`, `langfuse_*`, `pseudonymize_secret`,
 `gate_epsilon`, `serving_regression_bound_pct`, `extract_page_size`).
 
-## Relationship to the future training regime
+## Relationship to the training regime
 
 Per the ADR: QLoRA adapters staged SFT→DPO in an isolated venv on Node B, merged
 and requantized offline, promoted as a new immutable checkpoint **only** through
 propose→interrupt→execute HITL, inside exclusive GPU windows
 ([gpu-window runbook](../runbooks/gpu-window.md)). Training cycles are modeled
-as Goals via the existing GoalStore. None of this is implemented yet — the gate
-stays dry-run until those phases land.
+as Goals via the existing GoalStore. The SFT cycle of this regime is implemented
+as of 2026-08-27 (see the Phase 1 — training cycle section above); the promotion
+gate itself remains report-only.
 
 ## Phase 1 environment
 
