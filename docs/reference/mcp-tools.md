@@ -82,6 +82,18 @@ restriction beyond the tier check.
 
 Total: **13 native tools**.
 
+### File-system tool behavior (2026-08-28)
+
+- **Concrete paths shortcut:** a request that already names a concrete file path is routed
+  straight to `xnch_fs_read` instead of going through the planning loop (`75c7380`).
+- **Recursive glob hygiene:** `xnch_fs_glob` prunes noise directories (caches, venvs,
+  build artifacts) from recursive globs (`5a33c09`).
+- **Chat loop tool results:** tool results are surfaced in the chat loop output, and Office
+  documents (`.docx`/`.xlsx`/`.pptx`) are text-extracted inline so their content is readable
+  in replies (`d2ca850`).
+- **`tool_choice` constraint:** requests to the OpenCode Go backend never include unsupported
+  `tool_choice` parameters (`3b18021`).
+
 ---
 
 ## Bridged prefixes
