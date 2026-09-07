@@ -73,6 +73,10 @@ dragging, connections are drawn between node ports, and the graph is saved throu
 the same gateway-gated workflow API the JSON path uses (`a059090`). Both authoring
 paths produce identical workflow definitions — mixed editing is safe.
 
+Canvas note (2026-09-07): the canvas renders the **live workflow catalog** (WS4)
+and saves through the same gateway-gated workflow API as JSON authoring — mixed
+editing is safe (`b39d23c`).
+
 ## Troubleshooting
 
 | Symptom | Check |

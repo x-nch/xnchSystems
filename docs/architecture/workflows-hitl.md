@@ -54,6 +54,14 @@ Serialized loop, survives transient errors:
 Enabled on nexi via `NEXI_WORKFLOW_EXECUTOR_ENABLED=true`
 (poll interval `NEXI_WORKFLOW_POLL_INTERVAL_S`=5).
 
+## Per-step model override (`897d275`)
+
+`WorkflowStepDef` (and the resulting `RunStep`) carry optional `model_provider`
+and `model_id` fields. When a step sets them, the workflow executor routes that
+step through the given provider/model (e.g. `provider="openrouter",
+model_id="openai/gpt-4o"`); when omitted, the pipeline default router picks the
+model. The store persists the chosen values onto the created `RunStep`.
+
 ## Hybrid-B write gate
 
 All state-changing endpoints below require gateway access: a short-lived HMAC
