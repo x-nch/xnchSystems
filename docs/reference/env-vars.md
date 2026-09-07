@@ -41,7 +41,9 @@ Secrets below are placeholders; never commit real values.
 | `XNCH_OPENCODE_GO_API_KEY` | *(empty)* | Bearer key for the OpenCode Go API; required when hosted inference is in use |
 | `XNCH_OPENCODE_GO_API_TIMEOUT_S` | `60.0` | Per-call timeout (seconds) for OpenCode Go requests |
 | `XNCH_LLM_STATUS_URL` | `https://opencode.ai/zen/go/v1/models` | Endpoint probed by the `/system/llm-status` availability check |
-| `XNCH_LLM_MODEL_ID` | `deepseek-v4-pro` | Model id used for chat — chat uses this configured id, never a routing label (`51a315c`) |
+| `XNCH_LLM_MODEL_ID` | `nexi-default` | model id used for chat — `nexi-default` delegates to nexi's model router; set a concrete id to pin per-deploy (`897d275`) |
+| `XNCH_CHAT_PROVIDER` | *(empty)* | pin the nexi router's provider for chat (`openrouter\|opencode\|litellm`); empty = router auto-detects |
+| `XNCH_CHAT_FORCE_OPENCODE` | `"0"` | `"1"` bypasses nexi routing for chat and calls OpenCode Go directly (`xnch_mcp/chat_tools.py`) |
 | `XNCH_LLM_PROBE_TIMEOUT_S` | `5.0` | Timeout for the llm-status probe |
 | `XNCH_GRAPH_EXTRACTOR_MODEL` | `deepseek-v4-pro` | consolidation extractor model (hosted OpenCode Go DeepSeek V4; `llama_cpp/<file>` opts into local backend) |
 | `XNCH_GRAPH_EXTRACTOR_PROVIDER_HINT` | `""` | provider hint for extraction |

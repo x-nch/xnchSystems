@@ -22,9 +22,12 @@ Full tool-loop chat:
 2. Context assembly: L1 working turns (20) + L2 semantic recall (top_k 5,
    min score 0.35) + L3 entity connections + sensory tail → system prompt
    (persona + capability summary).
-3. Model: chat locks to `XNCH_LLM_MODEL_ID` — hosted DeepSeek V4 via the
-   OpenCode Go API (`xnch_mcp/chat_tools.py` reads `XNCH_OPENCODE_GO_*`); voice
-   requests additionally route through `classify_request`.
+3. Model: chat defaults to `XNCH_LLM_MODEL_ID` = `nexi-default`, which delegates
+   to **nexi's model router** (local litellm primary with free-only OpenRouter
+   fallback — [model routing](../architecture/decision-pipeline.md)). Set
+   `XNCH_LLM_MODEL_ID` to a concrete id (`anthropic/claude-sonnet-4`) to pin
+   per-deploy; `XNCH_CHAT_PROVIDER` pins the router's provider; `XNCH_CHAT_FORCE_OPENCODE=1`
+   bypasses nexi entirely; voice requests additionally route through `classify_request`.
 4. Hosted chat-with-tools loop — tools = native `xnch_*` ∪ bridged
    `{crg_,am_,doc_}` — round cap 3, or 5 while bridge servers are connected
    ([bridge flow](../architecture/mcp-bridge.md#request-flow)).
