@@ -77,6 +77,10 @@ Then verify content-equality between deployed hand-edits and the target commit
 
 ## Mac agent-runner
 
+The runner polls xnch for claimed runs and executes them; runs whose prompt
+starts with `@reddit` are delegated to a **trusted Reddit executor** instead of
+opencode — see [reddit agent guide](guides/reddit-agent.md).
+
 ```bash
 # regenerate installed plist from template (fills placeholders)
 python3 - <<'EOF'

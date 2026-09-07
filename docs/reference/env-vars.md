@@ -118,6 +118,8 @@ Secrets below are placeholders; never commit real values.
 | `XNCH_GOAL_DISPATCH_GOAL_ID` | job-search goal | the single goal the cron scopes to |
 | `XNCH_GOAL_DISPATCH_ALLOWED_ACTIONS` | `""` (empty) | comma-separated keywords vs plan-entry action text. Fail-closed: only matches file `low`; empty/everything else files `elevated` (admin role required to decide) |
 | `XNCH_AGENTS_DIRECT_DISPATCH_ENABLED` | `false` | kill-switch on `POST /agents/dispatch` — approval-bypass path, deny-by-default (audit F7) |
+| `XNCH_REDDIT_AGENT` | `<repo>/scripts/reddit/reddit_agent.py` | override path to the trusted Reddit executor (`b39d23c`) |
+| `XNCH_REDDIT_CLIENT_ID` / `XNCH_REDDIT_PASSWORD` | `""` | Reddit API creds for the `@reddit` runner hook (else `~/.xnch/reddit.env`); `XNCH_REDDIT_USERNAME` also used — see [reddit agent guide](../guides/reddit-agent.md) |
 
 ### Voice
 
