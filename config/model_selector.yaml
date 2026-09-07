@@ -1,0 +1,24 @@
+weights:
+  quality: 0.5
+  latency: 0.3
+  context: 0.2
+probe:
+  prompt: "Say hello in one sentence."
+  timeout_s: 10.0
+  runs: 3
+quality_tiers:
+  frontier: 1.0
+  strong: 0.75
+  mid: 0.5
+  weak: 0.25
+manual_tiers:
+  "anthropic/claude-sonnet-4": frontier
+  "openai/gpt-4o": frontier
+  "google/gemini-2.0-flash-001": strong
+  "deepseek/deepseek-v4-pro": frontier
+  "deepseek/deepseek-v4-lite": mid
+  "nvidia/nemotron-3-super-120b-a12b:free": mid
+redis:
+  url: "redis://localhost:6379/0"
+  ttl_s: 86400
+  rankings_key: "model_selector:rankings"

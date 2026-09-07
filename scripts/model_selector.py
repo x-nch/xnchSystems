@@ -23,6 +23,7 @@ from nexi.adapters.model_selector import (
     discover_openrouter,
     dump_rankings_json,
     fetch_elo,
+    INTENT_STRENGTHS,
     load_config,
     probe_latency,
     rank_models,
@@ -97,7 +98,7 @@ async def _probe_all(entries: list[dict], cfg) -> list[dict]:
 @app.command()
 def run():
     """Discover + probe + rank + store."""
-    cfg = load_config()
+    cfg = load_config(settings.model_selector_config_path)
     models, elo, tiers = asyncio.run(_collect())
     entries = asyncio.run(_probe_all(models, cfg)) if models else []
     ranked = rank_models(entries, elo, tiers, weights=cfg.weights)
@@ -110,7 +111,7 @@ def run():
 @app.command()
 def probe():
     """Re-benchmark known ranked models on latency."""
-    cfg = load_config()
+    cfg = load_config(settings.model_selector_config_path)
     client = redis_client_from(cfg)
     ranked = read_rankings(client, cfg.redis.rankings_key, cfg.redis.ttl_s)
     if not ranked:
@@ -131,6 +132,30 @@ def probe():
     write_rankings(client, ranked, cfg.redis.rankings_key, cfg.redis.ttl_s)
     dump_rankings_json(ranked, _RANKINGS_PATH)
     typer.echo(f"re-probed {len(refreshed)} models, rankings updated")
+
+
+@app.command()
+def show(intent: str = typer.Option("", "--intent")):
+    """Print current rankings (optionally filtered to an intent)."""
+    cfg = load_config(settings.model_selector_config_path)
+    client = redis_client_from(cfg)
+    ranked = read_rankings(client, cfg.redis.rankings_key, cfg.redis.ttl_s)
+    if not ranked:
+        typer.echo("No fresh rankings. Run `model_selector.py run` first.", err=True)
+        raise typer.Exit(1)
+    for r in ranked[:20]:
+        tag = ""
+        if intent and intent in shebangish(r):
+            tag = " *"
+        typer.echo(
+            f"{r['score']:>5}  {r['provider']:<10} {r['model_id']:<45} "
+            f"lat={r.get('latency_ms',0):>5}ms ctx={r.get('context_window',0):>7} elo={r.get('elo')} "
+            f"tier={r.get('tier')}{tag}"
+        )
+
+
+def shebangish(entry: dict) -> set[str]:
+    return INTENT_STRENGTHS.get(entry.get("tier", ""), {"QUERY", "ESCALATION"})
 
 
 if __name__ == "__main__":
