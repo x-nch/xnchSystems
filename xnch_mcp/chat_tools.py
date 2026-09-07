@@ -154,7 +154,7 @@ async def chat_with_tools(
     route_via_nexi = not _USE_DIRECT_OPENCODE
     explicit_model = None if model_name in _NEXI_MODEL_ALIASES else (model_name or None)
     if route_via_nexi:
-        from nexi.adapters.llm import chat_completion
+        from nexi.adapters.llm import chat_completion_with_fallback
 
     last_message: dict[str, Any] = {}
     last_tool_result: dict[str, Any] | None = None
@@ -192,7 +192,7 @@ async def chat_with_tools(
                         ]
 
             if route_via_nexi:
-                body, _ = await chat_completion(
+                body, _ = await chat_completion_with_fallback(
                     messages=messages,
                     intent_class="DECISION",
                     provider=CHAT_PROVIDER,
