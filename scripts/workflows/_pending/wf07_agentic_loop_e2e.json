@@ -1,0 +1,37 @@
+{
+  "name": "Agentic Loop E2E Validation",
+  "description": "Validate the core agentic loop end-to-end before promotion. Serves the active workstream. Manual trigger.",
+  "owner_actor_id": "operator",
+  "trigger": { "kind": "manual" },
+  "steps": [
+    {
+      "id": "run_loop_tests",
+      "kind": "exec_tool",
+      "summary": "Run the goal-loop test suite",
+      "target": "test",
+      "args": { "command": "pytest nexi/tests/test_goal_loop.py -x" },
+      "preview": "pytest nexi/tests/test_goal_loop.py -x",
+      "requires_approval": true,
+      "description": "Elevated: requires admin approval."
+    },
+    {
+      "id": "dry_run_dispatch",
+      "kind": "exec_tool",
+      "summary": "Dry-run the goal dispatch scheduler",
+      "target": "dispatch",
+      "args": { "command": "python -m xnch.jobs.goal_dispatch --dry-run" },
+      "preview": "python -m xnch.jobs.goal_dispatch --dry-run",
+      "requires_approval": true,
+      "description": "Elevated: requires admin approval."
+    },
+    {
+      "id": "register_promotion_goal",
+      "kind": "create_goal",
+      "summary": "Register the promotion goal for the agentic loop",
+      "target": "goal",
+      "args": { "name": "Promote agentic loop to staging", "priority": 9, "description": "Gate before prod promotion." },
+      "requires_approval": false,
+      "description": "Low-risk: creates a goal entity (no forced approval)."
+    }
+  ]
+}

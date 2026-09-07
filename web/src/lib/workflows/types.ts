@@ -16,6 +16,8 @@ export type WorkflowStep = {
   preview?: string | null;
   requiresApproval: boolean;
   description?: string | null;
+  modelProvider?: string | null;
+  modelId?: string | null;
 };
 
 export type Workflow = {

@@ -27,6 +27,9 @@ logger = logging.getLogger(__name__)
 
 MAX_TOOL_ROUNDS = int(os.environ.get("XNCH_MCP_MAX_TOOL_ROUNDS", str(settings.mcp_max_tool_rounds)))
 
+# Model-name aliases that mean "let nexi decide the model" rather than pinning.
+_NEXI_MODEL_ALIASES = {"", "auto", "default", "nexi-default"}
+
 # Counteracts small models that "refuse" by describing how to act instead of
 # calling a tool. Strong, explicit, and role-model-specific.
 _TOOL_SYSTEM_PROMPT = (
@@ -115,6 +118,13 @@ def _max_tool_rounds() -> int:
 OPENCODE_GO_BASE = os.environ.get("OPENCODE_GO_BASE_URL", settings.opencode_go_api_url)
 OPENCODE_GO_API_KEY = os.environ.get("OPENCODE_GO_API_KEY", settings.opencode_go_api_key)
 
+# Escape hatches: by default chat routes through nexi's multi-provider router
+# (which is the point — nexi decides the model). Set to bypass:
+#   XNCH_CHAT_FORCE_OPENCODE=1  → old direct OpenCode Go HTTP path
+#   XNCH_CHAT_PROVIDER=openrouter|opencode → pin the router's provider per-deploy
+_USE_DIRECT_OPENCODE = os.environ.get("XNCH_CHAT_FORCE_OPENCODE") == "1"
+CHAT_PROVIDER = os.environ.get("XNCH_CHAT_PROVIDER") or None
+
 
 async def chat_with_tools(
     app_state: Any,
@@ -125,7 +135,13 @@ async def chat_with_tools(
     actor_role: str = "nexi",
     max_rounds: int | None = None,
 ) -> str:
-    """Run LiteLLM chat with MCP tools until the model returns text or rounds exhaust."""
+    """Chat with MCP tools until the model returns text or rounds exhaust.
+
+    The LLM call is routed through nexi's multi-provider model router (the
+    default provider when no override) so chat + internals share one model
+    decision path. ``model_name`` is honored verbatim when it names a real
+    model; aliases (auto/default/nexi-default) let nexi pick.
+    """
     if max_rounds is None:
         max_rounds = _max_tool_rounds()
     tools = list_openai_tools(actor_role)
@@ -134,6 +150,11 @@ async def chat_with_tools(
     headers = {"Content-Type": "application/json"}
     if OPENCODE_GO_API_KEY:
         headers["Authorization"] = f"Bearer {OPENCODE_GO_API_KEY}"
+
+    route_via_nexi = not _USE_DIRECT_OPENCODE
+    explicit_model = None if model_name in _NEXI_MODEL_ALIASES else (model_name or None)
+    if route_via_nexi:
+        from nexi.adapters.llm import chat_completion
 
     last_message: dict[str, Any] = {}
     last_tool_result: dict[str, Any] | None = None
@@ -152,13 +173,10 @@ async def chat_with_tools(
             }
             if tools:
                 payload["tools"] = tools
-                # OpenCode Go (deepseek-v4-pro, thinking mode) accepts only
-                # tool_choice "auto" or "none". "required" and forced
-                # function-name values are rejected with
-                # "Thinking mode does not support this tool_choice" (HTTP 400),
-                # which surfaced as "LiteLLM unavailable". Keep "auto" for the
-                # tool-forcing retry and nudge via an explicit instruction
-                # instead of a hard tool_choice (unsupported in thinking mode).
+                # Model-routing note: OpenCode Go deepseek thinking mode accepts
+                # only tool_choice "auto" or "none"; "required" is rejected.
+                # Keep "auto" for the tool-forcing retry and nudge via an
+                # explicit instruction instead of a hard tool_choice.
                 payload["tool_choice"] = "none" if force_answer else "auto"
                 if forced and not force_answer:
                     forced_tool = _force_tool(messages)
@@ -173,13 +191,26 @@ async def chat_with_tools(
                             }
                         ]
 
-            resp = await client.post(
-                "/chat/completions",
-                json=payload,
-                headers=headers,
-            )
-            resp.raise_for_status()
-            last_message = resp.json()["choices"][0]["message"]
+            if route_via_nexi:
+                body, _ = await chat_completion(
+                    messages=messages,
+                    intent_class="DECISION",
+                    provider=CHAT_PROVIDER,
+                    model_id=explicit_model,
+                    tools=payload.get("tools"),
+                    tool_choice=payload.get("tool_choice", "auto"),
+                    temperature=payload["temperature"],
+                    max_tokens=2048,
+                )
+            else:
+                resp = await client.post(
+                    "/chat/completions",
+                    json=payload,
+                    headers=headers,
+                )
+                resp.raise_for_status()
+                body = resp.json()
+            last_message = body["choices"][0]["message"]
             tool_calls = parse_tool_calls_from_message(last_message)
             if not tool_calls:
                 if not forced and round_idx == 0 and tools and _needs_tool(messages):

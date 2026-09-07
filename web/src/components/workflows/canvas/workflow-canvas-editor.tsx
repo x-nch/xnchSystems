@@ -22,7 +22,7 @@ import {
   type EdgeRemoveChange,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { ArrowRightFromLine, ListPlus, Trash2 } from "lucide-react";
+import { ArrowRightFromLine, ListPlus, Trash2, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -36,12 +36,15 @@ import {
   graphToSteps,
   newStep,
   stepsToGraph,
+  toolBoundStep,
   validateGraph,
   type GraphCompileResult,
   type StepFlowNode,
 } from "@/lib/workflows/graph";
 import { KIND_ICONS } from "./step-icons";
 import { StepNode } from "./step-node";
+import { useMcpTools } from "@/lib/api/hooks";
+import type { McpTool } from "@/lib/api/types";
 
 const nodeTypes = { wfStep: StepNode };
 
@@ -69,6 +72,9 @@ function CanvasInner({
   const [nodes, setNodes, onNodesChange] = useNodesState<StepFlowNode>(initial.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>(initial.edges);
   const [argsText, setArgsText] = useState<string | null>(null);
+  const [catalogOpen, setCatalogOpen] = useState(false);
+  const [catalogFilter, setCatalogFilter] = useState("");
+  const catalog = useMcpTools("nexi");
 
   const onChangeRef = useRef(onChange);
   useEffect(() => {
@@ -101,9 +107,8 @@ function CanvasInner({
     [setNodes, setEdges]
   );
 
-  const addNode = useCallback(
-    (kind: HitlActionKind) => {
-      const created = newStep(kind);
+  const insertNode = useCallback(
+    (step: WorkflowStep) => {
       const rect = wrapperRef.current?.getBoundingClientRect();
       const center = rect
         ? screenToFlowPosition({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 })
@@ -112,15 +117,29 @@ function CanvasInner({
       setNodes((nds) => [
         ...nds.map((n) => ({ ...n, selected: false })),
         {
-          id: created.id,
+          id: step.id,
           type: "wfStep" as const,
           position: { x: center.x - 120 + jitter, y: center.y - 60 + jitter / 2 },
-          data: { step: created },
+          data: { step },
           selected: true,
         },
       ]);
     },
     [nodes.length, screenToFlowPosition, setNodes]
+  );
+
+  const addNode = useCallback(
+    (kind: HitlActionKind) => {
+      insertNode(newStep(kind));
+    },
+    [insertNode]
+  );
+
+  const addToolNode = useCallback(
+    (tool: McpTool) => {
+      insertNode(toolBoundStep(tool));
+    },
+    [insertNode]
   );
 
   const removeNode = useCallback(
@@ -240,6 +259,83 @@ function CanvasInner({
               </Button>
             );
           })}
+        </div>
+
+        {/* Live tool catalog — click-to-add from xnch's /mcp/tools */}
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-center gap-1.5">
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="h-7 gap-1 px-2 text-[11px]"
+              onClick={() => {
+                if (!catalogOpen && catalog.data) void catalog.refetch();
+                setCatalogOpen((o) => !o);
+              }}
+              aria-expanded={catalogOpen}
+              aria-label="Toggle live tool catalog"
+            >
+              <Wand2 className="h-3 w-3" aria-hidden />
+              Live catalog
+              {catalog.isLoading && (
+                <span className="ml-1 h-2 w-2 animate-pulse rounded-full bg-[var(--accent)]" aria-hidden />
+              )}
+            </Button>
+            {catalog.isError && catalogOpen && (
+              <span className="text-[11px] text-muted-foreground">
+                catalog unavailable — gateway offline
+              </span>
+            )}
+          </div>
+          {catalogOpen && (
+            <div className="flex flex-col gap-1.5 rounded-lg border border-border bg-card p-2">
+              <Input
+                value={catalogFilter}
+                onChange={(e) => setCatalogFilter(e.target.value)}
+                placeholder="Filter tools (name)"
+                aria-label="Filter live tool catalog"
+                className="h-7 text-xs"
+              />
+              <div className="max-h-40 overflow-y-auto space-y-1" role="list" aria-label="Live tools">
+                {(catalog.data?.tools ?? [])
+                  .filter((t) =>
+                    catalogFilter.trim() === ""
+                      ? true
+                      : t.name.toLowerCase().includes(catalogFilter.trim().toLowerCase())
+                  )
+                  .slice(0, 50)
+                  .map((tool) => (
+                    <button
+                      key={tool.name}
+                      type="button"
+                      role="listitem"
+                      onClick={() => addToolNode(tool)}
+                      className="flex w-full items-start gap-2 rounded-md border border-transparent px-1.5 py-1 text-left text-[11px] hover:border-border hover:bg-[var(--accent-subtle)]"
+                      aria-label={`Add ${tool.name} step`}
+                    >
+                      <span className="mt-0.5 shrink-0 font-mono text-[10px] uppercase tracking-wide text-muted-foreground">
+                        {tool.tier}
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block truncate font-medium text-foreground">{tool.name}</span>
+                        {tool.description && (
+                          <span className="block truncate text-muted-foreground">{tool.description}</span>
+                        )}
+                      </span>
+                    </button>
+                  ))}
+                {catalog.data && catalog.data.tools.length === 0 && (
+                  <p className="px-1.5 py-1 text-[11px] text-muted-foreground">No tools registered.</p>
+                )}
+                {!catalog.isLoading && !catalog.data && !catalog.isError && (
+                  <p className="px-1.5 py-1 text-[11px] text-muted-foreground">
+                    Fetching tool inventory…
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {errors.length > 0 && (

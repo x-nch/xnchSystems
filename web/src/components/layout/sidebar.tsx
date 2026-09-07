@@ -16,6 +16,7 @@ import {
   Workflow,
   Bot,
   Gauge,
+  ScanSearch,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/button";
@@ -34,6 +35,7 @@ const NAV = [
   { href: "/network", label: "Network", icon: Orbit },
   { href: "/chat", label: "Chat", icon: MessageSquare },
   { href: "/memory", label: "Memory", icon: Database },
+  { href: "/context", label: "Context", icon: ScanSearch },
   { href: "/graph", label: "Graph", icon: GitBranch },
   { href: "/tools", label: "Tools", icon: Wrench },
   { href: "/system", label: "System", icon: Activity },

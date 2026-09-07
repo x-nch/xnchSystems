@@ -1,0 +1,37 @@
+{
+  "name": "Submodule Bump & Compatibility Check",
+  "description": "Pull latest submodule remotes, gate on human changelog review, then run the full suite. Scheduled weekly.",
+  "owner_actor_id": "operator",
+  "trigger": { "kind": "schedule", "cron": "0 4 * * 1" },
+  "steps": [
+    {
+      "id": "update_submodules",
+      "kind": "exec_tool",
+      "summary": "Update submodule remotes recursively",
+      "target": "git",
+      "args": { "command": "git submodule update --remote --recursive" },
+      "preview": "git submodule update --remote --recursive",
+      "requires_approval": true,
+      "description": "Elevated: mutates submodule pins. Requires admin approval."
+    },
+    {
+      "id": "review_changelog",
+      "kind": "other",
+      "summary": "Human reviews upstream changelog for breaking changes",
+      "target": "changelog",
+      "args": { "submodules": ["xnch", "nexi"] },
+      "requires_approval": true,
+      "description": "Manual gate: a human must sign off before tests run."
+    },
+    {
+      "id": "run_suite",
+      "kind": "exec_tool",
+      "summary": "Run full test suite",
+      "target": "test",
+      "args": { "command": "pytest" },
+      "preview": "pytest",
+      "requires_approval": true,
+      "description": "Elevated: requires admin approval."
+    }
+  ]
+}

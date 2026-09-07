@@ -4,6 +4,7 @@ import {
   graphToSteps,
   newStep,
   stepsToGraph,
+  toolBoundStep,
   validateGraph,
   type StepFlowNode,
 } from "./graph";
@@ -151,6 +152,22 @@ describe("newStep", () => {
     expect(a.id).not.toBe(b.id);
     expect(a.kind).toBe("send_email");
     expect(a.requiresApproval).toBe(true);
+  });
+});
+
+describe("toolBoundStep", () => {
+  it("binds an exec_tool step to the catalog tool name", () => {
+    const step = toolBoundStep({ name: "am_memory_lesson_save", description: "Save a lesson" });
+    expect(step.kind).toBe("exec_tool");
+    expect(step.target).toBe("am_memory_lesson_save");
+    expect(step.summary).toBe("Save a lesson");
+    expect(step.args).toEqual({});
+    expect(step.requiresApproval).toBe(true);
+  });
+
+  it("falls back to the tool name when description is missing", () => {
+    const step = toolBoundStep({ name: "web_search" });
+    expect(step.summary).toBe("Run web_search");
   });
 });
 

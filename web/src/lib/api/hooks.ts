@@ -2,11 +2,12 @@
 
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { endpoints } from "@/lib/api/endpoints";
-import type { McpCallRequest } from "@/lib/api/types";
+import type { ContextManifestRequest, McpCallRequest } from "@/lib/api/types";
 
 const HEALTH_MS = 5_000;
 const SURFACE_MS = 15_000;
 const LLM_STATUS_MS = 15_000;
+const TIER_HEALTH_MS = 60_000;
 
 export function useHealth() {
   return useQuery({
@@ -41,6 +42,18 @@ export function useSystemState() {
     queryFn: endpoints.systemState,
     enabled: online,
     refetchInterval: online ? 30_000 : false,
+    retry: 2,
+  });
+}
+
+export function useMemoryTierHealth() {
+  const online = useGatewayOnline();
+  return useQuery({
+    queryKey: ["memory-tier-health"],
+    queryFn: endpoints.memoryTierHealth,
+    enabled: online,
+    staleTime: 30_000,
+    refetchInterval: online ? TIER_HEALTH_MS : false,
     retry: 2,
   });
 }
@@ -107,6 +120,12 @@ export function useMemoryRecall() {
   return useMutation({
     mutationFn: (body: { query: string; top_k?: number }) =>
       endpoints.memoryRecall(body),
+  });
+}
+
+export function useContextManifest() {
+  return useMutation({
+    mutationFn: (body: ContextManifestRequest) => endpoints.memoryRead(body),
   });
 }
 

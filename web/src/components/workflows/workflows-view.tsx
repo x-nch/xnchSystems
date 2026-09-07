@@ -1,7 +1,7 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Clock3, Copy, FilePlus, Play, Pencil, Trash2, Workflow as WorkflowIcon, ShieldCheck } from "lucide-react";
+import { Clock3, Copy, FilePlus, Play, Pencil, Trash2, Upload, Workflow as WorkflowIcon, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,7 @@ import { WorkflowCanvasEditor } from "@/components/workflows/canvas/workflow-can
 import type { GraphCompileResult } from "@/lib/workflows/graph";
 import type { Workflow, WorkflowStep, WorkflowTrigger } from "@/lib/workflows/types";
 import type { HitlActionKind } from "@/lib/approvals/types";
+import type { WorkflowStepDef } from "@/lib/api/workflows";
 
 function kindLabel(k: HitlActionKind): string {
   switch (k) {
@@ -31,6 +32,67 @@ function kindLabel(k: HitlActionKind): string {
 function triggerLabel(t: WorkflowTrigger): string {
   if (t.kind === "schedule") return t.cron ? `schedule · ${t.cron}` : "schedule";
   return "manual";
+}
+
+const IMPORT_VALID_KINDS = new Set([
+  "write_file",
+  "exec_tool",
+  "send_email",
+  "create_goal",
+  "update_memory",
+  "other",
+]);
+
+interface ImportedWorkflow {
+  name: string;
+  description: string | null;
+  trigger: { kind: "manual" | "schedule"; cron?: string | null };
+  steps: WorkflowStepDef[];
+  owner_actor_id?: string;
+}
+
+// Validate + normalize a raw WorkflowCreateRequest JSON (the shape produced by
+// scripts/workflows/*.json and GET /workflows) into what api.create expects.
+// Throws a human-readable Error on the first problem so the UI can surface it.
+function normalizeWorkflowImport(raw: unknown): ImportedWorkflow {
+  if (!raw || typeof raw !== "object") throw new Error("Root must be a JSON object");
+  const r = raw as Record<string, unknown>;
+  const name = r.name;
+  if (typeof name !== "string" || name.trim().length === 0) throw new Error("missing or empty 'name'");
+  if (name.length > 200) throw new Error("'name' exceeds 200 chars");
+  const steps = r.steps;
+  if (!Array.isArray(steps) || steps.length === 0) throw new Error("'steps' must be a non-empty array");
+  const normSteps = steps.map((item, i) => {
+    if (!item || typeof item !== "object") throw new Error(`step ${i + 1} must be an object`);
+    const s = item as Record<string, unknown>;
+    if (typeof s.id !== "string" || !s.id) throw new Error(`step ${i + 1} missing 'id'`);
+    if (typeof s.kind !== "string" || !IMPORT_VALID_KINDS.has(s.kind)) throw new Error(`step ${i + 1} has invalid 'kind': ${String(s.kind)}`);
+    if (typeof s.summary !== "string" || !s.summary) throw new Error(`step ${i + 1} missing 'summary'`);
+    return {
+      id: s.id,
+      kind: s.kind as WorkflowStepDef["kind"],
+      summary: s.summary,
+      target: (s.target as string | null) ?? null,
+      args: (s.args as unknown) ?? null,
+      preview: (s.preview as string | null) ?? null,
+      requires_approval: typeof s.requires_approval === "boolean" ? s.requires_approval : true,
+      description: (s.description as string | null) ?? null,
+      model_provider: (s.model_provider as string | null) ?? null,
+      model_id: (s.model_id as string | null) ?? null,
+    };
+  });
+  const trig = (r.trigger ?? { kind: "manual" }) as Record<string, unknown>;
+  const trigger =
+    trig.kind === "schedule"
+      ? { kind: "schedule" as const, cron: typeof trig.cron === "string" ? trig.cron : null }
+      : { kind: "manual" as const };
+  return {
+    name: name.trim(),
+    description: typeof r.description === "string" ? r.description : null,
+    trigger,
+    steps: normSteps,
+    owner_actor_id: typeof r.owner_actor_id === "string" ? r.owner_actor_id : undefined,
+  };
 }
 
 function useDraftWorkflow(initial?: Workflow | null) {
@@ -110,6 +172,37 @@ export function WorkflowsView() {
     setCompiled({ steps: [], errors: [] });
     setBuilderOpen(true);
   };
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const openImport = () => fileInputRef.current?.click();
+
+  const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // allow re-selecting the same file
+    if (!file) return;
+    if (!online) {
+      setToast("Upload requires a gateway connection");
+      setTimeout(() => setToast(null), 4000);
+      return;
+    }
+    try {
+      const raw = JSON.parse(await file.text());
+      const body = normalizeWorkflowImport(raw);
+      const created = await api.create.mutateAsync({
+        name: body.name,
+        description: body.description,
+        trigger: body.trigger,
+        steps: body.steps,
+        owner_actor_id: body.owner_actor_id ?? "operator",
+      });
+      setSelected(created.id);
+      setToast(`Imported "${created.name}" — saved to control plane`);
+      setTimeout(() => setToast(null), 4000);
+    } catch (err) {
+      setToast(`Import failed: ${err instanceof Error ? err.message : "invalid JSON"}`);
+      setTimeout(() => setToast(null), 5000);
+    }
+  };
   const openEdit = (id: string) => {
     setEditingId(id);
     setCompiled({ steps: workflows.find((w) => w.id === id)?.steps ?? [], errors: [] });
@@ -137,6 +230,8 @@ export function WorkflowsView() {
       preview: s.preview ?? null,
       requires_approval: s.requiresApproval,
       description: s.description ?? null,
+      model_provider: s.modelProvider ?? null,
+      model_id: s.modelId ?? null,
     }));
     try {
       if (editingId) {
@@ -217,6 +312,9 @@ export function WorkflowsView() {
         <Button onClick={openCreate} size="sm" className="btn-accent gap-1.5">
           <FilePlus className="h-3.5 w-3.5" /> New workflow
         </Button>
+        <Button onClick={openImport} size="sm" variant="outline" className="gap-1.5">
+          <Upload className="h-3.5 w-3.5" /> Upload JSON
+        </Button>
       </div>
 
       <div className="border-b border-[var(--state-attention)] bg-[var(--accent-subtle)] px-4 py-2 text-xs leading-5">
@@ -237,6 +335,9 @@ export function WorkflowsView() {
                   <p className="text-sm font-medium text-foreground">No workflows yet</p>
                   <p className="max-w-sm text-xs leading-5 text-muted-foreground">Create a playbook — e.g. “Research → Draft → Send”. Each step with “requires approval” will become a pending item in Approvals when you Run.</p>
                   <Button onClick={openCreate} size="sm" variant="outline">Create first workflow</Button>
+                  <Button onClick={openImport} size="sm" variant="outline" className="gap-1.5">
+                    <Upload className="h-3.5 w-3.5" /> Upload JSON
+                  </Button>
                 </CardContent>
               </Card>
             ) : (
@@ -292,7 +393,7 @@ export function WorkflowsView() {
                       name:`${wf.name} (copy)`,
                       description: wf.description ?? null,
                       trigger:{kind:wf.trigger.kind, cron:"cron" in wf.trigger ? String((wf.trigger as {cron?:string}).cron ?? "") : undefined},
-                      steps: wf.steps.map(s=>({id:s.id, kind:s.kind, summary:s.summary, target:s.target??null, args:s.args??null, preview:s.preview??null, requires_approval:s.requiresApproval, description:s.description??null})),
+                      steps: wf.steps.map(s=>({id:s.id, kind:s.kind, summary:s.summary, target:s.target??null, args:s.args??null, preview:s.preview??null, requires_approval:s.requiresApproval, description:s.description??null, model_provider:s.modelProvider??null, model_id:s.modelId??null})),
                       owner_actor_id:"operator",
                     }).then(()=>undefined).catch(()=>undefined);
                   } else duplicateWorkflow(wf.id);
@@ -430,6 +531,14 @@ export function WorkflowsView() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="application/json,.json"
+        className="hidden"
+        onChange={handleImportFile}
+      />
 
       {toast && (
         <div className="motion-toast pointer-events-auto fixed bottom-4 left-1/2 z-50 flex -translate-x-1/2 items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 shadow-xl">

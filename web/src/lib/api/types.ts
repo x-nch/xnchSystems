@@ -200,3 +200,83 @@ export interface SessionInitRequest {
   trace_id?: string;
   idempotency_key?: string;
 }
+
+// ---- Context manifest (audit) ----
+
+/** POST /memory/read — the context tuple the manifest is scoped to. */
+export interface ContextManifestRequest {
+  session_id: string;
+  actor_id: string;
+  actor_role: string;
+  query: {
+    intent_class?: string;
+    target_entity_class?: string;
+    lookback_window_days?: number;
+    max_episodes?: number;
+    max_patterns?: number;
+    max_experiences?: number;
+  };
+}
+
+export interface ContextEpisode {
+  episode_id: string | null;
+  action_type: string | null;
+  entity_class: string | null;
+  outcome: string | null;
+  duration_ms: number | null;
+  created_at: string | null;
+}
+
+export interface ContextPattern {
+  pattern_id: string | null;
+  context_signature: string | null;
+  success_rate: number | null;
+  confidence: number | null;
+  observation_count: number | null;
+}
+
+export interface ContextExperience {
+  experience_id: string | null;
+  context_signature: string | null;
+  intent_class: string | null;
+  action_type: string | null;
+  entity_class: string | null;
+  actor_role: string | null;
+  outcome: string | null;
+  lesson: string | null;
+  insight: string | null;
+  verdict: string | null;
+  applicability: string | null;
+  confidence: number | null;
+  created_at: string | null;
+}
+
+export interface ContextPolicyRef {
+  policy_id: string | null;
+  rule_expression: string | null;
+  enforcement_level: string | null;
+}
+
+export interface ContextManifest {
+  manifest_id: string;
+  session_id: string;
+  system_state_version: string;
+  pinned_at: string;
+  episodes: ContextEpisode[];
+  patterns: ContextPattern[];
+  experiences: ContextExperience[];
+  policies: ContextPolicyRef[];
+}
+
+// ---- Memory tier health ----
+
+export interface TierProbeResult {
+  ok: boolean;
+  latency_ms: number;
+  detail: string | null;
+}
+
+export interface MemoryTierHealthResponse {
+  enabled: boolean;
+  tiers: Record<string, TierProbeResult>;
+}

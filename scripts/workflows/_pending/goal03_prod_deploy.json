@@ -1,0 +1,40 @@
+{
+  "name": "Goal: Production Deployment on Infra",
+  "description": "Register the production-deployment goal, smoke-test the cluster, and notify stakeholders. Manual, high-risk.",
+  "owner_actor_id": "operator",
+  "trigger": { "kind": "manual" },
+  "steps": [
+    {
+      "id": "create_goal",
+      "kind": "create_goal",
+      "summary": "Create the 'Production Deployment on Infra' goal",
+      "target": "goal",
+      "args": {
+        "name": "Production Deployment on Infra",
+        "priority": 6,
+        "description": "k3s manifests live, mem0/zep wired, runbooks updated, deploy checkpoint passed."
+      },
+      "requires_approval": false,
+      "description": "Low-risk: goal registration."
+    },
+    {
+      "id": "smoke_cluster",
+      "kind": "exec_tool",
+      "summary": "Smoke-test the k3s cluster",
+      "target": "k8s",
+      "args": { "command": "kubectl get ns" },
+      "preview": "kubectl get ns",
+      "requires_approval": true,
+      "description": "Elevated: requires admin approval."
+    },
+    {
+      "id": "notify_stakeholders",
+      "kind": "send_email",
+      "summary": "Email stakeholders about the deployment goal",
+      "target": "stakeholders",
+      "args": { "to": "stakeholders@xnch.systems", "subject": "Production Deploy Goal", "body": "Deployment goal registered." },
+      "requires_approval": true,
+      "description": "Elevated: requires admin approval."
+    }
+  ]
+}

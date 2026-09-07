@@ -1,0 +1,33 @@
+{
+  "name": "Weekly Ops Report",
+  "description": "Gather week metrics, write a report, and email the team. Scheduled Monday morning.",
+  "owner_actor_id": "operator",
+  "trigger": { "kind": "schedule", "cron": "0 9 * * 1" },
+  "steps": [
+    {
+      "id": "gather_metrics",
+      "kind": "update_memory",
+      "summary": "Gather weekly ops metrics into memory",
+      "target": "ops_metrics",
+      "args": { "window": "7d" },
+      "requires_approval": false
+    },
+    {
+      "id": "write_report",
+      "kind": "write_file",
+      "summary": "Write the weekly ops report",
+      "target": "reports/ops-<week>.md",
+      "args": { "content": "# Weekly Ops Report\n\n" },
+      "requires_approval": false
+    },
+    {
+      "id": "email_report",
+      "kind": "send_email",
+      "summary": "Email the weekly report to the team",
+      "target": "team",
+      "args": { "to": "team@xnch.systems", "subject": "Weekly Ops Report", "body": "See attached report." },
+      "requires_approval": true,
+      "description": "Elevated: requires admin approval."
+    }
+  ]
+}

@@ -3,6 +3,8 @@ import type {
   CapabilitiesResponse,
   ChatResponse,
   ChatRequest,
+  ContextManifest,
+  ContextManifestRequest,
   HealthResponse,
   LlmStatusResponse,
   McpCallRequest,
@@ -11,6 +13,7 @@ import type {
   McpToolsResponse,
   MemoryRecallRequest,
   MemoryRecallResult,
+  MemoryTierHealthResponse,
   SessionInitRequest,
   SurfaceEvent,
   SystemStateResponse,
@@ -24,6 +27,8 @@ export const endpoints = {
   health: () => apiRequest<HealthResponse>("/health"),
   llmStatus: () => apiRequest<LlmStatusResponse>("/system/llm-status"),
   systemState: () => apiRequest<SystemStateResponse>("/system/state"),
+  memoryTierHealth: () =>
+    apiRequest<MemoryTierHealthResponse>("/system/memory-tier-health"),
   capabilities: () => apiRequest<CapabilitiesResponse>("/nexi/capabilities"),
   systemPrompt: () => apiRequest<string>("/nexi/system-prompt"),
   chat: (body: ChatRequest) =>
@@ -35,6 +40,11 @@ export const endpoints = {
       body,
     }),
   memorySurface: () => apiRequest<SurfaceEvent[]>("/nexi/memory/surface"),
+  memoryRead: (body: ContextManifestRequest) =>
+    apiRequest<ContextManifest>("/memory/read", {
+      method: "POST",
+      body,
+    }),
 
   graphStats: () => apiRequest<GraphStats>("/memory/graph/stats"),
   graphEntities: (params?: {

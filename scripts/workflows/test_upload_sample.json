@@ -1,0 +1,27 @@
+{
+  "name": "Test Upload Sample",
+  "description": "Smoke-test workflow for the UI Upload JSON feature — one auto step + one gated elevated step.",
+  "owner_actor_id": "operator",
+  "trigger": { "kind": "manual" },
+  "steps": [
+    {
+      "id": "note",
+      "kind": "update_memory",
+      "summary": "Record that the upload feature works",
+      "target": "smoke_test",
+      "args": { "note": "ui upload ok" },
+      "requires_approval": false,
+      "description": "Low-risk: executor auto-runs on claim."
+    },
+    {
+      "id": "ping",
+      "kind": "exec_tool",
+      "summary": "Echo a confirmation from the executor",
+      "target": "shell",
+      "args": { "command": "echo 'upload-test'" },
+      "preview": "echo 'upload-test'",
+      "requires_approval": true,
+      "description": "Elevated: requires X-Actor-Role: admin approval in /approvals."
+    }
+  ]
+}

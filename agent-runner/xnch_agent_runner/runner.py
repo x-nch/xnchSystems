@@ -157,6 +157,62 @@ def build_command(cfg: RunnerConfig, prompt: str) -> list[str]:
     )
 
 
+# --- Reddit special-agent routing ------------------------------------------------
+# Runs whose prompt begins with "@reddit" are executed by the trusted Reddit
+# executor (scripts/reddit/reddit_agent.py) instead of spawning opencode. The
+# sandboxed LLM never sees Reddit creds and cannot reach the network, so the one
+# external call lives here. See scripts/reddit/README.md.
+
+def _reddit_agent_path() -> Path:
+    if os.environ.get("XNCH_REDDIT_AGENT"):
+        return Path(os.environ["XNCH_REDDIT_AGENT"])
+    return Path(__file__).resolve().parents[2] / "scripts" / "reddit" / "reddit_agent.py"
+
+
+def _reddit_creds_present() -> bool:
+    if os.environ.get("XNCH_REDDIT_CLIENT_ID") and os.environ.get("XNCH_REDDIT_PASSWORD"):
+        return True
+    return Path(os.path.expanduser("~/.xnch/reddit.env")).exists()
+
+
+def execute_reddit_run(
+    cfg: RunnerConfig, run: dict[str, Any], run_id: str, prompt: str, spawn=None
+) -> str:
+    """Claimed run is a @reddit directive -> call the trusted executor & report."""
+    spawn = spawn or subprocess.run
+    outcome_url = f"{cfg.gateway_url}/agents/runs/{run_id}/outcome"
+    raw = prompt[len("@reddit"):].strip()
+    try:
+        task = json.loads(raw)
+        agent_py = _reddit_agent_path()
+        cmd = [sys.executable, str(agent_py), "execute", "--json", json.dumps(task)]
+        if not _reddit_creds_present():
+            cmd.append("--dry-run")
+        proc = spawn(
+            cmd, capture_output=True, text=True, timeout=cfg.timeout_s, env=_spawn_env()
+        )
+        ok = proc.returncode == 0
+        out, err = (proc.stdout or "").strip(), (proc.stderr or "").strip()
+        payload = {
+            "outcome_status": "DONE" if ok else "FAILED",
+            "exit_code": proc.returncode,
+            "result_text": out[-20000:] or None,
+            **({} if ok else {"error": (err or out)[-2000:]}),
+        }
+        word = "done" if ok else "failed"
+    except json.JSONDecodeError as exc:
+        payload = {"outcome_status": "FAILED", "exit_code": -1, "error": f"invalid @reddit JSON: {exc}"}
+        word = "failed"
+    except Exception as exc:  # noqa: BLE001 — must reach xnch as FAILED
+        payload = {"outcome_status": "FAILED", "exit_code": -1, "error": str(exc)[-2000:]}
+        word = "failed"
+    ostatus, obody = post_json(outcome_url, payload, cfg.gateway_secret)
+    if ostatus not in (200,):
+        print(f"[runner] reddit outcome rejected ({ostatus}): {obody}", file=sys.stderr)
+    print(f"[runner] {run_id[:8]} -> reddit {word}")
+    return word
+
+
 def handle_once(cfg: RunnerConfig, spawn=None) -> str:
     """One poll cycle: claim -> execute -> report. Returns a human status word."""
     spawn = spawn or subprocess.run
@@ -172,6 +228,9 @@ def handle_once(cfg: RunnerConfig, spawn=None) -> str:
         return "claim-error"
 
     run_id = run["id"]
+    prompt = (run.get("prompt") or "").strip()
+    if prompt.startswith("@reddit"):
+        return execute_reddit_run(cfg, run, run_id, prompt, spawn=spawn)
     workspace = Path(run["workspace"]).expanduser()
     outcome_url = f"{cfg.gateway_url}/agents/runs/{run_id}/outcome"
     try:

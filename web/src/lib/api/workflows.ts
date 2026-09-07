@@ -21,6 +21,8 @@ export interface WorkflowStepDef {
   preview?: string | null;
   requires_approval?: boolean;
   description?: string | null;
+  model_provider?: string | null;
+  model_id?: string | null;
 }
 
 export interface WorkflowDTO {
@@ -52,7 +54,13 @@ export interface RunStepDTO {
     | "CANCELLED"
     | "FAILED";
   approval_id: string | null;
-  payload?: { target?: string | null; args?: unknown; preview?: string | null };
+  payload?: {
+    target?: string | null;
+    args?: unknown;
+    preview?: string | null;
+    model_provider?: string | null;
+    model_id?: string | null;
+  };
 }
 
 export interface WorkflowRunDTO {

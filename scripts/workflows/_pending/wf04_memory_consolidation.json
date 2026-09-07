@@ -1,0 +1,34 @@
+{
+  "name": "Memory Consolidation Sweep",
+  "description": "Consolidate memory tiers, record crystals, and write a digest. Scheduled nightly before the graph rebuild.",
+  "owner_actor_id": "operator",
+  "trigger": { "kind": "schedule", "cron": "30 2 * * *" },
+  "steps": [
+    {
+      "id": "consolidate",
+      "kind": "exec_tool",
+      "summary": "Run 4-tier memory consolidation",
+      "target": "memory",
+      "args": { "command": "mem consolidate --tier semantic" },
+      "preview": "mem consolidate --tier semantic",
+      "requires_approval": true,
+      "description": "Elevated: transforms memory store. Requires admin approval."
+    },
+    {
+      "id": "record_crystals",
+      "kind": "update_memory",
+      "summary": "Record consolidated crystals to memory",
+      "target": "crystals",
+      "args": { "note": "nightly consolidation completed" },
+      "requires_approval": false
+    },
+    {
+      "id": "write_digest",
+      "kind": "write_file",
+      "summary": "Write the memory digest",
+      "target": "memory/digest.md",
+      "args": { "content": "# Memory Digest\n\n" },
+      "requires_approval": false
+    }
+  ]
+}

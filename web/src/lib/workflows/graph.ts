@@ -44,6 +44,19 @@ export function newStep(kind: HitlActionKind): WorkflowStep {
   };
 }
 
+/** exec_tool step pre-bound to a live-catalog tool (WS4 palette). */
+export function toolBoundStep(tool: {
+  name: string;
+  description?: string | null;
+}): WorkflowStep {
+  return {
+    ...newStep("exec_tool"),
+    summary: tool.description || `Run ${tool.name}`,
+    target: tool.name,
+    args: {},
+  };
+}
+
 const NODE_GAP_Y = 130;
 
 export function stepsToGraph(steps: WorkflowStep[]): {

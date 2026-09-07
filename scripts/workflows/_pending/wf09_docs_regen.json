@@ -1,0 +1,34 @@
+{
+  "name": "Docs Site Regen",
+  "description": "Rebuild the docs site and record the publish. Scheduled weekly.",
+  "owner_actor_id": "operator",
+  "trigger": { "kind": "schedule", "cron": "0 5 * * 0" },
+  "steps": [
+    {
+      "id": "build_docs",
+      "kind": "exec_tool",
+      "summary": "Build the mkdocs site",
+      "target": "docs",
+      "args": { "command": "mkdocs build -d site" },
+      "preview": "mkdocs build -d site",
+      "requires_approval": true,
+      "description": "Elevated: requires admin approval."
+    },
+    {
+      "id": "write_publish_note",
+      "kind": "write_file",
+      "summary": "Write the publish note",
+      "target": "reports/docs-publish.md",
+      "args": { "content": "# Docs Publish\n\n" },
+      "requires_approval": false
+    },
+    {
+      "id": "record_publish",
+      "kind": "update_memory",
+      "summary": "Record the docs publish to memory",
+      "target": "docs_log",
+      "args": { "note": "docs regen completed" },
+      "requires_approval": false
+    }
+  ]
+}

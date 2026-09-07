@@ -68,9 +68,14 @@ export async function proxyGateway(
     headers.set("X-Gateway-Token", mintGatewayToken(gatewaySecret));
   }
 
-  let body: BodyInit | null = null;
-  if (method !== "GET" && method !== "HEAD" && request.body) {
-    body = request.body as unknown as BodyInit;
+  // Buffer the request body instead of forwarding request.body as a streaming
+  // ReadableStream. Passing a web ReadableStream with duplex:"half" makes this
+  // undici build throw "fetch failed" on POST — a Buffer body avoids that and
+  // works for both empty and non-empty payloads.
+  let body: ArrayBuffer | null = null;
+  if (method !== "GET" && method !== "HEAD" && method !== "OPTIONS" && request.body) {
+    const buf = await request.arrayBuffer();
+    if (buf.byteLength > 0) body = buf;
   }
 
   try {
@@ -78,8 +83,6 @@ export async function proxyGateway(
       method,
       headers,
       body,
-      // @ts-expect-error — Node fetch requires duplex for streaming request bodies
-      duplex: body ? "half" : undefined,
       cache: "no-store",
       redirect: "manual",
     });

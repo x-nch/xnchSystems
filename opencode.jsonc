@@ -50,6 +50,10 @@
       "type": "remote",
       "url": "https://docs.langchain.com/mcp",
       "enabled": true
+    },
+    "spotify": {
+      "type": "local",
+      "command": ["node", "/Users/xnch/work/mcps/spotify-mcp-server/build/index.js"]
     }
   }
 }

@@ -1,0 +1,43 @@
+{
+  "name": "PR Review Loop",
+  "description": "Gather diff context, run the test suite, write a review note, and cache context to memory. Manual trigger (e.g. CI webhook or operator).",
+  "owner_actor_id": "operator",
+  "trigger": { "kind": "manual" },
+  "steps": [
+    {
+      "id": "collect_context",
+      "kind": "other",
+      "summary": "Collect diff + review context for the PR",
+      "target": "pr",
+      "args": { "pr": "<pr_id>" },
+      "requires_approval": false,
+      "description": "Read-only gathering; executor auto-runs."
+    },
+    {
+      "id": "run_tests",
+      "kind": "exec_tool",
+      "summary": "Run pytest fail-fast on the change set",
+      "target": "test",
+      "args": { "command": "pytest -x --no-header" },
+      "preview": "pytest -x --no-header",
+      "requires_approval": true,
+      "description": "Elevated: executes the suite. Requires admin approval."
+    },
+    {
+      "id": "write_review",
+      "kind": "write_file",
+      "summary": "Write the review note",
+      "target": "reviews/pr-<id>.md",
+      "args": { "content": "# PR Review\n\n(automated notes)\n" },
+      "requires_approval": false
+    },
+    {
+      "id": "cache_context",
+      "kind": "update_memory",
+      "summary": "Cache review context to memory",
+      "target": "review_context",
+      "args": { "note": "cached for continuity" },
+      "requires_approval": false
+    }
+  ]
+}

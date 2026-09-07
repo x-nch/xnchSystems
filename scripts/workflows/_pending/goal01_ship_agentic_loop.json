@@ -1,0 +1,37 @@
+{
+  "name": "Goal: Ship Core Agentic Loop",
+  "description": "North-star goal — register the core agentic loop as a trackable Goal and lay down its roadmap. Manual trigger.",
+  "owner_actor_id": "operator",
+  "trigger": { "kind": "manual" },
+  "steps": [
+    {
+      "id": "create_goal",
+      "kind": "create_goal",
+      "summary": "Create the 'Ship Core Agentic Loop E2E' goal",
+      "target": "goal",
+      "args": {
+        "name": "Ship Core Agentic Loop E2E",
+        "priority": 10,
+        "description": "Goal model + GoalStore -> APScheduler scheduler -> circuit-breaker HITL gate -> stub-runner e2e validation."
+      },
+      "requires_approval": false,
+      "description": "Low-risk: goal registration (no forced approval)."
+    },
+    {
+      "id": "write_roadmap",
+      "kind": "write_file",
+      "summary": "Write the agentic-loop roadmap",
+      "target": "docs/goals/agentic-loop.md",
+      "args": { "content": "# Ship Core Agentic Loop\n\n- Goal model + GoalStore\n- APScheduler scheduler\n- Circuit-breaker HITL gate\n- Stub-runner e2e\n" },
+      "requires_approval": false
+    },
+    {
+      "id": "record_goal",
+      "kind": "update_memory",
+      "summary": "Record the goal registration to memory",
+      "target": "goals",
+      "args": { "note": "core agentic loop goal registered" },
+      "requires_approval": false
+    }
+  ]
+}

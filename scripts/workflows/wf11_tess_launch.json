@@ -1,0 +1,49 @@
+{
+  "name": "xnch-tess-launch",
+  "description": "Merch as bait, community as the catch: ship Xnch terminal-README shirts, seed the dev/AI community. Maps to goal de5127e1-e690-4211-a09a-dd9bebf3534a.",
+  "owner_actor_id": "ck-san",
+  "trigger": { "kind": "manual" },
+  "steps": [
+    {
+      "id": "lock-secret-lines",
+      "kind": "other",
+      "summary": "ck-san finalizes the cryptic one-liner + ink color for each of 3-5 designs",
+      "description": "Human gate: only ck-san can supply the secret command per design. Output: locked design spec.",
+      "requires_approval": true
+    },
+    {
+      "id": "write-design-prompts",
+      "kind": "write_file",
+      "target": "designs/prompts.md",
+      "summary": "Write final paste-ready image prompts (README-as-terminal, monospace, screenprint ink-bleed) to disk",
+      "args": { "content": "# Xnch Tess design prompts from ck-san", "note": "filled in after lock-secret-lines" },
+      "requires_approval": false,
+      "description": "Low-risk: executor auto-runs after the secret lines are locked."
+    },
+    {
+      "id": "pick-production-route",
+      "kind": "other",
+      "summary": "Decide print-on-demand vs local screenprint + set pricing per design",
+      "description": "Decision gate: local screenprint wins on ink-bleed authenticity; pricing still needs ck-san sign-off.",
+      "requires_approval": true
+    },
+    {
+      "id": "build-storefront",
+      "kind": "exec_tool",
+      "summary": "Scaffold the storefront + checkout (lean self-hosted or Gumroad/LemonSqueezy)",
+      "target": "shell",
+      "args": { "command": "echo 'storefront scaffold pending route decision; wire checkout + newsletter capture'" },
+      "preview": "echo 'storefront scaffold pending route decision; wire checkout + newsletter capture'",
+      "requires_approval": true,
+      "description": "Elevated (exec_tool): requires admin approval in /approvals."
+    },
+    {
+      "id": "launch-and-seed",
+      "kind": "send_email",
+      "summary": "Launch: post cryptic art with ZERO explanation + notify beta community (HN, r/programming, dev.to, X, Mastodon)",
+      "args": { "to": "community@xnch.dev", "subject": "Xnch Tess launch", "body": "Prepared launch posts + community seed list" },
+      "requires_approval": true,
+      "description": "Elevated (send_email): requires admin approval in /approvals."
+    }
+  ]
+}

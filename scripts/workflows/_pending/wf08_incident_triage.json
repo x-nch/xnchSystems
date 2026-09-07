@@ -1,0 +1,34 @@
+{
+  "name": "Incident Triage",
+  "description": "Collect health signals, log the incident, and page oncall. Manual trigger by alert or operator.",
+  "owner_actor_id": "operator",
+  "trigger": { "kind": "manual" },
+  "steps": [
+    {
+      "id": "collect_signals",
+      "kind": "other",
+      "summary": "Collect xnch_health and recent logs",
+      "target": "health",
+      "args": { "source": "xnch_health" },
+      "requires_approval": false,
+      "description": "Read-only: executor auto-runs."
+    },
+    {
+      "id": "log_incident",
+      "kind": "update_memory",
+      "summary": "Log the incident to memory",
+      "target": "incident_log",
+      "args": { "note": "incident captured" },
+      "requires_approval": false
+    },
+    {
+      "id": "page_oncall",
+      "kind": "send_email",
+      "summary": "Page the oncall engineer",
+      "target": "oncall",
+      "args": { "to": "oncall@xnch.systems", "subject": "Incident", "body": "Automated incident triage triggered." },
+      "requires_approval": true,
+      "description": "Elevated: requires admin approval."
+    }
+  ]
+}

@@ -31,9 +31,12 @@ export default function AgentsPage() {
   }, []);
 
   useEffect(() => {
-    void refresh();
     const t = setInterval(() => void refresh(), 5000);
-    return () => clearInterval(t);
+    const initial = setTimeout(() => void refresh(), 0);
+    return () => {
+      clearInterval(t);
+      clearTimeout(initial);
+    };
   }, [refresh]);
 
   const dispatch = async () => {

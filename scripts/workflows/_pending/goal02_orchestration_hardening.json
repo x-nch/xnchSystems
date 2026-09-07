@@ -1,0 +1,39 @@
+{
+  "name": "Goal: Multi-Agent Orchestration Hardening",
+  "description": "Register the orchestration-hardening goal and validate leases/signals/mesh under load. Manual trigger.",
+  "owner_actor_id": "operator",
+  "trigger": { "kind": "manual" },
+  "steps": [
+    {
+      "id": "create_goal",
+      "kind": "create_goal",
+      "summary": "Create the 'Multi-Agent Orchestration Hardening' goal",
+      "target": "goal",
+      "args": {
+        "name": "Multi-Agent Orchestration Hardening",
+        "priority": 8,
+        "description": "Verify leases, signals, and mesh sync under real workloads across nexi engine + xnch control plane."
+      },
+      "requires_approval": false,
+      "description": "Low-risk: goal registration."
+    },
+    {
+      "id": "run_mesh_tests",
+      "kind": "exec_tool",
+      "summary": "Run multi-agent orchestration tests",
+      "target": "test",
+      "args": { "command": "pytest tests/test_mesh.py tests/test_signals.py -x" },
+      "preview": "pytest tests/test_mesh.py tests/test_signals.py -x",
+      "requires_approval": true,
+      "description": "Elevated: requires admin approval."
+    },
+    {
+      "id": "record_goal",
+      "kind": "update_memory",
+      "summary": "Record the goal to memory",
+      "target": "goals",
+      "args": { "note": "orchestration hardening goal registered" },
+      "requires_approval": false
+    }
+  ]
+}

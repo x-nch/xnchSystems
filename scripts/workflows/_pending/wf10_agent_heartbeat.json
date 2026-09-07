@@ -1,0 +1,25 @@
+{
+  "name": "Agent Heartbeat",
+  "description": "Light liveness probe: ping xnch_health and record last-seen. Scheduled every 5 minutes. No approvals so the executor runs it unattended.",
+  "owner_actor_id": "operator",
+  "trigger": { "kind": "schedule", "cron": "*/5 * * * *" },
+  "steps": [
+    {
+      "id": "ping_health",
+      "kind": "other",
+      "summary": "Ping xnch_health endpoint",
+      "target": "health",
+      "args": { "endpoint": "xnch_health" },
+      "requires_approval": false,
+      "description": "Read-only; auto-runs every 5m."
+    },
+    {
+      "id": "record_last_seen",
+      "kind": "update_memory",
+      "summary": "Record last-seen timestamp to memory",
+      "target": "heartbeat",
+      "args": { "note": "heartbeat ok" },
+      "requires_approval": false
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "name": "Deploy to k3s",
+  "description": "Apply infra manifests, notify the team, and record the deploy. HIGH RISK — manual only, admin approval required.",
+  "owner_actor_id": "operator",
+  "trigger": { "kind": "manual" },
+  "steps": [
+    {
+      "id": "apply_manifests",
+      "kind": "exec_tool",
+      "summary": "Apply k3s infra manifests",
+      "target": "k8s",
+      "args": { "command": "kubectl apply -k infra/" },
+      "preview": "kubectl apply -k infra/",
+      "requires_approval": true,
+      "description": "Elevated: production mutation. Requires X-Actor-Role: admin."
+    },
+    {
+      "id": "notify_team",
+      "kind": "send_email",
+      "summary": "Email the team that a deploy occurred",
+      "target": "team",
+      "args": { "to": "team@xnch.systems", "subject": "Deploy: k3s", "body": "Infra manifests applied." },
+      "requires_approval": true,
+      "description": "Elevated: outbound email. Requires X-Actor-Role: admin."
+    },
+    {
+      "id": "record_deploy",
+      "kind": "update_memory",
+      "summary": "Record the deploy event to memory",
+      "target": "deploy_log",
+      "args": { "note": "k3s deploy via workflow" },
+      "requires_approval": false
+    }
+  ]
+}
