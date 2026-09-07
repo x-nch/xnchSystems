@@ -129,3 +129,16 @@ servers:
       - validate_workflow
       - semantic_search_skills
     deny_tools: []
+
+  spotify:
+    enabled: true
+    actors:
+      - nexi
+      - operator
+    tier: T1_WRITE
+    tool_prefix: spotify_
+    command: /usr/bin/node
+    args:
+      - /home/x-nch/work/mcps/spotify-mcp-server/build/index.js
+    env: {}
+    deny_tools: []

@@ -149,6 +149,17 @@ servers:
     args: [-y, "@upstash/context7-mcp"]
     env: {CONTEXT7_API_KEY: ""}
     allow_tools: [resolve-library-id, query-docs]
+
+  spotify:
+    enabled: true
+    actors: [nexi, operator]
+    tier: T1_WRITE
+    tool_prefix: spotify_
+    command: /usr/bin/node
+    args: [~/work/mcps/spotify-mcp-server/build/index.js]
+    env: {}
+    # NOTE: omit allow_tools; an empty allowlist filters out every tool.
+    deny_tools: []
 ```
 
 ---

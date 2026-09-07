@@ -103,6 +103,7 @@ Defined in `~/.xnch/mcp-servers.yaml` (example: `infra/no-k3s/shared/mcp-servers
 | agentmemory | `agentmemory` | `am_` | T1_WRITE | nexi, operator | `npx @agentmemory/mcp` → `http://127.0.0.1:3111` | 11 | enabled |
 | docs-test | `docs-test` | `doc_` | T0_READ | nexi, operator | `python -m docs_test_mcp` (offline, no API key) | 2 | enabled |
 | context7 | `context7` | `c7_` | T0_READ | nexi, operator | `npx @upstash/context7-mcp` (`CONTEXT7_API_KEY`) | 2 (live docs) | disabled |
+| spotify | `spotify` | `spotify_` | T1_WRITE | nexi, operator | `node ~/work/mcps/spotify-mcp-server/build/index.js` | ~42 (search/playback/playlist) | enabled |
 
 **code-review-graph** — structure/impact tooling for the repo at
 `/home/x-nch/xnchSystems`. Only read/introspection tools are allow-listed
@@ -125,6 +126,13 @@ MCP, LiteLLM, Kuzu). No API key. Tools: `resolve-library-id`, `query-docs`.
 
 **context7** — live library docs. Disabled by default; enable in YAML and set
 `CONTEXT7_API_KEY`. Tools appear as `c7_resolve-library-id`, `c7_query-docs`.
+
+**spotify** — control Spotify via the [mcp spotify server](https://github.com/marcelmarais/spotify-mcp-server)
+(stdio child of `node`; reads `spotify-config.json` from its own package dir, so no cwd
+requirement). OAuth tokens are pre-configured. Tools appear as `spotify_*` (e.g.
+`spotify_searchSpotify`, `spotify_getNowPlaying`, `spotify_playMusic`, `spotify_setVolume`).
+All tools are exposed; `T1_WRITE` lets `nexi` and `operator` control playback and mutate
+playlists, and `viewer`/`external` remain blocked by the tier model.
 
 ---
 
@@ -171,10 +179,11 @@ its description is prefixed with `[{server_id}] `. Examples:
 | `query_graph_tool` | `crg_query_graph_tool` |
 | `memory_recall` | `am_memory_recall` |
 | `resolve-library-id` | `doc_resolve-library-id` |
+| `searchSpotify` | `spotify_searchSpotify` |
 
 Prefixes avoid collisions between servers and make provenance obvious to the model. The
-Nexi character prompt lists the three active groups (`crg_*`, `am_*`, `doc_*`) and a
-`tool_routing` table.
+Nexi character prompt lists the active groups (`crg_*`, `am_*`, `doc_*`, `c7_*`,
+`spotify_*`) and a `tool_routing` table.
 
 **Audit.** `invoke_tool` records every call in the event log as `xnch.mcp` /
 `TOOL_CALL`. Bridged calls add three provenance fields:

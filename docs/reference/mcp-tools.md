@@ -109,6 +109,7 @@ subprocesses by `xnch_mcp.bridge`. Tools are re-registered as
 | agentmemory | `am_` | T1_WRITE | nexi, operator | `am_memory_lesson_save`, `am_memory_lesson_recall`, `am_memory_save`, `am_memory_action_*` |
 | docs-test | `doc_` | T0_READ | nexi, operator | `doc_resolve-library-id`, `doc_query-docs` |
 | context7 | `c7_` | T0_READ | nexi, operator | `c7_resolve-library-id`, `c7_query-docs` (**disabled** by default) |
+| spotify | `spotify_` | T1_WRITE | nexi, operator | `spotify_searchSpotify`, `spotify_getNowPlaying`, `spotify_playMusic`, `spotify_setVolume` |
 
 Example calls (actor `nexi`):
 
@@ -119,6 +120,9 @@ curl -s -X POST http://127.0.0.1:8001/mcp/call \
 curl -s -X POST http://127.0.0.1:8001/mcp/call \
   -H 'X-Actor-Role: nexi' -H 'Content-Type: application/json' \
   -d '{"name":"am_memory_recall","arguments":{"query":"MCP bridge","limit":3}}'
+curl -s -X POST http://127.0.0.1:8001/mcp/call \
+  -H 'X-Actor-Role: nexi' -H 'Content-Type: application/json' \
+  -d '{"name":"spotify_getNowPlaying","arguments":{}}'
 ```
 
 ---
@@ -163,7 +167,7 @@ Which tools each actor can call. ✓ = visible, — = blocked (by tier or `allow
 | `xnch_fs_*` (5 tools) | ✓ | ✓ | ✓ | — | — | — | — |
 | `xnch_exec_run` | ✓ | ✓ | ✓ | — | — | — | — |
 | `xnch_web_search` | ✓ | ✓ | — | — | — | — | — |
-| `crg_*` / `am_*` / `doc_*` (bridged) | ✓ | ✓ | — | — | — | — | — |
+| `crg_*` / `am_*` / `doc_*` / `spotify_*` (bridged) | ✓ | ✓ | — | — | — | — | — |
 
 Notes:
 
@@ -195,6 +199,7 @@ for which need.
 | Current events / external docs / CVEs | `xnch_web_search` | `query="CVE ..."` |
 | Library/framework API docs (offline) | `doc_*` | `doc_query-docs` |
 | Library/framework API docs (live) | `c7_*` | `c7_resolve-library-id` (when enabled) |
+| Spotify playback / search / playlists | `spotify_*` | `spotify_searchSpotify`, `spotify_getNowPlaying` |
 | Governed decision pipeline / action | `xnch_session_run` | intent or command |
 
 ---

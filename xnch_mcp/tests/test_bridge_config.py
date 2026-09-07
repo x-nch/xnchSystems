@@ -53,3 +53,27 @@ servers:
     )
     with pytest.raises(ValueError, match="Unknown tier"):
         load_bridge_config(path)
+
+
+def test_load_bridge_config_spotify_omits_allowlist(tmp_path: Path):
+    path = tmp_path / "mcp-servers.yaml"
+    path.write_text(
+        """
+servers:
+  spotify:
+    enabled: true
+    actors: [nexi, operator]
+    tier: T1_WRITE
+    tool_prefix: spotify_
+    command: /opt/homebrew/bin/node
+    args: ["/Users/xnch/work/mcps/spotify-mcp-server/build/index.js"]
+    env: {}
+    deny_tools: []
+"""
+    )
+    srv = load_bridge_config(path).servers["spotify"]
+    assert srv.tier == ToolTier.T1_WRITE
+    assert srv.tool_prefix == "spotify_"
+    assert srv.actors == frozenset({"nexi", "operator"})
+    assert srv.allow_tools is None
+    assert srv.deny_tools == frozenset()
