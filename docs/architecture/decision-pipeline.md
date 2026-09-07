@@ -10,8 +10,9 @@ Audience: devs. Sources: `nexi/pipeline/`, `nexi/main.py`,
    (`NEXI_INTENT_CLASSIFIER_MODEL`).
 2. **load_context** — nexi → xnch `POST /memory/read` for a ContextManifest
    (episodes, patterns, policy refs).
-3. **generate_options** — ModelAdapter via the hosted OpenCode Go API
-   (`NEXI_OPENCODE_GO_*`; local vLLM/LiteLLM tiers as configured fallbacks),
+3. **generate_options** — ModelAdapter via the nexi model router: **litellm**
+   (local vLLM ornith proxy) when `NEXI_LITELLM_PROXY_URL` is set; hosted
+   OpenCode Go / OpenRouter otherwise (`e08bd23`, `cbf1620`),
    `NEXI_OPTIONS_COUNT` options.
 4. **PolicyFilter** — nexi → xnch `POST /policy/check` per option.
 5. **Evaluator** — scoring + simulation.
@@ -28,8 +29,8 @@ sequenceDiagram
     participant U as User
     participant X as xnch :8001
     participant N as nexi :8000
-    participant L as OpenCode Go<br/>(hosted DeepSeek V4)
-    participant V as local vLLM/LiteLLM<br/>(fallback)
+    participant L as local vLLM via litellm<br/>(primary when proxy configured)
+    participant V as OpenCode Go / OpenRouter<br/>(internet fallback)
     U->>X: POST /session/init
     X->>X: auth, dedup, rate limit
     X->>N: POST /session/start
@@ -72,8 +73,9 @@ EPISODE_PREDICTION_UPDATE` → early re-extraction of patterns when flagged.
   interrupt mode/risk threshold via `XNCH_HITL_EXECUTION_MODE`,
   `XNCH_HITL_RISK_THRESHOLD`.
 - **Chat tool-loop** (default conversational surface): `/nexi/chat(+ /stream)`
-  bypasses the plan pipeline; it runs recall + hosted OpenCode Go chat + MCP
-  tools. `/v1/chat/completions` instead forwards into nexi `POST
+  bypasses the plan pipeline; it runs recall + nexi-model-router chat (litellm
+  local primary, free-only OpenRouter fallback) + MCP tools. `/v1/chat/completions`
+  instead forwards into nexi `POST
   /session/start` — the plan pipeline — behind an OpenAI-compatible wrapper.
   See [chat & tools guide](../guides/chat-and-tools.md).
 - **Goal driver**: autonomous loop claiming goals — `NEXI_GOAL_DRIVER_ENABLED`

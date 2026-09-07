@@ -31,11 +31,14 @@ behavior with the copy-paste catalog: [nexi-test-prompts](nexi-test-prompts.md).
 
 ## Model routing
 
-Chat locks to `XNCH_LLM_MODEL_ID`; voice requests additionally route via
-`classify_request`. Intent classification uses `NEXI_INTENT_CLASSIFIER_MODEL`;
-consolidation's extractor uses `XNCH_GRAPH_EXTRACTOR_MODEL`. All are served by
-the hosted OpenCode Go API (DeepSeek V4) by default, with local tiers as
-configured fallbacks ([env reference](../reference/env-vars.md)).
+Chat runs through nexi's model router: local litellm/vLLM (ornith) when
+`NEXI_LITELLM_PROXY_URL` is configured (`XNCH_LLM_MODEL_ID=nexi-default`
+delegates the choice), with OpenCode Go / OpenRouter as internet fallback
+(free-tier only, `e08bd23`), or a concrete `XNCH_LLM_MODEL_ID` / voice
+`classify_request` overrides. Intent classification uses
+`NEXI_INTENT_CLASSIFIER_MODEL`; consolidation's extractor uses
+`XNCH_GRAPH_EXTRACTOR_MODEL`. Router precedence lives in
+[env reference](../reference/env-vars.md#nexi_).
 
 ## Memory behavior in chat
 

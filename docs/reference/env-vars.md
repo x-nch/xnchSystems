@@ -142,7 +142,7 @@ Secrets below are placeholders; never commit real values.
 |---|---|---|
 | `NEXI_XNCH_BASE_URL` | `http://localhost:8001` | xnch API base (Node B uses `http://192.168.50.1:8001`) |
 | `NEXI_XNCH_PUBLIC_KEY_PATH` | `~/.xnch/keys/public.pem` | RS256 public key for execution-token verification |
-| `NEXI_VLLM_PRIMARY_URL` | `""` | legacy fallback vLLM (Ornith) endpoint (kept for rollback; unused by default) |
+| `NEXI_VLLM_PRIMARY_URL` | `""` | legacy fallback vLLM (Ornith) endpoint (kept for rollback; litellm is the active local path) |
 | `NEXI_VLLM_PRIMARY_TIMEOUT_S` | `30.0` | legacy fallback timeout |
 | `NEXI_VLLM_SECONDARY_URL` / `_TIMEOUT_S` | `""` / `45.0` | optional fallback vLLM |
 | `NEXI_MODEL_ID` | `deepseek-v4-pro` | model id used for hosted generation (OpenCode Go) |
@@ -151,16 +151,20 @@ Secrets below are placeholders; never commit real values.
 | `NEXI_OPENCODE_GO_API_KEY` | *(empty)* | Bearer key for the OpenCode Go API |
 | `NEXI_OPENCODE_GO_API_TIMEOUT_S` | `60.0` | Per-call timeout (seconds) |
 | `NEXI_OPENCODE_GO_MODELS` | *(empty)* | Optional override of the opencode-go model catalog (JSON list of dicts); empty = catalog default |
+| `NEXI_OPENROUTER_FREE_MODEL` | `nvidia/nemotron-3-super-120b-a12b:free` | fallback target — only consulted when `chat_completion_with_fallback`'s primary fails; must be free-tier (`:free` suffix or `openrouter_free_models`) or failover is refused (`e08bd23`) |
+| `NEXI_OPENROUTER_FREE_MODELS` | *(empty)* | allowlist of free-tier ids (JSON list); empty = rely on `:free` suffix only |
 
 ### LiteLLM & classification
 
 | Variable | Default | Description |
 |---|---|---|
-| `NEXI_LITELLM_PROXY_URL` | *(empty)* | Legacy: local LiteLLM fallback (kept for rollback; unused by default) |
-| `NEXI_LITELLM_PROXY_TIMEOUT_S` | `60.0` | proxy timeout |
-| `NEXI_LITELLM_API_KEY` | `""` | proxy key if required |
-| `NEXI_INTENT_CLASSIFIER_MODEL` | `deepseek-v4-pro` | intent classifier (hosted, same model as generation) |
-| `NEXI_REFLECTION_MODEL` / `_ENABLED` | `deepseek-v4-pro` / `true` | post-decision reflection call |
+| `NEXI_LITELLM_PROXY_URL` | *(empty)* | When set, `nexi-default` resolves to the **litellm** provider and local vLLM (ornith) serves chat + internals (`_resolve_provider` short-circuit, `e08bd23`) |
+| `NEXI_LITELLM_PROXY_TIMEOUT_S` | `60.0` | per-call timeout for the litellm provider |
+| `NEXI_LITELLM_API_KEY` | `""` | proxy key (match `LITELLM_MASTER_KEY` on node-a) |
+| `NEXI_LITELLM_MODEL_ID` | `ornith` | model id sent to the litellm proxy (`litellm_model_id`) |
+| `NEXI_LITELLM_MODELS` | *(empty)* | optional override of the local catalog (JSON list of model dicts); empty = `DEFAULT_LITELLM_MODELS` |
+| `NEXI_INTENT_CLASSIFIER_MODEL` | `nexi-default` | intent classifier — alias for the router; override with a concrete id (`cbf1620`) |
+| `NEXI_REFLECTION_MODEL` / `_ENABLED` | `nexi-default` / `true` | post-decision reflection call — same alias semantics (`cbf1620`) |
 
 ### Sessions, redis, execution
 

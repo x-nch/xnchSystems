@@ -16,14 +16,14 @@ node. Templates: `infra/no-k3s/shared/*.example.yaml`. Sources: config paths in
 | `~/.xnch/policies/*.yaml` | A | `policies_dir` | policy-engine rule packs (first-match-wins; candidates land here via governance approval) |
 | `~/.xnch/nexi-capabilities.generated.yaml` | B | `NEXI_CAPABILITIES_GENERATED_PATH` | auto-refreshed capability manifest (do not hand-edit) |
 
-- xnch inference routing: `XNCH_OPENCODE_GO_*` + `XNCH_LLM_*` in `xnch/config.py` (see [env-vars](env-vars.md))
-- nexi inference routing: `NEXI_OPENCODE_GO_*` in `nexi/config.py` (see [env-vars](env-vars.md))
+- xnch inference routing: `XNCH_OPENCODE_GO_*` + `XNCH_LLM_*` in `xnch/config.py` (see [env-vars](env-vars.md)); `XNCH_LLM_MODEL_ID=nexi-default` delegates the choice to nexi's router
+- nexi inference routing: `NEXI_LITELLM_*` (local primary) + `NEXI_OPENCODE_GO_*` + `NEXI_OPENROUTER_*` in `nexi/config.py` (see [env-vars](env-vars.md))
 
 Node-A compose-side config (not `~/.xnch`):
 
 | File | Purpose |
 |---|---|
-| `infra/no-k3s/node-a/litellm-config/config.yaml` + `shared/litellm-routing.yaml` | litellm models; Node B target `api_base http://192.168.50.2:8082/v1`; served name must be vLLM's `openai/ornith-1.0-35b`, alias `qwen3-xml` is public-facing only |
+| `infra/no-k3s/node-a/litellm-config/config.yaml` + `shared/litellm-routing.yaml` | litellm → Node B vLLM `api_base http://192.168.50.2:8082/v1`; served name `openai/ornith-1.0-35b` — the active chat primary when `NEXI_LITELLM_PROXY_URL` is set |
 | `infra/no-k3s/node-a/searxng/settings.yml` | SearXNG settings (loopback bind) |
 | `~/.xnch/xnch.env` secrets | POSTGRES_PASSWORD, LANGFUSE_*, LITELLM_MASTER_KEY, XNCH_AUTH_SECRET |
 
