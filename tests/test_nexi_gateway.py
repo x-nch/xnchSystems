@@ -170,6 +170,36 @@ async def test_chat_success(
 
 
 @pytest.mark.asyncio
+@patch("xnch.routes.nexi_gateway.assemble_context")
+@patch("xnch.routes.nexi_gateway.scan_input")
+@patch("xnch_mcp.chat_tools.chat_with_tools", new_callable=AsyncMock)
+async def test_chat_forwards_method_to_chat_with_tools(
+    mock_chat_with_tools, mock_scan, mock_assemble, app_state
+):
+    mock_scan.return_value = MagicMock(is_clean=True, matched_patterns=[])
+
+    fake_ctx = MagicMock()
+    fake_ctx.to_messages.return_value = [{"role": "user", "content": "Hello Nexi"}]
+    mock_assemble.return_value = fake_ctx
+    mock_chat_with_tools.return_value = "auto-selected reply"
+
+    transport = ASGITransport(app=xnch_app)
+    payload = {
+        "session_id": "sess-1",
+        "message": "Hello Nexi",
+        "actor_role": "operator",
+        "method": "auto",
+    }
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.post("/nexi/chat", json=payload)
+
+    assert response.status_code == 200
+    assert response.json()["response"] == "auto-selected reply"
+    mock_chat_with_tools.assert_awaited_once()
+    assert mock_chat_with_tools.call_args.kwargs["method"] == "auto"
+
+
+@pytest.mark.asyncio
 @patch("xnch.routes.nexi_gateway.scan_input")
 @patch("xnch.routes.nexi_gateway.classify_request")
 @patch("xnch_mcp.chat_tools.chat_with_tools", new_callable=AsyncMock)

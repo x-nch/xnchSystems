@@ -134,13 +134,15 @@ async def chat_with_tools(
     session_id: str,
     actor_role: str = "nexi",
     max_rounds: int | None = None,
+    method: str | None = None,
 ) -> str:
     """Chat with MCP tools until the model returns text or rounds exhaust.
 
     The LLM call is routed through nexi's multi-provider model router (the
     default provider when no override) so chat + internals share one model
     decision path. ``model_name`` is honored verbatim when it names a real
-    model; aliases (auto/default/nexi-default) let nexi pick.
+    model; aliases (auto/default/nexi-default) let nexi pick. Setting
+    ``method="auto"`` lets nexi auto-select a free model from Redis rankings.
     """
     if max_rounds is None:
         max_rounds = _max_tool_rounds()
@@ -201,6 +203,7 @@ async def chat_with_tools(
                     tool_choice=payload.get("tool_choice", "auto"),
                     temperature=payload["temperature"],
                     max_tokens=2048,
+                    method=method,
                 )
             else:
                 resp = await client.post(

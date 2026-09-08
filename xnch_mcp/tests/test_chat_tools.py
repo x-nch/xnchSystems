@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
+import asyncio
+from unittest.mock import AsyncMock, MagicMock, patch
+
 from xnch_mcp.chat_tools import (
     _extract_local_path,
     _final_text,
     _fmt_tool_result,
     _force_tool,
+    chat_with_tools,
 )
 
 
@@ -92,3 +96,36 @@ def test_force_tool_path_requires_read_verb():
 def test_force_tool_falls_back_to_search_keyword():
     msgs = [{"role": "user", "content": "search the web for latest news"}]
     assert _force_tool(msgs) == "xnch_web_search"
+
+
+def test_chat_with_tools_forwards_method_to_fallback():
+    """route_via_nexi passes method='auto' through to chat_completion_with_fallback."""
+    fake_fallback = AsyncMock()
+    fake_fallback.return_value = (
+        {"choices": [{"message": {"content": "hi"}}]},
+        MagicMock(model_id="m", provider="p"),
+    )
+
+    with (
+        patch("xnch_mcp.chat_tools.list_openai_tools", return_value=[]),
+        patch(
+            "nexi.adapters.llm.chat_completion_with_fallback",
+            new=fake_fallback,
+        ),
+    ):
+        out = asyncio.run(
+            chat_with_tools(
+                app_state=MagicMock(),
+                messages=[{"role": "user", "content": "hi"}],
+                model_name="",
+                session_id="s1",
+                method="auto",
+                max_rounds=1,
+            )
+        )
+
+    assert out == "hi"
+    fake_fallback.assert_awaited_once()
+    assert fake_fallback.call_args.kwargs["method"] == "auto"
+    # model_name="" is an alias → nexi picks the model; provider passes through.
+    assert fake_fallback.call_args.kwargs["model_id"] is None
