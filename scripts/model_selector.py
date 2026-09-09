@@ -92,8 +92,9 @@ async def _probe_all(entries: list[dict], cfg) -> list[dict]:
     for entry, res in zip(entries, results):
         if res["ok"]:
             entry["latency_ms"] = res["total_ms"] or 0
+        else:
+            entry["latency_ms"] = 20000  # penalize failed probes heavily
     return entries
-
 
 @app.command()
 def run():
