@@ -1,0 +1,17 @@
+[Unit]
+Description=Hermes Agent — long-horizon autonomy (node-b)
+After=network.target
+
+[Service]
+Type=simple
+User=x-nch
+WorkingDirectory=/home/x-nch
+EnvironmentFile=/home/x-nch/.xnch/hermes.env
+ExecStart=/usr/bin/env hermes agent --daemon
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
