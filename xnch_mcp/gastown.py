@@ -6,8 +6,6 @@ from typing import Any
 
 import httpx
 
-from xnch.config import settings
-
 
 class GastownError(Exception):
     """Raised when Gas Town returns a non-2xx response or transport fails."""
