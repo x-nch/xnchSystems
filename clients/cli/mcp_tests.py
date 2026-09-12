@@ -6,7 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-from cli.client import XnchCliClient
+from clients.cli.client import XnchCliClient
 
 
 @dataclass(frozen=True)

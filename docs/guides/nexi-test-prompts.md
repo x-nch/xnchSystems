@@ -97,7 +97,7 @@ Use xnch_web_search to find the current stable Python release, then summarize wh
 > can return **0 results** for many queries — the tool still answers with
 > `status: ok` and empty results. A useful answer proves routing; empty results
 > prove the engine pool, not the bridge. Distinguish them: check
-> `python -m cli mcp call xnch_web_search --arg query="test"` (should return ≥1
+> `python -m clients.cli mcp call xnch_web_search --arg query="test"` (should return ≥1
 > wikipedia hit) versus `docker logs searxng` for upstream rate-limits.
 
 ## 2. Code graph (`crg_*`)

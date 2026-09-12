@@ -67,7 +67,6 @@ hosts:
       - curl http://192.168.50.2:8000
       - curl http://192.168.50.2:8082
       - curl http://192.168.50.2:8090
-      - curl http://192.168.50.2:8090
       # docker (read-only)
       - docker compose ps
       - docker compose -f /home/x-nch/xnchSystems/infra/no-k3s/node-a/docker-compose.yml ps
@@ -89,12 +88,12 @@ hosts:
       # python / tests / cli
       - pytest
       - python -m pytest
-      - python -m cli health
-      - python -m cli status
-      - python -m cli memory surface
-      - python -m cli memory recall
-      - python -m cli consolidate status
-      - /home/x-nch/xnchSystems/.venv/bin/python -m cli
+      - python -m clients.cli health
+      - python -m clients.cli status
+      - python -m clients.cli memory surface
+      - python -m clients.cli memory recall
+      - python -m clients.cli consolidate status
+      - /home/x-nch/xnchSystems/.venv/bin/python -m clients.cli
       - /home/x-nch/xnchSystems/.venv/bin/python -m pytest
       - python --version
       - python3 --version
@@ -137,7 +136,6 @@ hosts:
       - curl http://127.0.0.1:8000
       - curl http://127.0.0.1:8082
       - curl http://127.0.0.1:8090
-      - curl http://127.0.0.1:8004
       - curl http://192.168.50.1:8001
       - curl http://192.168.50.1:4000
       # gpu

@@ -19,7 +19,7 @@ does not use it for the voice CLI.
 ```mermaid
 flowchart TB
     subgraph HomeLAN["Home LAN 192.168.1.0/24"]
-        MAC["MacBook .11<br/>python -m cli voice"]
+        MAC["MacBook .11<br/>python -m clients.cli voice"]
         G7W["gate7 .10<br/>xnch :8001"]
         NBW["xnch-core .9"]
     end
@@ -46,7 +46,7 @@ OpenCode Go API (DeepSeek V4) for the LLM step.
 flowchart LR
     subgraph Mac["MacBook"]
         MIC[Mic / speakers]
-        CLI["python -m cli voice"]
+        CLI["python -m clients.cli voice"]
     end
     subgraph Gate7["gate7"]
         API["xnch :8001"]
@@ -150,8 +150,8 @@ source .venv/bin/activate
 set -a && source ~/.xnch/xnch.env && set +a
 
 curl -sf "$XNCH_BASE_URL/health"
-python -m cli voice devices
-python -m cli voice speak "Mac client online"
+python -m clients.cli voice devices
+python -m clients.cli voice speak "Mac client online"
 ```
 
 **Expect:** health 200, Mac mic/speaker listed, audible TTS from gate7-synthesized audio.
@@ -161,9 +161,9 @@ python -m cli voice speak "Mac client online"
 ## 4. Voice chat
 
 ```bash
-python -m cli voice talk --once    # one round trip
-python -m cli voice talk           # REPL — Enter to record, /quit to exit
-python -m cli voice listen -s 5    # STT only
+python -m clients.cli voice talk --once    # one round trip
+python -m clients.cli voice talk           # REPL — Enter to record, /quit to exit
+python -m clients.cli voice listen -s 5    # STT only
 ```
 
 Each `voice talk` launch starts a **fresh session** unless you pass `--continue`.
@@ -174,7 +174,7 @@ Each `voice talk` launch starts a **fresh session** unless you pass `--continue`
 
 | Task | Command |
 |------|---------|
-| List devices | `python -m cli voice devices` |
+| List devices | `python -m clients.cli voice devices` |
 | Pick input | `export XNCH_VOICE_INPUT_DEVICE=<index>` |
 | Pick output (AirPods, etc.) | `export XNCH_VOICE_OUTPUT_DEVICE=<index>` |
 | Mute playback (debug) | `export XNCH_VOICE_MUTE=1` |
@@ -214,9 +214,9 @@ Setup checklist:
 2. git clone --recursive; uv venv; uv pip install -e . sounddevice numpy
 3. ~/.xnch/xnch.env with XNCH_BASE_URL=http://192.168.1.10:8001 and XNCH_AUTH_SECRET from gate7
 4. curl $XNCH_BASE_URL/health
-5. python -m cli voice devices
-6. python -m cli voice speak "test"
-7. python -m cli voice talk --once
+5. python -m clients.cli voice devices
+6. python -m clients.cli voice speak "test"
+7. python -m clients.cli voice talk --once
 
 Do NOT install Piper/Whisper on Mac — STT/TTS run on gate7 only.
 Gate7 voice deploy runbook: docs/runbooks/voice-deploy.md

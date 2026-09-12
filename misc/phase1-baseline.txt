@@ -1,0 +1,77 @@
+# Phase 1 baseline test record (2026-09-12)
+
+Recorded so pre-existing failures are not blamed on Phase 1 work.
+Environment: darwin (macOS), Python 3.13.9 via `uv run --no-project`
+(the repo `uv sync` is broken — hatchling build issue in the xnch submodule).
+
+## How tests are run here
+
+Full `pytest` from the superrepo root fails to collect because the host
+Python (3.14) lacks the repo's transitive deps. Records below use:
+
+    uv run --no-project --with <deps...> python -m pytest <path> -q
+
+## xnch submodule settings (Task 2, pre-done at 62f6f52)
+
+    xnch/tests/test_capability_settings.py -v  -> 2 passed
+
+NOTE: the xnch submodule was later moved to b066f74 (memory-service
+work) by a sibling task during baseline; the superrepo gitlink is still
+0b80c07. Superrepo `tests/` (e2e) therefore cannot go green even in an
+ideal venv until the gitlink catches up — recorded below as env-drift.
+
+## xnch_mcp/tests
+
+    74 passed, 2 failed
+
+Pre-existing failures (both fail at the Task-1 baseline commit a797df4,
+none touched by this work):
+
+1. test_exec_handlers.py::test_handler_run
+   - subprocess cwd `/home/x-nch/xnchSystems` (policy working_dir from
+     test fixture) does not exist on this dev host.
+     FileNotFoundError: /System/Volumes/Data/home/x-nch/xnchSystems
+2. test_fs_handlers.py::test_fs_tools_hidden_from_opencode
+   - asserts `xnch_fs_read` is hidden from the `opencode` actor, but
+     `xnch_mcp/handlers/fs.py:_FS_ACTORS` includes `"opencode"` and the
+     tool tier is T0_READ, which opencode passes the tier gate for
+     (T2_EXEC is what opencode is cut off from). Pre-existing
+     tool-visibility mismatch, not caused by Phase 1.
+
+## xnch_mcp/tests/test_registry.py (with mcp dep)
+
+    5 passed
+
+## fs_read_agent/tests
+
+    1 passed, 1 failed
+
+Pre-existing failure:
+
+- test_server.py::test_agent_read — sends no X-Internal-Token; the
+  server fail-closed token check (already in fs_read_agent/server.py)
+  returns 503. The test predates the fail-closed guard.
+
+## tests/ (superrepo e2e)
+
+    104 passed, 14 failed, 3 skipped, 4 errors (375.89s)
+
+The 14 failures / 4 errors are a mix of:
+- env drift: checked-out xnch submodule (b066f74) does not match the
+  superrepo gitlink (0b80c07), so tests mocking `xnch.routes`
+  attributes fail (nexi_gateway, model selector, e2e).
+- missing deps on this host (voice io, nexi chat e2e needing services).
+
+None are touched by Phase 1 scope.
+
+## Service inventory (Task 1 Step 2)
+
+`git submodule status`:
+- mcp/superpowers-mcp @ 7199130 (heads/main)
+- nexi @ 4b6f38a (remotes/origin/master)
+- skills/superpowers @ b36e082 (v6.3.0)
+- xnch @ +62f6f52 (later moved to b066f74 by sibling task; gitlink 0b80c07)
+
+`ls infra/no-k3s/node-b/systemd/` → exec-agent.service, fs-read-agent.service,
+nexi.service, vllm-ornith.service, xtrain-cycle.service, xtrain-promote.service
+(pre-merge state — both legacy units present as expected).

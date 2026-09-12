@@ -30,7 +30,6 @@ deny_globs: []
     )
 
     monkeypatch.setattr(fs_router.xnch_settings, "capability_token", "shared")
-    monkeypatch.setattr(fs_router.xnch_settings, "fs_agent_token", "")
     policy = load_fs_policy(policy_path)
     fs_router._policy = policy
     fs_router._backend = fs_router.LocalFsBackend(policy, "node-b")

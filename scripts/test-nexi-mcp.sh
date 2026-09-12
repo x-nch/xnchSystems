@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Test connected MCP bridge servers through Nexi (gate7 xnch :8001)
-# Prefer CLI:  python -m cli mcp test
+# Prefer CLI:  python -m clients.cli mcp test
 set -euo pipefail
 
 BASE="${XNCH_BASE_URL:-http://127.0.0.1:8001}"

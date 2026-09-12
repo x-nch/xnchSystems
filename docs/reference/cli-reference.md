@@ -1,9 +1,9 @@
 # CLI Reference
 
-Sources: `cli/main.py`, `cli/voice.py` (Typer), `xnch-train/xnch_train/cli.py`,
+Sources: `clients/cli/main.py`, `clients/cli/voice.py` (Typer), `xnch-train/xnch_train/cli.py`,
 `scripts/`. Console scripts registered by the root `pyproject.toml`:
 **`xnch-cli`, `xnch-mcp`, `fs-read-agent`, `exec-agent`, `docs-test-mcp`**
-(run via `uv run <name>`); module forms `python -m cli`, `python -m xnch_mcp`
+(run via `uv run <name>`); module forms `python -m clients.cli`, `python -m xnch_mcp`
 are equivalent.
 
 > Fresh-clone caveat [UNVERIFIED remedy]: the CLI imports the `xnch` submodule

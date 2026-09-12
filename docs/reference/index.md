@@ -12,7 +12,7 @@ Lookup material. Schemas live in code beside each handler; these pages are maps.
 | [mcp-config](mcp-config.md) | MCP-related `XNCH_*` env vars and YAML files |
 | [env-vars](env-vars.md) | exhaustive `XNCH_*` / `NEXI_*` / `XTRAIN_*` / `SCRAPER_*` + unprefixed |
 | [config-files](config-files.md) | `~/.xnch/*.yaml` inventory + compose-side config |
-| [cli-reference](cli-reference.md) | `python -m cli …`, `xtrain …`, scripts |
+| [cli-reference](cli-reference.md) | `python -m clients.cli …`, `xtrain …`, scripts |
 | [tests](tests.md) | suites, commands, known pre-existing failures |
 
 Related elsewhere:

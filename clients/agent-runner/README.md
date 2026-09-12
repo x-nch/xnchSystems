@@ -4,7 +4,7 @@ Mac-side worker that claims tasks from xnch's dispatch queue and executes
 them headless in opencode. Stdlib-only; no venv needed.
 
 ## Run manually
-    cd agent-runner
+    cd clients/agent-runner
     XNCH_GATEWAY_SECRET=<secret> python3 -m xnch_agent_runner
 
 ## Install as a service (launchd)

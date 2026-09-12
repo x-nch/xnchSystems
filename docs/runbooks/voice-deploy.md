@@ -40,9 +40,9 @@ On **gate7** (mic attached to server):
 
 ```bash
 cd /home/x-nch/xnchSystems
-python -m cli voice devices
-python -m cli voice speak "Hello ck-san"
-python -m cli voice talk --once
+python -m clients.cli voice devices
+python -m clients.cli voice speak "Hello ck-san"
+python -m clients.cli voice talk --once
 ```
 
 On **MacBook** (mic/speaker local, STT/TTS on gate7): see

@@ -48,7 +48,6 @@ async def test_run_without_configured_token_503(
     fake_backend: _FakeExecBackend, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(exec_router.xnch_settings, "capability_token", "")
-    monkeypatch.setattr(exec_router.xnch_settings, "exec_agent_token", "")
     async with _client() as client:
         resp = await client.post("/exec/run", json={"command": "echo hi"})
     assert resp.status_code == 503
@@ -78,18 +77,6 @@ async def test_run_capability_token_accepted(
     assert resp.status_code == 200
     assert resp.json()["exit_code"] == 0
     assert fake_backend.calls == [("echo hi", "/tmp")]
-
-
-async def test_run_legacy_exec_token_accepted(
-    fake_backend: _FakeExecBackend, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    monkeypatch.setattr(exec_router.xnch_settings, "capability_token", "")
-    monkeypatch.setattr(exec_router.xnch_settings, "exec_agent_token", "legacy")
-    async with _client() as client:
-        resp = await client.post(
-            "/exec/run", json={"command": "echo hi"}, headers={"X-Internal-Token": "legacy"}
-        )
-    assert resp.status_code == 200
 
 
 async def test_run_exec_denied_403(

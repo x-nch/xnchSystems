@@ -25,7 +25,7 @@ with one `xnch-capability.service` on :8090.
    XNCH_CAPABILITY_NODE_B_URL=http://192.168.50.2:8090
    XNCH_CAPABILITY_TOKEN=<shared token>
    ```
-   Restart the xnch gateway. Verify: `python -m cli mcp test --skip-chat` — exec/fs tool tests pass.
+   Restart the xnch gateway. Verify: `python -m clients.cli mcp test --skip-chat` — exec/fs tool tests pass.
 
 ## Decommission (node-b)
 5. Stop old units:

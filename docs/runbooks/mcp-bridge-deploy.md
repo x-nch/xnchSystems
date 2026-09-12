@@ -38,7 +38,7 @@ to the repo index.
 | `uvx` | `/home/x-nch/.local/bin/uvx` (v0.11.6) | Runs `code-review-graph serve` |
 | `npx` | `/usr/bin/npx` (v11.16.0) | Runs `@agentmemory/mcp` and `@upstash/context7-mcp` |
 | `agentmemory.service` | active on `:3111` | Backend for `am_*` tools (unit `/etc/systemd/system/agentmemory.service`) |
-| Repo venv | `/home/x-nch/xnchSystems/xnch/.venv/bin/python` | Runs `docs_test_mcp` and the `python -m cli` tooling |
+| Repo venv | `/home/x-nch/xnchSystems/xnch/.venv/bin/python` | Runs `docs_test_mcp` and the `python -m clients.cli` tooling |
 | Bridge config | `~/.xnch/mcp-servers.yaml` | Server declarations (see step 1) |
 | CRG graph | `~/.xnch/xnchSystems/.code-review-graph/` | Built graph for the repo (see step 2) |
 
@@ -161,7 +161,7 @@ cases only and does **not** need LiteLLM/Ornith:
 
 ```bash
 cd /home/x-nch/xnchSystems
-/home/x-nch/xnchSystems/xnch/.venv/bin/python -m cli mcp test --skip-chat
+/home/x-nch/xnchSystems/xnch/.venv/bin/python -m clients.cli mcp test --skip-chat
 ```
 
 **Expected (all green after graph includes `xnch_mcp/`):**
@@ -189,7 +189,7 @@ Run the full suite (adds two live `/nexi/chat` tool-loop cases) only when the LL
 path is healthy:
 
 ```bash
-/home/x-nch/xnchSystems/xnch/.venv/bin/python -m cli mcp test
+/home/x-nch/xnchSystems/xnch/.venv/bin/python -m clients.cli mcp test
 ```
 
 **Failure:** any `✗` → match the case name against
@@ -229,10 +229,10 @@ curl -s -X POST http://127.0.0.1:8001/mcp/call \
 | **CRG graph stale / 0 nodes** — `crg_query_graph_tool` returns `status: not_found`, `crg_list_graph_stats_tool` shows 0 nodes, or `crg_semantic_search_nodes_tool` returns no results | Graph built before the code existed (e.g. built at an earlier commit; `xnch_mcp/` added after) | Rebuild: `cd /home/x-nch/xnchSystems && uvx code-review-graph build && uvx code-review-graph embed`, then `sudo systemctl restart xnch` so the `serve` subprocess reopens the rebuilt `graph.db` |
 | **Bridge stop crash** — `stop()` during shutdown throws, or one server flips `down` while others stay `connected` | A single stdio child crashed; supervisor logs `MCP bridge supervisor error (<server>)` | This is **by design**: `pool.stop()` suppresses per-client errors and one crashed child does not take down the pool. Check `journalctl -u xnch.service`, then `sudo systemctl restart xnch` to reconnect the dead server |
 | **`input_schema` vs `inputSchema` attr** — bridged tools register but `parameters`/argument schema is empty, or a dependency bump drops schemas | `mcp.types.Tool` exposes the schema as `input_schema` (newer SDK) or `inputSchema` (older SDK); code assumed one name | `_tool_input_schema()` in `xnch_mcp/bridge/pool.py:175` already falls back via `getattr(tool, "input_schema", None) or getattr(tool, "inputSchema", None)` with an empty-schema default. Never hardcode one attribute name; restart xnch after an `mcp` package bump |
-| `tool count` test fails (`< 35` tools) | A server not connected, or `allow_tools`/`deny_tools` filtered tools out | `python -m cli mcp servers` to see per-server state; check the YAML allow/deny lists in `~/.xnch/mcp-servers.yaml` |
+| `tool count` test fails (`< 35` tools) | A server not connected, or `allow_tools`/`deny_tools` filtered tools out | `python -m clients.cli mcp servers` to see per-server state; check the YAML allow/deny lists in `~/.xnch/mcp-servers.yaml` |
 | `crg_semantic_search` no results | Embeddings never computed | Run `uvx code-review-graph embed`; verify `Embeddings: N nodes embedded` in `list_graph_stats` |
 | `context7` permanently `down` | Server `enabled: false` (default) and/or empty `CONTEXT7_API_KEY` | Leave disabled, or set `enabled: true` + key from context7.com/dashboard and restart xnch |
-| All servers `down` immediately after `restart` | Bridge config unreadable (YAML error, wrong `$HOME` expansion, missing file) | `python -m cli mcp servers` → `MCP bridge disabled`; validate: `python -c "import yaml; yaml.safe_load(open('/home/x-nch/.xnch/mcp-servers.yaml'))"` |
+| All servers `down` immediately after `restart` | Bridge config unreadable (YAML error, wrong `$HOME` expansion, missing file) | `python -m clients.cli mcp servers` → `MCP bridge disabled`; validate: `python -c "import yaml; yaml.safe_load(open('/home/x-nch/.xnch/mcp-servers.yaml'))"` |
 
 ---
 
@@ -261,7 +261,7 @@ curl -s -w '\nHTTP %{http_code}\n' -X POST http://127.0.0.1:8001/mcp/call \
   -d '{"name":"xnch_memory_store_note","arguments":{"text":"test"}}'
 # expect 403
 
-python -m cli mcp call am_memory_lesson_recall --arg query="MCP bridge" --arg limit=1
+python -m clients.cli mcp call am_memory_lesson_recall --arg query="MCP bridge" --arg limit=1
 # expect lessons array
 ```
 
@@ -270,7 +270,7 @@ python -m cli mcp call am_memory_lesson_recall --arg query="MCP bridge" --arg li
 ## See also
 
 - [Nexi MCP Bridge — Architecture Guide](../architecture/mcp-bridge.md) — request flow, actor/tier model, tool prefixing & audit, lifecycle
-- [MCP CLI reference](../guides/mcp-cli.md) — `python -m cli mcp servers|tools|call|test`
+- [MCP CLI reference](../guides/mcp-cli.md) — `python -m clients.cli mcp servers|tools|call|test`
 - [Memory routing deploy runbook](memory-routing-deploy.md) — episodic vs agentmemory
 - [Web search deploy runbook](web-search-deploy.md) — SearXNG + `xnch_web_search`
 - [Nexi test prompts](../guides/nexi-test-prompts.md) — copy-paste chat prompts

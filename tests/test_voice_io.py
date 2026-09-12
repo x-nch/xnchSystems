@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from cli.voice_io import (
+from clients.cli.voice_io import (
     _effective_playback_rate,
     _resample_int16,
     resolve_output_device,

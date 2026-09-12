@@ -20,9 +20,7 @@ on two owned physical machines ([topology](topology.md)).
 | **muse web app** | `web/` (Next.js, runs on the operator's Mac) | approvals queue, workflow builder, chat/memory/graph/system views, gateway proxy |
 | **infra** | `infra/no-k3s/` | two-node systemd/compose regime, LiteLLM routing, Langfuse, SearXNG |
 
-Supporting packages: `cli/` (voice-capable CLI client), `xnch_mcp/` (MCP bridge +
-native tool server), `exec_agent/` + `fs_read_agent/` (Node B side-effect/read
-agents), `scraper/`, `docs_test_mcp/`, root `tests/` e2e suite.
+Supporting packages: `clients/cli/` (voice-capable CLI client), `clients/agent-runner/` (Mac dispatch), `xnch_mcp/` (MCP bridge + native tool server), `capability_agent/` (Node B exec + FS sidecar), `scraper/`, `docs_test_mcp/`, root `tests/` e2e suite.
 
 Model routing (2026-08-27): both services call the OpenCode Go hosted API
 (`opencode.ai/zen/go/v1`, DeepSeek V4) for LLM work — xnch for gateway/chat

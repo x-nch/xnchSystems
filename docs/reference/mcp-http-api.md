@@ -219,7 +219,7 @@ Bridge server status. Returns `enabled` plus one row per configured server:
 curl -s http://127.0.0.1:8001/mcp/servers | jq .
 
 # CLI equivalent
-python -m cli mcp servers
+python -m clients.cli mcp servers
 ```
 
 Response shape:
@@ -256,9 +256,9 @@ Response shape:
 CLI on gate7:
 
 ```bash
-python -m cli voice talk          # push-to-talk REPL
-python -m cli voice listen        # STT only
-python -m cli voice speak "hi"    # TTS only
+python -m clients.cli voice talk          # push-to-talk REPL
+python -m clients.cli voice listen        # STT only
+python -m clients.cli voice speak "hi"    # TTS only
 ```
 
 See [Nexi voice architecture](../guides/nexi-voice-architecture.md) and

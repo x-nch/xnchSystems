@@ -6,8 +6,8 @@ from unittest.mock import MagicMock, patch
 import jwt
 import pytest
 
-from cli.client import XnchCliClient
-from cli.config import CliConfig
+from clients.cli.client import XnchCliClient
+from clients.cli.config import CliConfig
 
 
 @pytest.fixture
@@ -64,7 +64,7 @@ def test_session_init_posts_payload(config):
 
 def test_session_id_persistence(config, tmp_path, monkeypatch):
     state_file = tmp_path / "cli_state.json"
-    monkeypatch.setattr("cli.client._STATE_PATH", state_file)
+    monkeypatch.setattr("clients.cli.client._STATE_PATH", state_file)
 
     client = XnchCliClient(config)
     sid = client._load_session_id()
@@ -82,7 +82,7 @@ def test_session_id_persistence(config, tmp_path, monkeypatch):
 
 def test_new_session_generates_and_persists(config, tmp_path, monkeypatch):
     state_file = tmp_path / "cli_state.json"
-    monkeypatch.setattr("cli.client._STATE_PATH", state_file)
+    monkeypatch.setattr("clients.cli.client._STATE_PATH", state_file)
 
     client = XnchCliClient(config)
     sid = client.new_session()
@@ -93,7 +93,7 @@ def test_new_session_generates_and_persists(config, tmp_path, monkeypatch):
 
 def test_clear_session_resets_to_fresh(config, tmp_path, monkeypatch):
     state_file = tmp_path / "cli_state.json"
-    monkeypatch.setattr("cli.client._STATE_PATH", state_file)
+    monkeypatch.setattr("clients.cli.client._STATE_PATH", state_file)
 
     client = XnchCliClient(config)
     first = client.new_session()
@@ -121,7 +121,7 @@ def test_mcp_call_posts_with_actor_header(config):
 
 
 def test_parse_mcp_args():
-    from cli.main import _parse_mcp_args
+    from clients.cli.main import _parse_mcp_args
 
     assert _parse_mcp_args(["query=MCP bridge", "limit=3"]) == {
         "query": "MCP bridge",

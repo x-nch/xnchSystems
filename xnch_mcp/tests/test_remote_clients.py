@@ -56,26 +56,10 @@ def test_exec_service_prefers_capability_url() -> None:
         exec_local_host = "node-a"
         capability_node_b_url = "http://192.168.50.2:8090"
         capability_token = "shared"
-        exec_agent_node_b_url = "http://192.168.50.2:8004"
-        exec_agent_token = "legacy"
 
     svc = ExecRunService.from_settings(S())
     assert svc._remote["node-b"]._base_url == "http://192.168.50.2:8090"
     assert svc._remote["node-b"]._headers["X-Internal-Token"] == "shared"
-
-
-def test_exec_service_falls_back_to_legacy_url() -> None:
-    class S:
-        exec_policy_path = "/nonexistent/exec-policy.yaml"
-        exec_local_host = "node-a"
-        capability_node_b_url = ""
-        capability_token = ""
-        exec_agent_node_b_url = "http://192.168.50.2:8004"
-        exec_agent_token = "legacy"
-
-    svc = ExecRunService.from_settings(S())
-    assert svc._remote["node-b"]._base_url == "http://192.168.50.2:8004"
-    assert svc._remote["node-b"]._headers["X-Internal-Token"] == "legacy"
 
 
 def test_fs_service_prefers_capability_url() -> None:
@@ -84,8 +68,6 @@ def test_fs_service_prefers_capability_url() -> None:
         fs_local_host = "node-a"
         capability_node_b_url = "http://192.168.50.2:8090"
         capability_token = "shared"
-        fs_agent_node_b_url = "http://192.168.50.2:8003"
-        fs_agent_token = "legacy"
 
     svc = FsReadService.from_settings(S())
     assert svc._remote["node-b"]._base_url == "http://192.168.50.2:8090"

@@ -87,7 +87,7 @@ python3 - <<'EOF'
 from pathlib import Path
 import subprocess
 secret = subprocess.run(["grep","^XNCH_GATEWAY_SECRET=","web/.env.local"],capture_output=True,text=True).stdout.strip().split("=",1)[1].strip('"')
-tpl = Path("agent-runner/com.xnch.agent-runner.plist").read_text()
+tpl = Path("clients/agent-runner/com.xnch.agent-runner.plist").read_text()
 out = tpl.replace("PLACEHOLDER_REPO","/Users/xnch/xnchSystems").replace("PLACEHOLDER_SECRET",secret).replace("PLACEHOLDER_HOME","/Users/xnch")
 Path.home().joinpath("Library/LaunchAgents/com.xnch.agent-runner.plist").write_text(out)
 EOF

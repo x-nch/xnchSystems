@@ -88,7 +88,7 @@ systemctl is-active xnch.service
 
 ```bash
 cd /home/x-nch/xnchSystems
-/home/x-nch/xnchSystems/xnch/.venv/bin/python -m cli mcp tools --actor nexi --prefix xnch_web_search
+/home/x-nch/xnchSystems/xnch/.venv/bin/python -m clients.cli mcp tools --actor nexi --prefix xnch_web_search
 # actor: nexi  tools: 1
 #   xnch_web_search  [T0_READ]
 ```
@@ -101,11 +101,11 @@ cd /home/x-nch/xnchSystems
 
 ```bash
 cd /home/x-nch/xnchSystems
-/home/x-nch/xnchSystems/xnch/.venv/bin/python -m cli mcp call xnch_web_search \
+/home/x-nch/xnchSystems/xnch/.venv/bin/python -m clients.cli mcp call xnch_web_search \
   --arg query="vLLM latest release" --arg limit=3
 
 # CLI unwraps /mcp/call result, so web_search sits at the top level:
-/home/x-nch/xnchSystems/xnch/.venv/bin/python -m cli mcp call xnch_health \
+/home/x-nch/xnchSystems/xnch/.venv/bin/python -m clients.cli mcp call xnch_health \
   | python3 -c "import sys,json; print(json.load(sys.stdin).get('web_search'))"
 ```
 
@@ -131,12 +131,12 @@ curl -s -X POST http://127.0.0.1:8001/mcp/call \
 
 ```bash
 cd /home/x-nch/xnchSystems
-/home/x-nch/xnchSystems/xnch/.venv/bin/python -m cli chat \
+/home/x-nch/xnchSystems/xnch/.venv/bin/python -m clients.cli chat \
   "What's new in vLLM? Use xnch_web_search — don't guess."
 ```
 
 The `web_search_health` and `xnch_web_search` cases of
-`python -m cli mcp test --skip-chat` also cover this.
+`python -m clients.cli mcp test --skip-chat` also cover this.
 
 ---
 

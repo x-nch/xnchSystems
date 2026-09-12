@@ -32,10 +32,8 @@ dependencies = [
 ]
 
 [project.scripts]
-xnch-cli = "cli.main:app"
+xnch-cli = "clients.cli.main:app"
 xnch-mcp = "xnch_mcp.stdio_server:main"
-fs-read-agent = "fs_read_agent.server:main"
-exec-agent = "exec_agent.server:main"
 docs-test-mcp = "docs_test_mcp.server:main"
 
 [build-system]
@@ -44,12 +42,12 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["cli*"]
+include = ["clients*"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 pythonpath = [".", "xnch-train"]
-testpaths = ["nexi/tests", "xnch/tests", "tests", "xnch_mcp/tests", "fs_read_agent/tests", "docs_test_mcp/tests", "xnch-train/tests"]
+testpaths = ["nexi/tests", "xnch/tests", "tests", "xnch_mcp/tests", "docs_test_mcp/tests", "xnch-train/tests"]
 
 [dependency-groups]
 dev = [

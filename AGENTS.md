@@ -5,13 +5,26 @@
 - `web/` — Next.js muse UI (chat, HITL approvals, drag-and-drop workflow canvas)
 - `xnch_mcp/` — MCP server + federated bridge (`xnch_*` native tools, `crg_`/`am_`/`doc_` passthroughs)
 - `xnch-train/` — training data pipeline + eval harness (Phase 0 gates; Phase 1 QLoRA cycle)
-- `agent-runner/` — stdlib dispatch runner (Mac-side opencode runner pulling from xnch) + launchd template
+- `clients/agent-runner/` — stdlib dispatch runner (Mac-side opencode runner pulling from xnch) + launchd template
+- `clients/cli/` — human CLI
 - `scraper/` — tiered web scraper service (Playwright; pgvector store)
 - `infra/` — no-k3s deployment: systemd units, docker-compose, observability stack, wake/start scripts
 - `docs/` — architecture docs, runbooks, guides, reference
 - `scripts/` — helper scripts, migration agent
 - `misc/` — historical records, conversations, reports
 - Root `pyproject.toml` requires Python 3.13+ (packages specify `>=3.11`, align to 3.13)
+
+## Single-Home Registry
+
+| Domain | The ONE home | How everything else uses it |
+|---|---|---|
+| Policy evaluation | `xnch/policy/` (engine, loader, validator) | nexi pipeline calls it via `XnchClient.check_policies_parallel` (`nexi/pipeline/policy_filter.py`); policy DATA lives per-service in `xnch/policies/`, `nexi/policies/` |
+| Security guards (trust tiers, injection/memory guard, sandbox, tokens) | `xnch/security/` | imported by routes/handlers; never merged into `xnch/policy` |
+| Runtime episodic memory (L0–L3) | `xnch/memory/` | gateway routes + `xnch_memory_*` tools; routing decided by `~/.xnch/memory-routing.yaml` (`xnch/memory/routing_policy.py`) |
+| Curated cross-session knowledge | agentmemory (:3111) | `am_*` MCP tools ONLY; `xnch_memory_store_note` is deprecated for actors in `deprecate_store_note_for` (enforced in `xnch_mcp/handlers/memory.py`) |
+| Governed exec + read-only fs | `capability_agent/` (sidecar) + `xnch_mcp/exec|fs` (backends + dispatch) | MCP exec/fs tools → `ExecRunService`/`FsReadService` → sidecar on node-b :8090 |
+| Mac-side dispatch worker | `clients/agent-runner/` | launchd; claims from xnch dispatch queue |
+| Human CLI | `clients/cli/` | `python -m clients.cli` / `xnch-cli` |
 
 **Entrypoints:**
 - `nexi/main.py` — Engine CLI (inside submodule)

@@ -1,6 +1,6 @@
 """Tests for CLI helper utilities."""
 
-from cli.util import dedupe_memory_results, join_args, parse_recall_intent, parse_timer_line
+from clients.cli.util import dedupe_memory_results, join_args, parse_recall_intent, parse_timer_line
 
 
 def test_join_args_none_and_empty():

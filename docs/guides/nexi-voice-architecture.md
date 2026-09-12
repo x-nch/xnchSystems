@@ -1,6 +1,6 @@
 # Nexi Voice — Architecture (gate7 CLI, STT + TTS)
 
-Architecture for **push-to-talk voice** on gate7: the existing `python -m cli`
+Architecture for **push-to-talk voice** on gate7: the existing `python -m clients.cli`
 client captures microphone audio, xnch transcribes and synthesizes speech, and
 Nexi responds through the same `/nexi/chat` tool loop used for text.
 
@@ -9,7 +9,7 @@ voice-out loop. Always-on ambient listening is explicitly out of scope (phase 2)
 
 **Related docs:**
 - [Architecture diagram suite](../architecture-suite.md) — no-k3s topology
-- [MCP CLI reference](mcp-cli.md) — existing `python -m cli chat`
+- [MCP CLI reference](mcp-cli.md) — existing `python -m clients.cli chat`
 - [Mac voice client](nexi-voice-mac-client.md) — CLI + mic on MacBook, API on gate7
 - [MCP HTTP API](../reference/mcp-http-api.md) — `/nexi/chat` contract
 - Perception plan: `misc/fluffy-percolating-cosmos.md` (Phase 4)
@@ -21,7 +21,7 @@ voice-out loop. Always-on ambient listening is explicitly out of scope (phase 2)
 | Goal | Detail |
 |------|--------|
 | **Full loop** | Mic → STT → Nexi chat (MCP tools) → TTS → speaker |
-| **Client** | `python -m cli voice` on gate7 (same venv / auth as text chat) |
+| **Client** | `python -m clients.cli voice` on gate7 (same venv / auth as text chat) |
 | **Privacy** | No cloud STT/TTS; models run locally on gate7 CPU |
 | **Parity** | Voice turns use the same memory, persona, and tool loop as text chat |
 | **Latency target** | &lt; 3s STT + &lt; 8s first LLM token + &lt; 2s TTS for a short utterance |
@@ -56,7 +56,7 @@ voice-out loop. Always-on ambient listening is explicitly out of scope (phase 2)
 ```mermaid
 sequenceDiagram
     participant U as Operator (gate7 mic)
-    participant CLI as python -m cli voice
+    participant CLI as python -m clients.cli voice
     participant XNCH as xnch :8001
     participant STT as faster-whisper (CPU)
     participant SB as SensoryBuffer L0
@@ -90,7 +90,7 @@ node-b for v1.
 ```mermaid
 flowchart TB
     subgraph Gate7["gate7 — 192.168.50.1"]
-        CLI["python -m cli voice<br/>sounddevice capture/playback"]
+        CLI["python -m clients.cli voice<br/>sounddevice capture/playback"]
         XNCH["xnch :8001<br/>/nexi/voice/*"]
         STT["faster-whisper base<br/>CPU int8"]
         TTS["Piper<br/>CPU"]
@@ -274,7 +274,7 @@ Add to `nexi/character/capabilities.yaml`:
 ```yaml
 voice:
   mode: push_to_talk
-  client: python -m cli voice (gate7)
+  client: python -m clients.cli voice (gate7)
   stt: faster-whisper/base/cpu
   tts: piper/en_US-lessac-medium
   endpoints:
@@ -287,20 +287,20 @@ No change to lean chat prompt size — voice config lives in capabilities JSON o
 
 ### 5. CLI (`cli/voice.py`)
 
-New Typer subcommand group: `python -m cli voice`.
+New Typer subcommand group: `python -m clients.cli voice`.
 
 ```
-python -m cli voice talk              # push-to-talk REPL (default)
-python -m cli voice talk --once       # single utterance then exit
-python -m cli voice listen            # STT only, print transcript
-python -m cli voice speak "hello"     # TTS only, play audio
-python -m cli voice devices           # list sounddevice inputs/outputs
+python -m clients.cli voice talk              # push-to-talk REPL (default)
+python -m clients.cli voice talk --once       # single utterance then exit
+python -m clients.cli voice listen            # STT only, print transcript
+python -m clients.cli voice speak "hello"     # TTS only, play audio
+python -m clients.cli voice devices           # list sounddevice inputs/outputs
 ```
 
 #### `voice talk` UX (push-to-talk)
 
 ```
-$ python -m cli voice talk
+$ python -m clients.cli voice talk
 Nexi voice (gate7) — hold Space to talk, release to send, /quit to exit
 session: sess-7f3a...
 
@@ -440,7 +440,7 @@ voice request. Optional `ExecStartPre` warm-up in future.
 ### Phase 2 — CLI
 
 1. `cli/voice.py` + `client.voice_*` methods
-2. `python -m cli voice talk` push-to-talk REPL
+2. `python -m clients.cli voice talk` push-to-talk REPL
 3. `voice devices`, `voice listen`, `voice speak` utilities
 4. Docs: runbook `docs/runbooks/voice-deploy.md`
 
@@ -517,4 +517,4 @@ xnch transcribes with CPU Whisper, runs the standard `chat_with_tools` path, and
 synthesizes a Piper reply. No new inference stack on node-b; no change to Nexi's
 decision pipeline on `:8000`. The main engineering work is the `xnch/voice`
 package, three HTTP routes, sensory-buffer schema alignment, context injection,
-and a `python -m cli voice talk` push-to-talk client.
+and a `python -m clients.cli voice talk` push-to-talk client.

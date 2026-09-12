@@ -1,4 +1,4 @@
-"""Allow `python -m cli` invocation."""
+"""Allow `python -m clients.cli` invocation."""
 
 from .main import main
 

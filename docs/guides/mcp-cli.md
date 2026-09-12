@@ -1,4 +1,4 @@
-# MCP CLI Reference — `python -m cli mcp`
+# MCP CLI Reference — `python -m clients.cli mcp`
 
 The `mcp` subcommand group of the xnch CLI drives the MCP bridge over HTTP. It
 talks to `xnch :8001` (`/mcp/servers`, `/mcp/tools`, `/mcp/call`) as an actor, so

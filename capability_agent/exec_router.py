@@ -35,7 +35,7 @@ def _verify_token(
     token: Annotated[str | None, Header(alias="X-Internal-Token")] = None,
 ) -> None:
     candidates = [
-        c for c in (xnch_settings.capability_token, xnch_settings.exec_agent_token) if c
+        c for c in (xnch_settings.capability_token,) if c
     ]
     if not candidates:
         # Fail CLOSED: an unconfigured token on a 0.0.0.0-bound exec service

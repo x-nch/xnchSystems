@@ -106,8 +106,8 @@ PYTHONPATH=/home/x-nch/xnchSystems:/home/x-nch/xnchSystems/xnch \
 pytest xnch_mcp/tests/test_memory_routing.py -q
 
 # E2E routing
-python -m cli mcp call xnch_memory_store_note --arg text=x --actor nexi  # 403
-python -m cli chat --session t "Which tool saves a deploy lesson? Name only."
+python -m clients.cli mcp call xnch_memory_store_note --arg text=x --actor nexi  # 403
+python -m clients.cli chat --session t "Which tool saves a deploy lesson? Name only."
 ```
 
 MCP audit events for memory tools include `memory_target: episodic|agentmemory`.

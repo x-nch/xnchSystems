@@ -54,12 +54,8 @@ overrides settings.
 | `XNCH_CAPABILITY_TOKEN` | `capability_token` | `""` (shared token; wins over legacy per-agent tokens) |
 | `XNCH_FS_POLICY_PATH` | `fs_policy_path` | `~/.xnch/fs-policy.yaml` |
 | `XNCH_FS_LOCAL_HOST` | `fs_local_host` | `node-a` |
-| `XNCH_FS_AGENT_NODE_B_URL` | `fs_agent_node_b_url` | `http://192.168.50.2:8003` (legacy — used only if capability URL unset) |
-| `XNCH_FS_AGENT_TOKEN` | `fs_agent_token` | `""` (legacy — superseded by `XNCH_CAPABILITY_TOKEN`, still accepted by /fs router) |
 | `XNCH_EXEC_POLICY_PATH` | `exec_policy_path` | `~/.xnch/exec-policy.yaml` |
 | `XNCH_EXEC_LOCAL_HOST` | `exec_local_host` | `node-a` |
-| `XNCH_EXEC_AGENT_NODE_B_URL` | `exec_agent_node_b_url` | `http://192.168.50.2:8004` (legacy — used only if capability URL unset) |
-| `XNCH_EXEC_AGENT_TOKEN` | `exec_agent_token` | `""` (legacy — superseded by `XNCH_CAPABILITY_TOKEN`, still accepted by /exec router) |
 
 ### Stdio server / chat loop (not `XNCH_`-prefixed)
 

@@ -49,7 +49,7 @@ prompt (`## Agent lessons (curated)`). Fail-open if agentmemory is down.
 | xnch | `systemctl is-active xnch.service` |
 | Postgres pgvector | episodic recall works |
 | agentmemory | `systemctl is-active agentmemory.service` + `:3111` |
-| MCP bridge | `am_*` tools connected (`python -m cli mcp servers`) |
+| MCP bridge | `am_*` tools connected (`python -m clients.cli mcp servers`) |
 
 ```bash
 systemctl is-active xnch.service agentmemory.service
