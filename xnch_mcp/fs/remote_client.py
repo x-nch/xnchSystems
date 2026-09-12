@@ -1,4 +1,4 @@
-"""HTTP client for fs-read-agent on remote hosts."""
+"""HTTP client for the fs capability of capability-agent on remote hosts."""
 
 from __future__ import annotations
 
@@ -8,10 +8,17 @@ import httpx
 
 
 class FsRemoteClient:
-    def __init__(self, base_url: str, token: str = "", timeout: float = 60.0) -> None:
+    def __init__(
+        self,
+        base_url: str,
+        token: str = "",
+        timeout: float = 60.0,
+        transport: httpx.AsyncBaseTransport | None = None,
+    ) -> None:
         self._base_url = base_url.rstrip("/")
         self._headers = {"X-Internal-Token": token} if token else {}
         self._timeout = timeout
+        self._transport = transport
 
     def _params(self, **kwargs: Any) -> dict[str, Any]:
         return {k: v for k, v in kwargs.items() if v is not None}
@@ -23,9 +30,11 @@ class FsRemoteClient:
         recursive: bool = False,
         max_entries: int = 1000,
     ) -> dict[str, Any]:
-        async with httpx.AsyncClient(base_url=self._base_url, timeout=self._timeout) as client:
+        async with httpx.AsyncClient(
+            base_url=self._base_url, timeout=self._timeout, transport=self._transport
+        ) as client:
             resp = await client.get(
-                "/list",
+                "/fs/list",
                 params=self._params(path=path, recursive=recursive, max_entries=max_entries),
                 headers=self._headers,
             )
@@ -39,9 +48,11 @@ class FsRemoteClient:
         offset: int = 0,
         max_bytes: int = 2_097_152,
     ) -> dict[str, Any]:
-        async with httpx.AsyncClient(base_url=self._base_url, timeout=self._timeout) as client:
+        async with httpx.AsyncClient(
+            base_url=self._base_url, timeout=self._timeout, transport=self._transport
+        ) as client:
             resp = await client.get(
-                "/read",
+                "/fs/read",
                 params=self._params(path=path, offset=offset, max_bytes=max_bytes),
                 headers=self._headers,
             )
@@ -49,21 +60,27 @@ class FsRemoteClient:
             return resp.json()
 
     async def stat(self, path: str) -> dict[str, Any]:
-        async with httpx.AsyncClient(base_url=self._base_url, timeout=self._timeout) as client:
-            resp = await client.get("/stat", params={"path": path}, headers=self._headers)
+        async with httpx.AsyncClient(
+            base_url=self._base_url, timeout=self._timeout, transport=self._transport
+        ) as client:
+            resp = await client.get("/fs/stat", params={"path": path}, headers=self._headers)
             resp.raise_for_status()
             return resp.json()
 
     async def exists(self, path: str) -> dict[str, Any]:
-        async with httpx.AsyncClient(base_url=self._base_url, timeout=self._timeout) as client:
-            resp = await client.get("/exists", params={"path": path}, headers=self._headers)
+        async with httpx.AsyncClient(
+            base_url=self._base_url, timeout=self._timeout, transport=self._transport
+        ) as client:
+            resp = await client.get("/fs/exists", params={"path": path}, headers=self._headers)
             resp.raise_for_status()
             return resp.json()
 
     async def glob(self, pattern: str, *, max_results: int = 200) -> dict[str, Any]:
-        async with httpx.AsyncClient(base_url=self._base_url, timeout=self._timeout) as client:
+        async with httpx.AsyncClient(
+            base_url=self._base_url, timeout=self._timeout, transport=self._transport
+        ) as client:
             resp = await client.get(
-                "/glob",
+                "/fs/glob",
                 params={"pattern": pattern, "max_results": max_results},
                 headers=self._headers,
             )
@@ -71,7 +88,9 @@ class FsRemoteClient:
             return resp.json()
 
     async def health(self) -> dict[str, Any]:
-        async with httpx.AsyncClient(base_url=self._base_url, timeout=10.0) as client:
-            resp = await client.get("/health", headers=self._headers)
+        async with httpx.AsyncClient(
+            base_url=self._base_url, timeout=10.0, transport=self._transport
+        ) as client:
+            resp = await client.get("/fs/health", headers=self._headers)
             resp.raise_for_status()
             return resp.json()

@@ -38,8 +38,16 @@ class FsReadService:
         policy = load_fs_policy(policy_path)
 
         remote: dict[str, FsRemoteClient] = {}
-        node_b_url = getattr(settings, "fs_agent_node_b_url", "") or ""
-        token = getattr(settings, "fs_agent_token", "") or ""
+        node_b_url = (
+            getattr(settings, "capability_node_b_url", "")
+            or getattr(settings, "fs_agent_node_b_url", "")
+            or ""
+        )
+        token = (
+            getattr(settings, "capability_token", "")
+            or getattr(settings, "fs_agent_token", "")
+            or ""
+        )
         if node_b_url:
             remote["node-b"] = FsRemoteClient(node_b_url, token=token)
 

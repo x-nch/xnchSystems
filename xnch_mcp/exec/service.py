@@ -34,8 +34,16 @@ class ExecRunService:
         policy = load_exec_policy(policy_path)
 
         remote: dict[str, ExecRemoteClient] = {}
-        node_b_url = getattr(settings, "exec_agent_node_b_url", "") or ""
-        token = getattr(settings, "exec_agent_token", "") or ""
+        node_b_url = (
+            getattr(settings, "capability_node_b_url", "")
+            or getattr(settings, "exec_agent_node_b_url", "")
+            or ""
+        )
+        token = (
+            getattr(settings, "capability_token", "")
+            or getattr(settings, "exec_agent_token", "")
+            or ""
+        )
         if node_b_url:
             remote["node-b"] = ExecRemoteClient(node_b_url, token=token)
 
