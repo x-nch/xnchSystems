@@ -1,0 +1,22 @@
+[Unit]
+Description=Capability Agent — governed exec + read-only fs for Nexi (node-b)
+After=network.target
+
+[Service]
+Type=simple
+User=x-nch
+WorkingDirectory=/home/x-nch/xnchSystems
+EnvironmentFile=/home/x-nch/.xnch/nexi.env
+Environment=PYTHONPATH=/home/x-nch/xnchSystems:/home/x-nch/xnchSystems/xnch
+Environment=XNCH_EXEC_LOCAL_HOST=node-b
+Environment=XNCH_FS_LOCAL_HOST=node-b
+Environment=XNCH_CAPABILITY_BIND=0.0.0.0
+Environment=XNCH_CAPABILITY_PORT=8090
+ExecStart=/home/x-nch/xnchSystems/nexi/.venv/bin/python -m capability_agent
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

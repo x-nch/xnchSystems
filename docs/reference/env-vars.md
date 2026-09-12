@@ -58,26 +58,22 @@ Secrets below are placeholders; never commit real values.
 | `XNCH_ATTENTION_SCREEN_DIFF_THRESHOLD` | `0.15` | screen-change fraction |
 | `XNCH_ATTENTION_IDLE_TIMEOUT_S` | `600` | idle before consolidation |
 
-### Filesystem agent (fs)
+### Capability agent (merged exec + fs sidecar)
 
 | Variable | Default | Description |
 |---|---|---|
+| `XNCH_CAPABILITY_BIND` | `127.0.0.1` | sidecar bind address |
+| `XNCH_CAPABILITY_PORT` | `8090` | sidecar port (node-b) |
+| `XNCH_CAPABILITY_TOKEN` | `""` | shared bearer token (wins over legacy per-agent tokens) |
+| `XNCH_CAPABILITY_NODE_B_URL` | `""` | e.g. `http://192.168.50.2:8090`; when set, exec+fs remote clients use it |
 | `XNCH_FS_POLICY_PATH` | `~/.xnch/fs-policy.yaml` | read-only FS policy |
-| `XNCH_FS_LOCAL_HOST` | `node-a` | which node this process serves reads for |
-| `XNCH_FS_AGENT_NODE_B_URL` | `http://192.168.50.2:8003` | Node B fs-read-agent |
-| `XNCH_FS_AGENT_TOKEN` | `""` | agent bearer token |
-| `XNCH_FS_MAX_READ_BYTES` | `2097152` | 2 MiB read cap |
-| `XNCH_FS_MAX_LIST_ENTRIES` | `1000` | listing cap |
-| `XNCH_FS_MAX_GLOB_RESULTS` | `200` | glob cap |
-
-### Exec agent
-
-| Variable | Default | Description |
-|---|---|---|
+| `XNCH_FS_LOCAL_HOST` | `node-a` | node this process serves reads for |
+| `XNCH_FS_AGENT_NODE_B_URL` | `http://192.168.50.2:8003` | legacy — used only if capability URL unset |
+| `XNCH_FS_AGENT_TOKEN` | `""` | legacy fs token (accepted by /fs router) |
 | `XNCH_EXEC_POLICY_PATH` | `~/.xnch/exec-policy.yaml` | governed command policy |
-| `XNCH_EXEC_LOCAL_HOST` | `node-a` | which node this process runs commands on |
-| `XNCH_EXEC_AGENT_NODE_B_URL` | `http://192.168.50.2:8004` | Node B exec-agent |
-| `XNCH_EXEC_AGENT_TOKEN` | `""` | agent bearer token |
+| `XNCH_EXEC_LOCAL_HOST` | `node-a` | node this process runs commands on |
+| `XNCH_EXEC_AGENT_NODE_B_URL` | `http://192.168.50.2:8004` | legacy — used only if capability URL unset |
+| `XNCH_EXEC_AGENT_TOKEN` | `""` | legacy exec token (accepted by /exec router) |
 
 ### MCP bridge & tools
 

@@ -66,8 +66,8 @@ hosts:
       - curl http://127.0.0.1:3000
       - curl http://192.168.50.2:8000
       - curl http://192.168.50.2:8082
-      - curl http://192.168.50.2:8003
-      - curl http://192.168.50.2:8004
+      - curl http://192.168.50.2:8090
+      - curl http://192.168.50.2:8090
       # docker (read-only)
       - docker compose ps
       - docker compose -f /home/x-nch/xnchSystems/infra/no-k3s/node-a/docker-compose.yml ps
@@ -136,7 +136,7 @@ hosts:
       - curl -s
       - curl http://127.0.0.1:8000
       - curl http://127.0.0.1:8082
-      - curl http://127.0.0.1:8003
+      - curl http://127.0.0.1:8090
       - curl http://127.0.0.1:8004
       - curl http://192.168.50.1:8001
       - curl http://192.168.50.1:4000
