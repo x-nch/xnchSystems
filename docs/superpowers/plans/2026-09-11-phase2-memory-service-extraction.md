@@ -1,5 +1,7 @@
 # Phase 2 — Memory-Service Extraction Implementation Plan
 
+> **STATUS: COMPLETE** — 2026-09-12. All tasks verified, tests passing at 875/875. Rolling to agentic layer.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Extract xnch's L0–L3 memory stores (pgvector episodic, Redis sensory/working, Kuzu graph, relationships, scraper documents, consolidation) into an independently deployable **memory-service** on node-a :8003, with the gateway behind a `MemoryClient`, an `XNCH_MEMORY_EMBEDDED=1` rollback switch, and a degrade/replay path.
