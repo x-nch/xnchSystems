@@ -228,7 +228,7 @@ Gate7 voice deploy runbook: docs/runbooks/voice-deploy.md
 
 | Component | Where |
 |-----------|--------|
-| Mic capture / speaker playback | **Mac** (`cli/voice_io.py`, sounddevice) |
+| Mic capture / speaker playback | **Mac** (`clients/cli/voice_io.py`, sounddevice) |
 | STT (faster-whisper) | **gate7** |
 | TTS (Piper) | **gate7** |
 | LLM + MCP tools | hosted OpenCode Go (DeepSeek V4), called from **gate7** |

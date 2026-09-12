@@ -48,7 +48,7 @@ voice-out loop. Always-on ambient listening is explicitly out of scope (phase 2)
 | `SensoryBuffer` | `xnch/memory/sensory_buffer.py` | Works; voice payloads use `transcript` key |
 | `context_assembler` | `nexi/pipeline/context_assembler.py` | Reads voice snippets but uses `data` key; **never injects into prompt** |
 | `AttentionFilter` | `xnch/perception/attention_filter.py` | `forward_to_gateway` rule; no consumer |
-| CLI text chat | `cli/main.py` `chat` | No audio capture/playback |
+| CLI text chat | `clients/cli/main.py` `chat` | No audio capture/playback |
 | TTS | — | **Not implemented** |
 
 ### Target (v1)
@@ -285,7 +285,7 @@ voice:
 
 No change to lean chat prompt size — voice config lives in capabilities JSON only.
 
-### 5. CLI (`cli/voice.py`)
+### 5. CLI (`clients/cli/voice.py`)
 
 New Typer subcommand group: `python -m clients.cli voice`.
 
@@ -333,7 +333,7 @@ Optional: `keyboard` or `pynput` for global Space hook (v1 can use terminal
 #### CLI → API
 
 ```python
-# cli/client.py additions
+# clients/cli/client.py additions
 def voice_chat(self, wav_bytes: bytes, *, session_id: str) -> dict: ...
 def voice_transcribe(self, wav_bytes: bytes) -> dict: ...
 def voice_speak(self, text: str) -> bytes: ...
@@ -341,7 +341,7 @@ def voice_speak(self, text: str) -> bytes: ...
 
 Upload as `multipart/form-data` with fields `audio`, `session_id`.
 
-#### CLI config (`cli/config.py`)
+#### CLI config (`clients/cli/config.py`)
 
 | Var | Default | Meaning |
 |-----|---------|---------|
@@ -439,7 +439,7 @@ voice request. Optional `ExecStartPre` warm-up in future.
 
 ### Phase 2 — CLI
 
-1. `cli/voice.py` + `client.voice_*` methods
+1. `clients/cli/voice.py` + `client.voice_*` methods
 2. `python -m clients.cli voice talk` push-to-talk REPL
 3. `voice devices`, `voice listen`, `voice speak` utilities
 4. Docs: runbook `docs/runbooks/voice-deploy.md`
@@ -494,7 +494,7 @@ fixed transcript.
 |--------|------|
 | **Create** | `xnch/voice/stt.py`, `tts.py`, `audio.py`, `pipeline.py` |
 | **Create** | `xnch/routes/voice.py` |
-| **Create** | `cli/voice.py` |
+| **Create** | `clients/cli/voice.py` |
 | **Create** | `tests/test_voice_api.py`, `tests/fixtures/voice/` |
 | **Create** | `scripts/install-voice-models.sh` |
 | **Create** | `docs/runbooks/voice-deploy.md` |
@@ -502,8 +502,8 @@ fixed transcript.
 | **Modify** | `xnch/config.py` — voice settings |
 | **Modify** | `nexi/pipeline/context_assembler.py` — inject voice snippets |
 | **Modify** | `nexi/character/capabilities.yaml` — voice section |
-| **Modify** | `cli/main.py` — `app.add_typer(voice_app, name="voice")` |
-| **Modify** | `cli/client.py` — voice HTTP methods |
+| **Modify** | `clients/cli/main.py` — `app.add_typer(voice_app, name="voice")` |
+| **Modify** | `clients/cli/client.py` — voice HTTP methods |
 | **Deprecate** | Direct Redis writes in `voice_daemon.py` — route through `SensoryBuffer` |
 | **Update** | `docs/reference/mcp-http-api.md` — voice endpoints section |
 | **Update** | `docs/architecture-suite.md` — voice in diagram |

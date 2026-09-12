@@ -12,17 +12,17 @@ it needs the xnch API up — not the LLM path.
 
 ## Setup
 
-Run from the repo root with the repo venv (the `cli` package lives at repo root
+Run from the repo root with the repo venv (the `clients/cli` package lives at repo root
 and imports `xnch.routing`):
 
 ```bash
 cd /home/x-nch/xnchSystems
 PY=/home/x-nch/xnchSystems/xnch/.venv/bin/python
 
-"$PY" -m cli mcp --help
+"$PY" -m clients.cli mcp --help
 ```
 
-Environment (`cli/config.py`):
+Environment (`clients/cli/config.py`):
 
 | Var | Default | Meaning |
 |-----|---------|---------|
@@ -49,7 +49,7 @@ Every `mcp` subcommand accepts:
 List bridge server status.
 
 ```bash
-"$PY" -m cli mcp servers
+"$PY" -m clients.cli mcp servers
 # code-review-graph: connected  tools=14  prefix=crg_
 # agentmemory: connected  tools=11  prefix=am_
 # docs-test: connected  tools=2  prefix=doc_
@@ -57,7 +57,7 @@ List bridge server status.
 ```
 
 ```bash
-"$PY" -m cli mcp servers --json
+"$PY" -m clients.cli mcp servers --json
 ```
 
 A server is `down` when its stdio subprocess failed to connect. The pool keeps
@@ -69,13 +69,13 @@ section. If the bridge is disabled the command prints `MCP bridge disabled`.
 List the tools visible to an actor, optionally filtered by prefix.
 
 ```bash
-"$PY" -m cli mcp tools --actor nexi
+"$PY" -m clients.cli mcp tools --actor nexi
 # actor: nexi  tools: 40
 #   xnch_health  [T0_READ]
 #   ...
 
-"$PY" -m cli mcp tools --actor nexi --prefix crg_    # bridged CRG tools only
-"$PY" -m cli mcp tools --actor nexi --prefix xnch_   # native tools only (13)
+"$PY" -m clients.cli mcp tools --actor nexi --prefix crg_    # bridged CRG tools only
+"$PY" -m clients.cli mcp tools --actor nexi --prefix xnch_   # native tools only (13)
 ```
 
 **Expected counts (live):** `nexi` sees **40** tools = 13 native (`xnch_*`) + 27
@@ -88,10 +88,10 @@ hidden — actor/tier model in the architecture guide).
 Invoke any tool visible to the actor.
 
 ```bash
-"$PY" -m cli mcp call crg_list_graph_stats_tool
-"$PY" -m cli mcp call am_memory_recall --arg query="MCP bridge" --arg limit=2
-"$PY" -m cli mcp call xnch_web_search --arg query="vLLM latest release" --arg limit=3
-"$PY" -m cli mcp call xnch_health --json
+"$PY" -m clients.cli mcp call crg_list_graph_stats_tool
+"$PY" -m clients.cli mcp call am_memory_recall --arg query="MCP bridge" --arg limit=2
+"$PY" -m clients.cli mcp call xnch_web_search --arg query="vLLM latest release" --arg limit=3
+"$PY" -m clients.cli mcp call xnch_health --json
 ```
 
 Argument syntax:
@@ -113,12 +113,12 @@ payload (useful for piping to `jq`).
 Run the bridge integration suite.
 
 ```bash
-"$PY" -m cli mcp test --skip-chat     # 11 tool-level cases; no LLM needed
-"$PY" -m cli mcp test                 # + 2 live /nexi/chat tool-loop cases (needs OpenCode Go access)
-"$PY" -m cli mcp test --skip-chat --json
+"$PY" -m clients.cli mcp test --skip-chat     # 11 tool-level cases; no LLM needed
+"$PY" -m clients.cli mcp test                 # + 2 live /nexi/chat tool-loop cases (needs OpenCode Go access)
+"$PY" -m clients.cli mcp test --skip-chat --json
 ```
 
-Coverage (from `cli/mcp_tests.py`):
+Coverage (from `clients/cli/mcp_tests.py`):
 
 | Case | Checks |
 |------|--------|
@@ -141,11 +141,11 @@ Coverage (from `cli/mcp_tests.py`):
 
 ```bash
 # nexi blocked from store_note (403)
-"$PY" -m cli mcp call xnch_memory_store_note --arg text="x" --actor nexi
+"$PY" -m clients.cli mcp call xnch_memory_store_note --arg text="x" --actor nexi
 
 # episodic + curated recall
-"$PY" -m cli mcp call xnch_memory_recall --arg query="deploy" --arg top_k=2
-"$PY" -m cli mcp call am_memory_lesson_recall --arg query="CRG" --arg limit=2
+"$PY" -m clients.cli mcp call xnch_memory_recall --arg query="deploy" --arg top_k=2
+"$PY" -m clients.cli mcp call am_memory_lesson_recall --arg query="CRG" --arg limit=2
 ```
 
 Full runbook: [memory-routing-deploy.md](../runbooks/memory-routing-deploy.md).

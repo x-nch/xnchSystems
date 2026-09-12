@@ -1,6 +1,6 @@
 # Reddit special-agent routing (2026-09-07)
 
-The Mac dispatch runner (`agent-runner/xnch_agent_runner/runner.py`) routes any
+The Mac dispatch runner (`clients/agent-runner/xnch_agent_runner/runner.py`) routes any
 claimed run whose prompt starts with `@reddit` to the trusted Reddit executor
 (`scripts/reddit/reddit_agent.py`) instead of spawning opencode. The sandboxed
 LLM only *drafts* text; it never sees Reddit credentials (OAuth2) and cannot

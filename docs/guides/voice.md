@@ -1,6 +1,6 @@
 # Voice
 
-Audience: users running the voice loop. Sources: `cli/voice.py`,
+Audience: users running the voice loop. Sources: `clients/cli/voice.py`,
 `xnch/routes/voice.py`, `scripts/{setup-mac-voice-client,install-voice-models}.sh`,
 and the detailed guides kept alongside:
 [architecture](nexi-voice-architecture.md) ·
