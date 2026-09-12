@@ -43,14 +43,22 @@ async def _memory_recall(app: Any, _actor: ActorContext, args: dict[str, Any]) -
     return results
 
 
+async def _proactivity_enabled() -> bool:
+    from xnch.config import settings
+
+    return settings.proactivity_surface_enabled
+
+
 async def _memory_surface(app: Any, _actor: ActorContext, _args: dict[str, Any]) -> list[dict[str, Any]]:
+    if not _proactivity_enabled():
+        return []
     if not hasattr(app, "_nexi_proactivity"):
         from nexi.proactivity.engine import ProactivityEngine
 
         redis = app.kv_cache.redis_client
         app._nexi_proactivity = ProactivityEngine(redis)
     events = await app._nexi_proactivity.get_pending()
-    return [e.to_dict() for e in events]
+    return [e.to_dict() if hasattr(e, "to_dict") else e for e in events]
 
 
 async def _memory_store_note(app: Any, actor: ActorContext, args: dict[str, Any]) -> dict[str, Any]:
