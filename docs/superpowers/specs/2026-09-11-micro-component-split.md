@@ -252,6 +252,10 @@ agent-runner (Mac) → gateway dispatch queue (unchanged contract)
 | T1.7 | Execution boundary audit + `docs/architecture/execution-boundary.md`; move confirmed duplicates only (candidate: `xnch/jobs/workflow_schedule.py` vs `nexi/workflow/executor.py`) | docs + audited code | — | boundary doc approved; moved code covered by existing tests |
 | T1.8 | Group clients: `clients/cli/`, `clients/agent-runner/`; fix plist template + README paths | moves, `com.xnch.agent-runner.plist` | — | `python -m clients.cli` works; plist paths updated |
 
+**Phase 1 status: COMPLETE (2026-09-12).** Gate A and Gate B passed; the merged capability sidecar is active on `:8090`, legacy `exec_agent/` and `fs_read_agent/` packages and systemd units are deleted, CLI grouping is complete, and targeted tests pass. See `docs/superpowers/plans/2026-09-12-gate1-phase1-capability-sidecar-cutover.md` and `docs/superpowers/plans/2026-09-12-gate2-memory-service-cutover.md` for evidence.
+
+**Phase 2 status: COMPLETE (2026-09-12).** Gate 0–E passed; `xnch-memory.service` active on `:8003` (nexi venv), `healthz` = `{"status":"ok","tiers":{"postgres":true,"kuzu":true}}`, gateway remote (`XNCH_MEMORY_EMBEDDED=false`), Kuzu single-owner verified, relay + consolidation verified, rollback rehearsed. All xnch (586) + nexi (256) tests pass. Superrepo targeted tests (33) pass. See `docs/superpowers/plans/2026-09-12-gate2-memory-service-cutover.md` for evidence.
+
 ### Phase 2 — Memory-service extraction
 | ID | Task | Pri | Depends | Files | Verify |
 |---|---|---|---|---|---|
@@ -280,6 +284,24 @@ T2.1 → T2.2 → T2.3 → T2.4 → T2.5 → T2.6
 T3.1 → T3.2 → T3.3, T3.4 (last)
 ```
 Phase 1 and Phase 2 are separable: Phase 1 alone already delivers 3 of 4 redundancy fixes.
+
+---
+
+## GATE 2 review note — node-a memory-service cutover (2026-09-12)
+
+**Status: PASSED — node-a is running in remote memory mode.**
+
+Verified during the cutover (see `docs/superpowers/plans/2026-09-12-gate2-memory-service-cutover.md`):
+
+- `xnch-memory.service` active on `:8003` (nexi venv), `healthz` = `{"status":"ok","tiers":{"postgres":true,"kuzu":true}}`; gateway on `:8001` remote (`XNCH_MEMORY_EMBEDDED=false`, `XNCH_MEMORY_SERVICE_URL=http://127.0.0.1:8003`), token-authenticated (fail-closed, 401 without token).
+- **Kuzu single-owner verified in both directions**: service owns `~/.xnch/graph.kuzu` in remote mode; gateway owns it after rollback. Ordering rule (stop gateway first when going service-up, stop service first when going embedded) is now step 1 of `docs/runbooks/memory-service-deploy.md`.
+- Relay verified: `GET /memory/graph/stats` (2053 entities / 2469 relations) and `POST /memory/read` return live store data via the gateway; SSE direct (`:8003/v1/graph/stream`) and relay (`:8001/memory/graph/stream`) both stream `stats`/`ready` events.
+- `consolidation.service` re-targeted to `:8003/v1/consolidation/run` with token; manual fire returned HTTP 200 (`{"triples_written":0,"episodes_processed":0,"extraction_failures":100,"archived":81}`) — extraction failures were the OpenCode Go API 429 usage limit, not the cutover; job logs in `journalctl -u xnch-memory`.
+- `mcp test --skip-chat`: **11/11 green** (CRG graph rebuilt + embedded on node-a — it had never been built there; `--with code-review-graph[embeddings]` needed for the local provider).
+- Rollback rehearsed end-to-end: `XNCH_MEMORY_EMBEDDED=true` → gateway re-owns Kuzu, embedded mode green; remote mode re-applied after. One-command rollback is production-safe.
+
+**Deferred / follow-ups (not this gate):**
+Monkey the scraping of `node-b`, verify manual chat in the web UI once OpenCode Go usage resets, wire `/metrics` into `server.py::build_app` + Prometheus scrape for `:8003` (T2.5/T3.4).
 
 ---
 
