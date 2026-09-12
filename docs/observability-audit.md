@@ -44,7 +44,7 @@
 |---|---|---|---|
 | litellm, langfuse, redis, postgres-pgvector, langfuse-postgres, searxng | A | Docker healthcheck | Process-up only; unconsumed |
 | xnch (:8001), perception (:8002), vault-indexer, consolidation.timer, tailscale-funnel | A | systemd `Restart=on-failure` | Restart loops invisible |
-| vllm-ornith (:8082), nexi (:8000), fs-read-agent, exec-agent | B | systemd | Same |
+| vllm-ornith (:8082), nexi (:8000), memory-service :8003 | A | systemd | Same |
 
 ### 1.5 Audit trail (adjacent, worth noting)
 
