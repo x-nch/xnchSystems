@@ -7,11 +7,11 @@ node. Templates: `infra/no-k3s/shared/*.example.yaml`. Sources: config paths in
 | File | Node(s) | Owner knob | Contents |
 |---|---|---|---|
 | `~/.xnch/xnch.env` | A | — | service env (see [env-vars](env-vars.md)) |
-| `~/.xnch/nexi.env` | B | — | nexi + exec/fs agents env |
+| `~/.xnch/nexi.env` | B | — | nexi env |
 | `~/.xnch/mcp-servers.yaml` | A | `XNCH_MCP_SERVERS_PATH` / `NEXI_MCP_SERVERS_PATH` | federated MCP servers: id, command, prefix, tier, actors, enabled ([bridge](../architecture/mcp-bridge.md#server-inventory)) |
 | `~/.xnch/memory-routing.yaml` | A | `XNCH_MEMORY_ROUTING_POLICY_PATH` | episodic vs agentmemory tool routing rules |
 | `~/.xnch/exec-policy.yaml` | A+B | `XNCH_EXEC_POLICY_PATH` | governed commands: per-host prefix allowlist (status/read-only ops), denied destructive substrings, cwd lock, timeout |
-| `~/.xnch/fs-policy.yaml` | A+B | `XNCH_FS_POLICY_PATH` | read-only FS scope for fs agent/tools |
+| `~/.xnch/fs-policy.yaml` | A+B | `XNCH_FS_POLICY_PATH` | read-only FS scope |
 | `~/.xnch/web-search.yaml` | A | `XNCH_WEB_SEARCH_POLICY_PATH` | `xnch_web_search` policy (SearXNG backend) |
 | `~/.xnch/policies/*.yaml` | A | `policies_dir` | policy-engine rule packs (first-match-wins; candidates land here via governance approval) |
 | `~/.xnch/nexi-capabilities.generated.yaml` | B | `NEXI_CAPABILITIES_GENERATED_PATH` | auto-refreshed capability manifest (do not hand-edit) |

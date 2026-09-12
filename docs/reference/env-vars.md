@@ -64,16 +64,12 @@ Secrets below are placeholders; never commit real values.
 |---|---|---|
 | `XNCH_CAPABILITY_BIND` | `127.0.0.1` | sidecar bind address |
 | `XNCH_CAPABILITY_PORT` | `8090` | sidecar port (node-b) |
-| `XNCH_CAPABILITY_TOKEN` | `""` | shared bearer token (wins over legacy per-agent tokens) |
-| `XNCH_CAPABILITY_NODE_B_URL` | `""` | e.g. `http://192.168.50.2:8090`; when set, exec+fs remote clients use it |
+| `XNCH_CAPABILITY_TOKEN` | `""` | same value as existing `XNCH_EXEC_AGENT_TOKEN` |
+| `XNCH_CAPABILITY_NODE_B_URL` | `http://192.168.50.2:8090` | e.g. `http://192.168.50.2:8090`; exec+fs remote clients use it |
 | `XNCH_FS_POLICY_PATH` | `~/.xnch/fs-policy.yaml` | read-only FS policy |
 | `XNCH_FS_LOCAL_HOST` | `node-a` | node this process serves reads for |
-| `XNCH_FS_AGENT_NODE_B_URL` | `http://192.168.50.2:8003` | legacy — used only if capability URL unset |
-| `XNCH_FS_AGENT_TOKEN` | `""` | legacy fs token (accepted by /fs router) |
 | `XNCH_EXEC_POLICY_PATH` | `~/.xnch/exec-policy.yaml` | governed command policy |
 | `XNCH_EXEC_LOCAL_HOST` | `node-a` | node this process runs commands on |
-| `XNCH_EXEC_AGENT_NODE_B_URL` | `http://192.168.50.2:8004` | legacy — used only if capability URL unset |
-| `XNCH_EXEC_AGENT_TOKEN` | `""` | legacy exec token (accepted by /exec router) |
 
 ### MCP bridge & tools
 
@@ -97,9 +93,9 @@ Secrets below are placeholders; never commit real values.
 
 | Variable | Default | Description |
 |---|---|---|
-| `XNCH_MEMORY_EMBEDDED` | `true` | embedded mode keeps in-process stores; `false` targets the remote memory-service |
+| `XNCH_MEMORY_EMBEDDED` | `1` | embedded mode keeps in-process stores; `false` targets the remote memory-service |
 | `XNCH_MEMORY_SERVICE_URL` | `http://127.0.0.1:8003` | remote memory-service base URL (node-a) |
-| `XNCH_MEMORY_TOKEN` | `""` | shared internal token for the memory-service (`X-Internal-Token`) |
+| `XNCH_MEMORY_TOKEN` | `""` | must be set before memory-service starts — fail-closed |
 | `XNCH_MEMORY_BIND` / `XNCH_MEMORY_PORT` | `127.0.0.1` / `8003` | memory-service server bind/port (`python -m xnch.memory.server`) |
 
 ### HITL & workflows
