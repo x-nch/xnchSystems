@@ -42,7 +42,7 @@ All product tools register in `xnch_mcp/registry.py`. **Every** `invoke_tool` ca
 | T2_EXEC | `xnch_exec_run` (actors: nexi/operator/admin/opencode), `xnch_session_run` |
 | dynamic | MCP bridge pool tools (`xnch_mcp/bridge/pool.py`) — each external server declares tier+actors in YAML; same enforcement fn (`pool.py:202–204`) |
 
-Dev-tooling surfaces (console scripts, not product-critical): `exec-agent`, `fs-read-agent`, `docs-test-mcp` — share the exec/fs policy files per `infra/no-k3s/shared/exec-policy.yaml:1`.
+Dev-tooling surfaces (console scripts, not product-critical): `exec-agent`/`fs-read-agent` (legacy, replaced by capability sidecar :8090), `docs-test-mcp` — share the exec/fs policy files per `infra/no-k3s/shared/exec-policy.yaml:1`.
 
 ### Does anything destructive bypass the interrupt gate?
 

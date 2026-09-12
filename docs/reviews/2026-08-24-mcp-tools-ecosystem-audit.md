@@ -83,8 +83,7 @@ Ranked order:
    One click of downtime vs. indefinite exposure.
 
 Items 5–7 are serious but not per-fire exposures; they can follow within days:
-5. exec/fs-agent fail-open tokens → require non-empty token at startup, fail closed,
-   constant-time compare (`exec_agent/server.py:34-39`, `fs_read_agent/server.py:33`).
+5. Capability sidecar fail-closed tokens — verify `XNCH_CAPABILITY_TOKEN` set and capability endpoint fails closed (503) when unset | capability_agent/tests/test_exec_router.py, test_fs_router.py |
 6. Remaining A4 surfaces: vLLM :8082 `--api-key` or firewall-to-node-a; nexi router auth sweep.
 7. Purge or fix scripts/agent-gateway defaults (A3 proper).
 
@@ -130,7 +129,7 @@ documented anti-pattern.
 | LangSmith | ✅ Still absent as adopted dep; ❌ hygiene: root `pyproject.toml:17` still carries `langchain-openai>=1.4.1` (A15 deletion never done) keeping transitive langsmith latent. |
 | Orchestration consolidation | ✅ Single path holds; beeAI/AgentStack absent from active tree. |
 | LiteLLM-only inference | ❌ **Violated in practice by default** on dispatched + interactive opencode runs (C1) — mechanism differs from the rejected `-m` flag but lands in the same place: silent external routing. |
-| exec/fs-agent unauth LAN finding | 🟡 Partially fixed — `_verify_token` exists on both but **fails open when token env unset** and binds remain 0.0.0.0 (`infra/no-k3s/node-b/systemd/*.service`). Deployed-env token presence unverifiable from this Mac (ssh check needed). |
+| Capability sidecar unauth LAN finding | ✅ Fixed — fail-closed token on :8090 (unset ⇒ 503); `infra/no-k3s/node-b/systemd/xnch-capability.service` binds 127.0.0.1 by default; legacy exec-agent/fs-read-agent units deleted. | [dep S3], [core F2] |
 | nexi/vLLM unauth surfaces | 🔴 No in-tree evidence of fix since A4 (nexi still has no JWT path per 08-23 audit; vLLM `--api-key` absent). Same ssh caveat. |
 | HITL approvals route auth | ✅ Fixed — `/approvals/{id}/decide` is gateway-token gated (`workflows.py:289`). |
 | Credential re-scoping (core-F1/A3) | 🔴 Never landed — and the live runner reproduces the identical defect (C4); gateway copy also unfixed (C7). |
@@ -143,7 +142,7 @@ documented anti-pattern.
 - F1 (P0, pre-cron): pin local model/provider for headless runs + policies deny external providers (C1).
 - F2 (P0, pre-cron): dedicated restricted dispatch agent; strip MCP servers from headless scope (C2/C3).
 - F3 (P0, pre-cron): runner env allowlist (C4). ~10 lines in runner.py + tests.
-- F4 (P1): fail-closed tokens in exec/fs agents; verify deployed env via ssh (item 5).
+- F4 (P1): fail-closed tokens in capability sidecar (:8090) — verify deployed env via ssh (item 5).
 - F5 (P1): vLLM api-key/firewall + nexi auth sweep (A4 remainder, item 6).
 - F6 (P1): implement the step-kind allowlist for real — classify at approval-filing time
   (`run_due_dispatch`), tag approvals risk_class low/elevated using the existing workflows

@@ -20,7 +20,7 @@ surface has failing-test-first coverage.
 
 | Item | Files |
 |---|---|
-| F4 fail-closed tokens | `exec_agent/server.py`, `fs_read_agent/server.py`: unset token ⇒ 503 loud misconfig; wrong/missing ⇒ 401 constant-time compare | `tests/test_agent_servers_auth.py` (6) |
+| F4 fail-closed tokens | `capability_agent/` sidecar (:8090): unset token ⇒ 503 loud misconfig; wrong/missing ⇒ 401 constant-time compare; `XNCH_MEMORY_TOKEN` unset ⇒ memory-service 503 fail-closed (never 401/200) | `capability_agent/tests/`, `xnch/memory/server.py` |
 | F6 addendum on deployed design | Re-based onto upstream `1a3ecbe` (which already shipped keyword-allowlist→elevation + in-flight guard + retry): added `ELEVATED_KINDS` force-elevation — plan entries declaring kind∈{send_email, submit_application, purchase, publish, exec, external_action, delete} or `risk:"elevated"` are NEVER filed low-risk, even when keywords match | `xnch/jobs/goal_dispatch.py`, `xnch/tests/test_agent_goal_dispatch.py` (14 ✓ incl. upstream's) |
 | F7 direct-dispatch kill-switch | `POST /agents/dispatch` now 403 unless `XNCH_AGENTS_DIRECT_DISPATCH_ENABLED=true` (deny-by-default); enabled path logs a warning (approval-bypass audit marker) | `xnch/routes/agents.py`, `xnch/config.py`, `xnch/tests/test_agent_routes.py` (7 ✓) |
 | F8 gateway defaults | `opencode_auto_approve=False`; `_verify_api_key` fails closed (503 when unset); `child_env()` allowlist passed to both spawn paths | gateway suite (10 ✓) |
