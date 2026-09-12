@@ -6,6 +6,7 @@ Wants=xnch.service
 [Service]
 Type=oneshot
 User=x-nch
-ExecStart=/usr/bin/curl -sf -X POST http://127.0.0.1:8001/admin/consolidate
+EnvironmentFile=/home/x-nch/.xnch/xnch.env
+ExecStart=/bin/sh -c 'curl -sf -X POST -H "X-Internal-Token: $XNCH_MEMORY_TOKEN" http://127.0.0.1:8003/v1/consolidation/run'
 StandardOutput=journal
 StandardError=journal

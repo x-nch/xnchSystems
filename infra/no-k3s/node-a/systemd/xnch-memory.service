@@ -1,0 +1,20 @@
+[Unit]
+Description=XNCH Memory Service — L0-L3 stores (node-a)
+After=network.target postgres.service redis.service
+
+[Service]
+Type=simple
+User=x-nch
+WorkingDirectory=/home/x-nch/xnchSystems
+EnvironmentFile=/home/x-nch/.xnch/xnch.env
+Environment=PYTHONPATH=/home/x-nch/xnchSystems:/home/x-nch/xnchSystems/xnch
+Environment=XNCH_MEMORY_BIND=0.0.0.0
+Environment=XNCH_MEMORY_PORT=8003
+ExecStart=/home/x-nch/xnchSystems/nexi/.venv/bin/python -m xnch.memory.server
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
