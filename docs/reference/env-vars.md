@@ -93,6 +93,15 @@ Secrets below are placeholders; never commit real values.
 | `XNCH_MEMORY_ROUTING_POLICY_PATH` | `~/.xnch/memory-routing.yaml` | episodic vs agentmemory routing |
 | `XNCH_AM_PREFETCH_ENABLED` | `false` | prefetch curated memories |
 
+### Memory service (Phase 2 extraction)
+
+| Variable | Default | Description |
+|---|---|---|
+| `XNCH_MEMORY_EMBEDDED` | `true` | embedded mode keeps in-process stores; `false` targets the remote memory-service |
+| `XNCH_MEMORY_SERVICE_URL` | `http://127.0.0.1:8003` | remote memory-service base URL (node-a) |
+| `XNCH_MEMORY_TOKEN` | `""` | shared internal token for the memory-service (`X-Internal-Token`) |
+| `XNCH_MEMORY_BIND` / `XNCH_MEMORY_PORT` | `127.0.0.1` / `8003` | memory-service server bind/port (`python -m xnch.memory.server`) |
+
 ### HITL & workflows
 
 | Variable | Default | Description |
