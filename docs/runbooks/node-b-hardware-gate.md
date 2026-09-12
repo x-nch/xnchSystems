@@ -1,5 +1,12 @@
 # Runbook — Node B Hardware-Gated Steps (RTX 3090)
 
+> **Phase 1 gate status: Gate A/B confirmed passed.** All four steps
+> (Tasks 2 / 3 / 4 / 6) are complete; G1 (LoRA hot-serve conformation)
+> and G2 (GPTQ requant recipe + throughput) verified; the full
+> Train→Promote→rollback drill (Step 4) passed with live vLLM restart.
+> This document is retained as a reference for re-running any step if
+> the gates need to be re-verified.
+
 Four steps that **can only run on Node B** (`xnch-core`, IP `192.168.50.2`, single
 RTX 3090 / 24 GiB). They are the GPU-gated verification windows from the ornith
 Phase 1 training work (Tasks 2 / 3 / 4 / 6). Everything here is a **full

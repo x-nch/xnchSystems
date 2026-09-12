@@ -4,6 +4,7 @@
 - Phase 2 code merged; `ss -ltn | grep 8003` empty on node-a.
 - `XNCH_MEMORY_TOKEN` set in `/home/x-nch/.xnch/xnch.env` (same file the unit reads).
 - LangGraph pipeline OFF or accept that it is skipped in remote mode.
+- **Gate 2 status**: remote mode confirmed, Kuzu single-owner verified, rollback rehearsed.
 
 ## Deploy
 1. **Stop the gateway FIRST (Kuzu safety).** The gateway owns the Kuzu file while

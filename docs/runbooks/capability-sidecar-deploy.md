@@ -1,11 +1,15 @@
 # Capability sidecar deploy (node-b)
 
-Replaces `exec-agent.service` (:8004) and `fs-read-agent.service` (:8003)
-with one `xnch-capability.service` on :8090.
+Phase 1 task complete. The merged `xnch-capability.service` (exec + read-only fs)
+is the primary capability surface on node-b :8090, replacing the legacy
+`exec-agent.service` (:8004) and `fs-read-agent.service` (:8003).
 
 ## Preconditions
-- This repo deployed on node-b with Tasks 2-6 merged (capability_agent package + retargeted clients).
+- This repo deployed on node-b with Phase 1 capability consolidation merged
+  (`capability_agent` package + retargeted clients).
 - Port 8090 free on node-b: `ss -ltn | grep 8090` → empty.
+- `XNCH_CAPABILITY_TOKEN` set in `/home/x-nch/.xnch/nexi.env` (same token the
+  unit reads).
 
 ## Cutover (node-b)
 1. Set the shared token in `/home/x-nch/.xnch/nexi.env`:

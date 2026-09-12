@@ -1,8 +1,8 @@
 # Deploy Runbook — xnchSystems two-node + Mac
 
 Last verified: 2026-08-23 (agent-dispatch deploy). Node roles:
-- **node-a / gate7** (`192.168.1.10`): xnch API :8001, Postgres/Redis/LiteLLM/Langfuse (compose), consolidation.timer
-- **node-b / xnch-core** (`192.168.50.2`): nexi :8000, vllm-ornith :8082 (systemd `Conflicts=` group — **never restart vllm as part of deploys**)
+- **node-a / gate7** (`192.168.1.10`): xnch API :8001, memory-service :8003 (remote L0-L3 stores), Postgres/Redis/LiteLLM/Langfuse (compose), consolidation.timer
+- **node-b / xnch-core** (`192.168.50.2`): nexi :8000, capability sidecar :8090 (merged exec-agent + fs-read-agent), vllm-ornith :8082 (systemd `Conflicts=` group — **never restart vllm as part of deploys**)
 - **Mac**: muse dev server :3000, `agent-runner` (launchd), coding agents
 
 ---
@@ -35,15 +35,16 @@ touches them (gitlink-only bumps usually don't) — do NOT blanket-stash operato
      && sudo systemctl restart xnch.service'
    ```
    Restart only when packaged code changed; yaml/config read live by prompt loaders.
-3. **node-b** (nexi changes): same pull/submodule dance, then `sudo systemctl restart nexi.service`.
+3. **node-b** (nexi changes): same pull/submodule dance, then `sudo systemctl restart nexi.service xnch-capability.service`.
 4. **Verify** (all must pass before declaring success):
-   ```bash
-   curl -s http://192.168.1.10:8001/health          # {"status":"ok",...}
-   curl -s http://192.168.50.2:8000/health          # nexi ok
-   ssh node-a 'grep -c XNCH_GATEWAY_SECRET ~/.xnch/xnch.env'   # must be 1 — empty secret = gated routes 503
-   # route-specific probe for whatever shipped, e.g.:
-   TOKEN=$(...)  # mint per docs/runbooks; reads are token-gated since 2026-08-24
-   ```
+    ```bash
+    curl -s http://192.168.1.10:8001/health          # {"status":"ok",...}
+    curl -s http://192.168.50.2:8000/health          # nexi ok
+    curl -sf -H "X-Internal-Token: $XNCH_MEMORY_TOKEN" http://127.0.0.1:8003/healthz  # memory-service
+    ssh node-a 'grep -c XNCH_GATEWAY_SECRET ~/.xnch/xnch.env'   # must be 1 — empty secret = gated routes 503
+    # route-specific probe for whatever shipped, e.g.:
+    TOKEN=$(...)  # mint per docs/runbooks; reads are token-gated since 2026-08-24
+    ```
 5. **Rollback**: pre-deploy pins recorded in `~/xnchSystems.rollback.txt` per node;
    `git checkout -f <old-pin> && git submodule update --init --recursive` + service
    restart. Verify rollback with step 4 probes.

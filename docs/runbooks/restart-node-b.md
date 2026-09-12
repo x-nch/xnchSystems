@@ -29,16 +29,16 @@ Requires Node A reachable (xnch :8001, redis, postgres) and
 `PYTHONPATH` covering both `nexi/` and `xnch/` dirs — both are set in the unit;
 do not override casually.
 
-## exec / fs agents (:8004 / :8003)
+## capability sidecar (:8090)
 
 ```bash
-sudo systemctl restart exec-agent.service fs-read-agent.service
-curl -sf http://localhost:8004/health
-curl -sf http://localhost:8003/health
+sudo systemctl restart xnch-capability.service
+curl -sf http://127.0.0.1:8090/health   # {"status":"ok","capabilities":"exec,fs"}
+journalctl -u xnch-capability.service -n 20 --no-pager  # on failure
 ```
 
-Both read `~/.xnch/nexi.env` + policy files; host pinning via
-`XNCH_EXEC_LOCAL_HOST=node-b` / `XNCH_FS_LOCAL_HOST=node-b`.
+Reads `XNCH_CAPABILITY_TOKEN` from `/home/x-nch/.xnch/nexi.env`. Replaces the
+legacy `exec-agent` (:8004) and `fs-read-agent` (:8003) services.
 
 ## Full Node B bounce (incl. wake from sleep)
 
@@ -48,7 +48,7 @@ Prefer the scripted path from **Node A**:
 
 ```bash
 sudo systemctl start nvidia-ready.service vllm-ornith.service   # ordering handles deps
-sudo systemctl start nexi.service exec-agent.service fs-read-agent.service
+sudo systemctl start nexi.service xnch-capability.service
 ```
 
 ## After any Node B restart
@@ -57,3 +57,6 @@ sudo systemctl start nexi.service exec-agent.service fs-read-agent.service
 - Workflow executor resumes claiming APPROVED steps automatically within its
   poll interval; stale CLAIMED steps are reclaimed after lease expiry
   ([semantics](../architecture/workflows-hitl.md#executor-claim-lease-semantics-nexiworkflowexecutorpy)).
+- If memory-service on node-a was restarted concurrently, verify Kuzu safety:
+  exactly ONE process (embedded gateway XOR memory-service) must own the Kuzu
+  file. See [memory-service-deploy.md](memory-service-deploy.md#invariants).

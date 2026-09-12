@@ -20,6 +20,10 @@ NEXI_POSTGRES_URL=postgresql://<user>:<pw>@192.168.50.1:5432/xnch   # placeholde
 
 - vLLM assets: model dir `~/models/ornith-gptq-pro`, venv `~/venvs/vllm-ornith`
   (vllm 0.24.0). nexi venv at `nexi/.venv`.
+- `XNCH_CAPABILITY_NODE_B_URL=http://192.168.50.2:8090` and
+  `XNCH_CAPABILITY_TOKEN=<shared token>` in `~/.xnch/nexi.env` if the
+  capability sidecar is enabled (Phase 1 merged exec-agent + fs-read-agent
+  into `xnch-capability.service` on :8090).
 
 ## Bring-up
 
@@ -35,7 +39,7 @@ Unit install (exact files):
 ```bash
 sudo cp systemd/*.service /etc/systemd/system/
 sudo systemctl daemon-reload
-sudo systemctl enable --now nvidia-ready.service vllm-ornith.service nexi.service exec-agent.service fs-read-agent.service
+sudo systemctl enable --now nvidia-ready.service vllm-ornith.service nexi.service xnch-capability.service
 ```
 
 ## Verify
@@ -43,8 +47,7 @@ sudo systemctl enable --now nvidia-ready.service vllm-ornith.service nexi.servic
 ```bash
 curl -sf http://localhost:8082/health        # vLLM Ornith
 curl -sf http://localhost:8000/health        # nexi
-curl -sf http://localhost:8003/health        # fs-read-agent
-curl -sf http://localhost:8004/health        # exec-agent
+curl -sf http://127.0.0.1:8090/health        # capability sidecar ({"status":"ok","capabilities":"exec,fs"})
 redis-cli -h 192.168.50.1 ping               # reaches Node A redis
 pg_isready -h 192.168.50.1 -U xnch           # reaches Node A postgres
 curl -sf http://192.168.50.1:4000/health     # litellm via master key
@@ -66,6 +69,10 @@ curl -sf http://192.168.50.1:4000/health     # litellm via master key
   `/system/state`, else 409.
 - Wake/sleep lifecycle: Node B sleeps when idle; wake from Node A via
   [wake runbook](../runbooks/wake-node-b.md).
+- Memory-service (`:8003`) runs on **node-a**, not node-b. Node B talks to it via
+  `NEXI_XNCH_BASE_URL=http://192.168.50.1:8001` (the gateway relays memory calls
+  to the remote service). The gateway must have `XNCH_MEMORY_EMBEDDED=false` and
+  `XNCH_MEMORY_SERVICE_URL=http://127.0.0.1:8003`.
 
 ## Related
 

@@ -9,7 +9,8 @@ Audience: ops. Sources: `infra/no-k3s/node-a/**`, `infra/no-k3s/MIGRATION.md`
 - Docker running; systemd available.
 - `~/.xnch/xnch.env` created from `infra/no-k3s/shared/.env.example`
   (POSTGRES_PASSWORD, LANGFUSE_*, LITELLM_MASTER_KEY, XNCH_AUTH_SECRET,
-  XNCH_GATEWAY_SECRET if muse is used).
+  XNCH_GATEWAY_SECRET if muse is used, XNCH_MEMORY_TOKEN, XNCH_MEMORY_EMBEDDED=false,
+  XNCH_MEMORY_SERVICE_URL=http://127.0.0.1:8003 if memory-service used).
 - Static IP `192.168.50.1` on the node-to-node link.
 
 ## Bring-up
@@ -43,6 +44,7 @@ sudo systemctl enable --now xnch.service consolidation.timer
 curl -sf http://localhost:8001/health              # xnch
 curl -sf http://localhost:4000/health/liveliness   # litellm (unauth probe)
 curl -sf http://localhost:3000/api/public/health   # langfuse v2
+curl -sf http://localhost:8003/healthz             # memory-service (token-gated)
 redis-cli ping                                     # redis
 pg_isready -h localhost -p 5432                    # pgvector store
 systemctl list-timers | grep consolidation         # timer active

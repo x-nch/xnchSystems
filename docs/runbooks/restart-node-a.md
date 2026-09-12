@@ -15,6 +15,21 @@ xnch startup spawns the MCP bridge children (`crg_`, `am_`, `doc_*`)
 from `~/.xnch/mcp-servers.yaml`; a failed child degrades to fewer tools, it
 does not block boot ([bridge lifecycle](../architecture/mcp-bridge.md#lifecycle--health)).
 
+## memory-service (:8003)
+
+```bash
+sudo systemctl restart xnch-memory.service
+curl -sf -H "X-Internal-Token: $XNCH_MEMORY_TOKEN" http://127.0.0.1:8003/healthz
+# {"status":"ok","tiers":{"postgres":true,"kuzu":true}}
+journalctl -u xnch-memory.service -n 20 --no-pager  # on failure
+```
+
+The memory-service reads `XNCH_MEMORY_TOKEN`, `XNCH_MEMORY_EMBEDDED`, and
+`XNCH_MEMORY_SERVICE_URL` from `/home/x-nch/.xnch/xnch.env`. Ensure
+`XNCH_MEMORY_EMBEDDED=false` and `XNCH_MEMORY_SERVICE_URL=http://127.0.0.1:8003`
+are set before restarting. If `XNCH_MEMORY_EMBEDDED=true`, the gateway must be
+stopped first (see memory-service-deploy.md Step 1).
+
 ## Consolidation
 
 ```bash

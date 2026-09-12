@@ -56,8 +56,8 @@ Network: `xnch-net`; volumes: `redis-data`, `pgdata`, `langfuse-pgdata`.
 | `nvidia-ready.service` | — | boots early | waits for NVIDIA driver |
 | `vllm-ornith.service` | 8082 | `After=/Wants= network-online nvidia-ready` | serves `ornith-gptq-pro` (`ornith-1.0-35b`, GPTQ `gptq_marlin`, `VLLM_ATTENTION_BACKEND=FLASH_ATTN`, max-model-len 32768, max-num-seqs 2). GPU (~22 GiB) must be idle before start |
 | `nexi.service` | 8000 | after network | `uvicorn nexi.main:app --port 8000`; `PYTHONPATH` includes both `nexi/` and `xnch/` dirs; env from `~/.xnch/nexi.env` |
-| `exec-agent.service` | 8004 | after network | governed command runner; `XNCH_EXEC_LOCAL_HOST=node-b` |
-| `fs-read-agent.service` | 8003 | after network | read-only file agent; `XNCH_FS_LOCAL_HOST=node-b` |
+| `capability sidecar` | 8090 | after network | merged exec-agent + fs-read-agent |
+| `memory-service` | 8003 | after network | remote mode (Phase 2) |
 
 > **GPU exclusivity:** in-repo units coordinate via ordering dependencies only —
 > there is no `Conflicts=` group in this tree. The training ADR describes a

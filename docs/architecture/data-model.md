@@ -97,7 +97,9 @@ erDiagram
 File: `~/.xnch/graph.kuzu`. `entities(entity_id PK, name, type, created_at)`
 connected by typed `relations(rel_type, confidence, created_at)`.
 Written by consolidation's graph extractor; read by chat assembly for entity
-context.
+context. Phase 2: exactly one process owns the Kuzu file at any time
+(gateway in embedded mode, memory-service in remote mode) — single-owner
+invariant verified.
 
 ## SQLite — governance stores
 
