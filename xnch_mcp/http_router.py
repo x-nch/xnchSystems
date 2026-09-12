@@ -3,17 +3,35 @@
 from __future__ import annotations
 
 import json
+import logging
+import secrets
 from typing import Any
 from uuid import uuid4
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
+
+from xnch.config import settings
 
 from xnch_mcp.bridge.pool import get_bridge_pool
 from xnch_mcp.context import ActorContext
 from xnch_mcp.registry import invoke_tool, list_openai_tools, list_tools_for_actor, tool_openai_schema
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter(prefix="/mcp", tags=["mcp"])
+
+
+def _verify_mcp_token(request: Request) -> None:
+    token = settings.mcp_http_token
+    if not token:
+        logger.warning(
+            "mcp_http_token is not configured; /mcp routes are unauthenticated (legacy)"
+        )
+        return
+    provided = request.headers.get("X-MCP-Token", "")
+    if not secrets.compare_digest(provided, token):
+        raise HTTPException(status_code=401, detail="invalid or missing MCP token")
 
 
 class ToolCallRequest(BaseModel):
@@ -28,7 +46,7 @@ def _actor_from_request(request: Request) -> ActorContext:
     return ActorContext(actor_role=role, trace_id=trace_id, session_id=session_id)
 
 
-@router.get("/tools")
+@router.get("/tools", dependencies=[Depends(_verify_mcp_token)])
 async def list_tools(request: Request) -> dict[str, Any]:
     actor = _actor_from_request(request)
     tools = list_tools_for_actor(actor.actor_role)
@@ -41,13 +59,13 @@ async def list_tools(request: Request) -> dict[str, Any]:
     }
 
 
-@router.get("/tools/openai")
+@router.get("/tools/openai", dependencies=[Depends(_verify_mcp_token)])
 async def list_tools_openai(request: Request) -> dict[str, Any]:
     actor = _actor_from_request(request)
     return {"tools": list_openai_tools(actor.actor_role)}
 
 
-@router.get("/servers")
+@router.get("/servers", dependencies=[Depends(_verify_mcp_token)])
 async def list_bridge_servers(request: Request) -> dict[str, Any]:
     pool = get_bridge_pool()
     if pool is None:
@@ -55,7 +73,7 @@ async def list_bridge_servers(request: Request) -> dict[str, Any]:
     return {"enabled": True, "servers": pool.server_status()}
 
 
-@router.post("/call")
+@router.post("/call", dependencies=[Depends(_verify_mcp_token)])
 async def call_tool(body: ToolCallRequest, request: Request) -> dict[str, Any]:
     actor = _actor_from_request(request)
     app = request.app.state
@@ -77,7 +95,7 @@ async def call_tool(body: ToolCallRequest, request: Request) -> dict[str, Any]:
     return {"name": body.name, "result": result}
 
 
-@router.post("/call/batch")
+@router.post("/call/batch", dependencies=[Depends(_verify_mcp_token)])
 async def call_tools_batch(
     body: list[ToolCallRequest], request: Request
 ) -> list[dict[str, Any]]:
