@@ -35,8 +35,8 @@ flowchart LR
 | | Node A — `gate7` (192.168.50.1) | Node B — `xnch-core` (192.168.50.2) |
 |---|---|---|
 | Runtime | Docker Compose + systemd | bare venv + systemd (no Docker) |
-| Runs | postgres-pgvector :5432 · redis :6379 · litellm :4000 · langfuse :3000 (+pg :5433) · searxng :8888 (loopback) · **xnch** :8001 · consolidation timer · tailscale funnel | **vllm-ornith** :8082 · **nexi** :8000 · exec-agent :8004 · fs-read-agent :8003 |
-| Notes | always on; WoL-wakes Node B | RTX 3090 sleeps when idle |
+| Runs | postgres-pgvector :5432 · redis :6379 · litellm :4000 · langfuse :3000 (+pg :5433) · searxng :8888 (loopback) · **xnch** :8001 · consolidation timer · tailscale funnel | **vllm-ornith** :8082 · **nexi** :8000 · capability sidecar :8090 |
+| Notes | always on; WoL-wakes Node B | RTX 3090 sleeps when idle; memory-service :8003 (remote mode) |
 
 ## Repository layout
 
@@ -49,8 +49,6 @@ xnch-train/      training data pipeline + eval harness (Phase 0 gates; Phase 1 Q
 xnch_mcp/        MCP server + federated bridge (native xnch_* tools, crg_/am_/doc_)
 clients/agent-runner/    Mac-side opencode dispatch runner + launchd template
 clients/cli/             Typer CLI client incl. voice loop (Mac client targets gate7)
-exec_agent/      LEGACY — Node B governed command runner (:8004), retired
-fs_read_agent/   LEGACY — Node B read-only file agent (:8003), retired
 scraper/         tiered web scraper service
 docs_test_mcp/   offline docs MCP server
 infra/no-k3s/    CURRENT deploy regime: compose, systemd units, boot scripts,
