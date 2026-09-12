@@ -15,3 +15,4 @@ rules:
 # Actors blocked from xnch_memory_store_note (use am_* instead)
 deprecate_store_note_for:
   - nexi
+  - hermes
