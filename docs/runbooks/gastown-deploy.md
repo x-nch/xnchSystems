@@ -134,6 +134,60 @@ Full hermes → gateway (node-a:8001) → bridge (Mac:7474) → bead → convoy 
 3. **Bridge launchd PATH** — added `EnvironmentVariables.PATH` to `com.xnch.gastown.plist` so `gt`/`bd` are found.
 4. **`_gt_exists()` guard** — changed from `subprocess.run(["gt","status"])` (hangs under non-tty) to `shutil.which("gt")`.
 
+## Tunnel durability (autossh + KeepAlive)
+
+The ephemeral SSH reverse tunnel (`ssh -fN -R`) does not survive reboots or connection drops. Replace it with a launchd `KeepAlive` wrapper around `autossh`:
+
+1. Install autossh: `brew install autossh`
+
+2. Create `~/Library/LaunchAgents/com.xnch.gastown-tunnel.plist`:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.xnch.gastown-tunnel</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/opt/homebrew/bin/autossh</string>
+        <string>-M</string>
+        <string>0</string>
+        <string>-N</string>
+        <string>-o</string>
+        <string>ServerAliveInterval=30</string>
+        <string>-o</string>
+        <string>ServerAliveCountMax=3</string>
+        <string>-o</string>
+        <string>StrictHostKeyChecking=no</string>
+        <string>-R</string>
+        <string>7474:127.0.0.1:7474</string>
+        <string>x-nch@node-a</string>
+    </array>
+    <key>KeepAlive</key>
+    <true/>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>/Users/xnch/.xnch/gastown-tunnel.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/xnch/.xnch/gastown-tunnel.err</string>
+</dict>
+</plist>
+```
+
+3. Load it: `launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.xnch.gastown-tunnel.plist`
+
+4. Verify: `launchctl print gui/$(id -u)/com.xnch.gastown-tunnel` → `state = running`, pid present.
+
+5. Kill any old ephemeral tunnel: `pkill -f "ssh.*-R 7474"` — confirm only `autossh` remains.
+
+**Notes:**
+- `-M 0` disables autossh's own monitoring (SSH's `ServerAliveInterval`/`ServerAliveCountMax` handles liveness).
+- Adjust the autossh path for Intel Macs (`/usr/local/bin/autossh`).
+- Logs: `~/.xnch/gastown-tunnel.log` (stdout), `~/.xnch/gastown-tunnel.err` (stderr).
+
 ---
 
 **Reference:** Plist template at `clients/gastown/com.xnch.gastown.plist`.
