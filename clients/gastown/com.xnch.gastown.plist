@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.xnch.gastown</string>
+  <key>WorkingDirectory</key><string>/Users/USER/xnch-workstreams</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/usr/local/bin/gastown</string>
+    <string>serve</string>
+  </array>
+  <key>KeepAlive</key><true/>
+  <key>StandardOutPath</key><string>/Users/USER/xnch-agents/gastown.log</string>
+  <key>StandardErrorPath</key><string>/Users/USER/xnch-agents/gastown.err</string>
+</dict>
+</plist>
