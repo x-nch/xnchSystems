@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import time
 from pathlib import Path
 from typing import Any
@@ -180,7 +181,11 @@ class XnchCliClient:
         return data
 
     def mcp_headers(self, *, actor_role: str | None = None) -> dict[str, str]:
-        return {"X-Actor-Role": actor_role or self.config.actor}
+        headers = {"X-Actor-Role": actor_role or self.config.actor}
+        token = os.environ.get("XNCH_MCP_TOKEN") or os.environ.get("XNCH_MCP_HTTP_TOKEN") or ""
+        if token:
+            headers["X-MCP-Token"] = token
+        return headers
 
     def mcp_servers(self, *, actor_role: str | None = None) -> dict[str, Any]:
         resp = self._client.get("/mcp/servers", headers=self.mcp_headers(actor_role=actor_role))

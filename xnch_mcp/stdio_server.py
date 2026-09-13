@@ -20,11 +20,19 @@ def _base_url() -> str:
     return os.environ.get("XNCH_BASE_URL", "http://127.0.0.1:8001").rstrip("/")
 
 
+def _mcp_token() -> str:
+    return os.environ.get("XNCH_MCP_TOKEN") or os.environ.get("XNCH_MCP_HTTP_TOKEN") or ""
+
+
 def _headers() -> dict[str, str]:
-    return {
+    headers = {
         "X-Actor-Role": actor_from_env(),
         "Content-Type": "application/json",
     }
+    token = _mcp_token()
+    if token:
+        headers["X-MCP-Token"] = token
+    return headers
 
 
 async def _http_call(name: str, arguments: dict[str, Any]) -> Any:
