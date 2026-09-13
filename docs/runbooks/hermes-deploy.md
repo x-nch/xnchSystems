@@ -180,10 +180,12 @@ sudo systemctl daemon-reload
 
 - **Cron job:** `a2d6c649463c` (`xnch_health_probe`, `*/15 * * * *`)
 - **Manual trigger:** `hermes cron run a2d6c649463c` → `Ran now: succeeded` (exit 0).
-  ⚠ Direct `hermes cron run` spawns its own MCP child that does **not** inherit the daemon env: the
+  ✅ Resolved 2026-09-13 (Task 3): direct `hermes cron run` from a fresh shell 401s unless
+  `~/.xnch/hermes.env` is sourced **first** (`set -a; . ~/.xnch/hermes.env; set +a`). The pre-fix
   direct-run sessions `cron_a2d6c649463c_20260913_145840` / `_150154` executed `xnch_health` against the
-  control plane but got `HTTP 401 invalid or missing MCP token`. Sourcing `~/.xnch/hermes.env` in the
-  invoking shell first resolves this (root cause is hermes `${XNCH_MCP_TOKEN}` interpolation, not the control plane).
+  control plane but got `HTTP 401 invalid or missing MCP token` because the CLI-spawned MCP child does
+  **not** inherit the daemon env (root cause is hermes `${XNCH_MCP_TOKEN}` interpolation, not the control
+  plane). Env-sourced manual runs succeed — see the Task 3 sign-off below.
 - **Natural builtin trace — marker (b) PASS:** execution `a6ab12ff26db4c49a9af3cb004a7ad51`
   (builtin, 15:00:58Z), session `cron_a2d6c649463c_20260913_150059`:
   `tool mcp__xmcp__xnch_health completed (0.04s, 2233 chars)` → health OK (status ok, redis ok,
@@ -221,3 +223,32 @@ sudo systemctl daemon-reload
   carry trace_id but not session/run id; hermes-side `usage_audit.jsonl`/`agent.log` timestamps align exactly.
 - 401 direct-run sessions (14:58:44 / 15:01:57) produce **no** events.jsonl entry — auth rejects before the
   TOOL_CALL event is emitted, consistent with round-1 root-cause (missing token interpolation).
+
+### 2026-09-13 — Post-skills soak sign-off (Task 3, Gastown/Hermes integration)
+
+**Soak follow-up: DONE ✅ (2026-09-13)** — cron trace verified end-to-end after skills generation + daemon
+restart. Gates Phase C.
+
+- **Manual cron trigger (post-skills, env sourced first):** `hermes cron run a2d6c649463c` →
+  `Ran now: succeeded` (exit 0).
+  - Run `84ececb454434b11a8056561b9bcda66` (source=direct, 15:33:55Z), session
+    `cron_a2d6c649463c_20260913_153355`; `mcp__xmcp__xnch_health completed (0.04s, 2233 chars)` at 15:34:00 —
+    no 401 (token present, env sourced).
+- **Natural builtin tick (post-restart, skills dir live):** run `3748756c89174aa6ba4ba2be737701cf`
+  (source=builtin, 15:30:05Z), session `cron_a2d6c649463c_20260913_153006`; xnch_health at 15:30:10
+  (2233 chars). Both manual + builtin paths succeed with the skills config loaded.
+- **Control-plane trace** (node-a `~/.xnch/audit/events.jsonl`, `TOOL_CALL`):
+  - `2026-09-13T15:30:10 TOOL_CALL xnch_health actor=hermes tier=T0_READ trace=e6189eb1-a742-4a4e-b9d1-4dedeafacf83` ← builtin run `3748756c...`
+  - `2026-09-13T15:34:00 TOOL_CALL xnch_health actor=hermes tier=T0_READ trace=b5239231-1940-47b5-8b0d-958aff2c760a` ← manual run `84ececb4...`
+  - (Isolated `15:30:58` entry trace `949467bf-8b97-4be4-959c-c6b46977e372` has no matching cron session —
+    gateway self-health/liveness call, consistent with the earlier 15:01:45 isolate; not a run.)
+- **Skills check — SOFT finding:** `skills.external_dirs` = `/home/x-nch/.xnch/hermes-skills` (21
+  `.skill.md` files) is loaded in the restarted daemon (PID 9029; config verified post-restart), but **no
+  runtime evidence that the probe consumed a skill.** `xnch_health_probe` calls only `xnch_health`; hermes
+  logs no skill load/usage lines (agent.log, journalctl, `~/.hermes/logs/` all clean), and `hermes skills
+  list` enumerates only hub/builtin skills (53) — external-dir skills are not surfaced there, and `hermes
+  skills config` is interactive-only. Nothing proves or refutes consumption; recorded as a **follow-up
+  suggestion**, not a claim of proof (e.g., add a skill-triggering probe, or surface external-dir skill
+  state/metrics in hermes logs).
+- **Status: SOAK SIGN-OFF ✅ (2026-09-13)** — cron automation (manual + builtin) and control-plane trace
+  verified post-skills. Soft finding above is non-blocking and recorded honestly.
