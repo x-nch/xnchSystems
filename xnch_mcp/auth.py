@@ -8,7 +8,7 @@ from xnch_mcp.tiers import ToolTier
 _MAX_TIER: dict[TrustLevel, ToolTier] = {
     TrustLevel.UNTRUSTED: ToolTier.T0_READ,
     TrustLevel.EXTERNAL_AGENT: ToolTier.T0_READ,
-    TrustLevel.TRUSTED_AGENT: ToolTier.T1_WRITE,
+    TrustLevel.TRUSTED_AGENT: ToolTier.T2_EXEC,
     TrustLevel.OWNER: ToolTier.T2_EXEC,
     TrustLevel.SYSTEM: ToolTier.T2_EXEC,
 }
