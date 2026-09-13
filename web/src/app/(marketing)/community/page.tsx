@@ -12,11 +12,15 @@ export const metadata: Metadata = {
 const REPOS = [
   {
     name: "x-nch/xnch",
-    body: "Control plane: REST routes, auth, memory, policy, learning.",
+    body: "Control plane: REST routes, auth, memory, policy, learning, governance.",
   },
   {
     name: "x-nch/nexi",
     body: "Execution engine: FastAPI decision/policy pipeline.",
+  },
+  {
+    name: "x-nch/xnchSystems",
+    body: "Full stack: web, xnch-train, xnch_mcp, infra/no-k3s.",
   },
 ];
 
@@ -32,7 +36,9 @@ export default function CommunityPage() {
           </h1>
           <p className="mkt-muted mt-6 max-w-xl text-base leading-relaxed">
             Both core systems are open source. Roadmaps are RFCs, not
-            press releases — argue with us before we build it.          </p>
+            press releases — argue with us before we build it.
+            MCP bridge and capability sidecar ship in the stack.
+          </p>
         </div>
       </section>
 
@@ -78,13 +84,13 @@ export default function CommunityPage() {
                 <span className="mkt-mono text-[11px] text-[#C8FF00]">
                   03&nbsp;&nbsp;
                 </span>
-                Weekly office hours: bring a workflow, leave with a policy.
+                Weekly office hours: bring a workflow, leave with a hermes policy.
               </li>
             </ol>
             <pre className="mkt-card mkt-mono mt-8 overflow-x-auto p-4 text-[12px] leading-relaxed text-[#8B96AD]">
               <code>{`$ git submodule update --init --recursive
 $ pytest nexi/tests xnch/tests
-$ # approval queue is already running at :3000`}</code>
+$ # no-k3s systemd deploy on your nodes`}</code>
             </pre>
           </div>
         </div>

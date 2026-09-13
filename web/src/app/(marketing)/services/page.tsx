@@ -6,7 +6,7 @@ import { NoiseLayer } from "@/components/marketing/noise-layer";
 export const metadata: Metadata = {
   title: "Services",
   description:
-    "Deployment, policy engineering and operations retainers for xnch + nexi control planes.",
+    "Deploy and run xnch + nexi control planes — no-k3s systemd, hermes routing, MCP bridge, HITL approvals, memory service.",
 };
 
 const TIERS = [
@@ -14,8 +14,9 @@ const TIERS = [
     name: "Deployment & Integration",
     lead: "Your cluster, our runway.",
     points: [
-      "k3s / Docker / systemd install with your TLS and identity stack",
+      "No-k3s systemd install on your nodes with your TLS and identity stack",
       "Gateway wiring between xnch, nexi and your models",
+      "MCP bridge + capability sidecar wired into your trust tiers",
       "Backup, restore and upgrade runbooks handed over in writing",
     ],
   },
@@ -24,7 +25,7 @@ const TIERS = [
     lead: "Autonomy you can defend on paper.",
     points: [
       "Policy filters drafted from your risk register",
-      "Approval thresholds tuned against real HITL queue data",
+      "Hermes routing rules tuned against real HITL queue data",
       "Audit trails mapped to your compliance reviewers",
     ],
   },
@@ -47,11 +48,10 @@ export default function ServicesPage() {
         <div className="mx-auto max-w-5xl px-6 py-24">
           <p className="mkt-kicker mkt-mono">services</p>
           <h1 className="mkt-display mt-4 max-w-3xl text-4xl font-bold leading-tight md:text-5xl">
-            <GlitchText text="We ship calm automation." />
+            <GlitchText text="Sovereign, governed automation." />
           </h1>
           <p className="mkt-muted mt-6 max-w-xl text-base leading-relaxed">
-            Three ways to put xnch + nexi to work — from a first deployment to
-            an ongoing operations partnership.
+            No-k3s systemd deployments on your infrastructure, with hermes routing, MCP bridge, HITL approvals, memory-service.
           </p>
         </div>
       </section>
@@ -87,7 +87,7 @@ export default function ServicesPage() {
           </h2>
           <p className="mkt-muted mx-auto mt-3 max-w-lg text-base">
             Bring one workflow you don&apos;t trust yet. We&apos;ll show you how it looks
-            behind a policy gate.
+            behind a hermes policy gate with MCP bridge and memory-service.
           </p>
           <div className="mt-8 flex justify-center gap-4">
             <MktCTA href="/community">Reach the team</MktCTA>

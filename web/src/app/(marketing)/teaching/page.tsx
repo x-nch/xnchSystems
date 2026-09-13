@@ -6,7 +6,7 @@ import { NoiseLayer } from "@/components/marketing/noise-layer";
 export const metadata: Metadata = {
   title: "Teaching",
   description:
-    "Cohort-based courses on HITL systems design, agent operations and memory architecture — built on xnch + nexi.",
+    "Cohort-based courses on HITL systems design, hermes routing, MCP bridge, agent operations and memory architecture — built on xnch + nexi.",
 };
 
 const MODULES = [
@@ -18,15 +18,15 @@ const MODULES = [
   },
   {
     id: "MODULE 02",
-    name: "Policy-Gated Autonomy",
+    name: "Hermes Routing & Policy",
     weeks: "4 weeks",
-    body: "Write policy filters as code. Tune option scoring against your own risk register and audit the decisions.",
+    body: "Route actions through trust tiers and hermes policies. Write policy filters as code. Tune option scoring against your own risk register and audit the decisions.",
   },
   {
     id: "MODULE 03",
     name: "Memory Architecture",
     weeks: "3 weeks",
-    body: "Episodic, semantic and graph stores in one pipeline — consolidation, provenance, and revocation by design.",
+    body: "Episodic, semantic and graph stores in one pipeline. MCP bridge and memory-service: consolidation, provenance, and revocation by design.",
   },
   {
     id: "MODULE 04",
