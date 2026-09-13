@@ -103,13 +103,23 @@ python -m clients.cli xnch_memory_recall "workstream test completed"
 
 ## agent-runner retirement
 
-The legacy `com.xnch.agent-runner` LaunchAgent is retired once Gas Town is live.
+~~The legacy `com.xnch.agent-runner` LaunchAgent is retired once Gas Town is live.~~
+
+**Status: COMPLETE (2026-09-13)** — agent-runner retired; Gas Town is sole Mac-side workstream runner.
 
 ```bash
-launchctl unload ~/Library/LaunchAgents/com.xnch.agent-runner.plist
+launchctl bootout gui/$(id -u)/com.xnch.agent-runner 2>/dev/null
+rm -f ~/Library/LaunchAgents/com.xnch.agent-runner.plist
+launchctl list | grep -i agent-runner || echo "retired"
 ```
 
-Leave the retired plist in the tree until M5 cleanup.
+### M3.4 retirement evidence (2026-09-13)
+
+- **Workstream:** `ws-9f00536b`
+- **Bead:** `xnch-workstreams-dlv`
+- **Final state:** `running`
+- **Smoke test:** 201 on POST /api/workstreams; bead created; dispatch_error: null
+- **Note:** agent-runner plist removed. Gas Town bridge (`com.xnch.gastown`) + tunnel (`com.xnch.gastown-tunnel`) remain active as the sole dispatch path.
 
 ## Rollback
 
