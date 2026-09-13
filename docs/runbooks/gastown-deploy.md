@@ -5,11 +5,14 @@
 Gas Town (github.com/gastownhall/gastown) — install per the [official Gas Town docs](https://gastownhall.github.io/gastown).
 
 ```bash
-# Example install steps from upstream docs
-cargo install gastown
-# or: brew install gastown
-# Then init a workspace root:
-mkdir -p ~/xnch-workstreams
+# macOS (Homebrew) — also installs bd and dolt as dependencies:
+brew install gastown
+# Required runtime for gt up (Mayor, Witnesses, Refineries, polecats):
+brew install tmux
+# Initialize the Gas Town HQ at the workspace root:
+gt install ~/xnch-workstreams
+gt doctor --fix
+gt config default-agent opencode
 ```
 
 ## Environment setup
@@ -21,7 +24,7 @@ cat > ~/.xnch/gastown.env <<'EOF'
 XNCH_GASTOWN_URL=http://localhost:7474
 XNCH_GASTOWN_TOKEN=<your-mcp-token-here>
 EOF
-chown x-nch:x-nch ~/.xnch/gastown.env
+chown xnch:staff ~/.xnch/gastown.env
 chmod 600 ~/.xnch/gastown.env
 ```
 
@@ -57,8 +60,10 @@ tail -f ~/xnch-agents/gastown.log
 ```bash
 # Plist path and WorkingDirectory are correct
 cat ~/Library/LaunchAgents/com.xnch.gastown.plist
-# Binary exists at ProgramArguments[0]
-which gastown
+# Bridge script and WorkingDirectory exist
+ls -la /Users/USER/xnchSystems/clients/gastown/serve.py
+# gt runtime available
+which gt
 ```
 
 ## Tailscale reachability (from node-a)

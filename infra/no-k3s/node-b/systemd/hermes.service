@@ -6,8 +6,11 @@ After=network.target
 Type=simple
 User=x-nch
 WorkingDirectory=/home/x-nch
+Environment=PATH=/home/x-nch/.local/bin:/home/x-nch/.hermes/hermes-agent/venv/bin:/usr/local/bin:/usr/bin:/bin
 EnvironmentFile=/home/x-nch/.xnch/hermes.env
-ExecStart=/usr/bin/env hermes agent --daemon
+# 0.19.0 renamed the daemon subcommand: `hermes agent --daemon` does not exist.
+# The resident `hermes gateway run` process is also what drives the cron scheduler.
+ExecStart=/usr/bin/env hermes gateway run --accept-hooks
 Restart=on-failure
 RestartSec=10
 StandardOutput=journal

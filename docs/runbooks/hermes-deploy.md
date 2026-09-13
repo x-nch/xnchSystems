@@ -14,19 +14,69 @@ mkdir -p /home/x-nch/.xnch
 
 ## Environment setup
 
-1. Create the env file with MCP bridge credentials:
+1. Create the env file with the MCP bridge credentials. Hermes cannot talk to the
+   gateway's custom JSON `/mcp` router directly — its MCP client speaks the MCP
+   protocol (stdio/streamable-HTTP). The transport is the **stdio bridge**
+   `xnch_mcp/stdio_server.py` (run via `python -m xnch_mcp`), which forwards to
+   the gateway HTTP `/mcp` endpoints. This env file is loaded into the daemon by
+   the unit's `EnvironmentFile=` and referenced from the hermes `mcp_servers`
+   config via `${VAR}` interpolation:
 
 ```bash
 cat > /home/x-nch/.xnch/hermes.env <<'EOF'
 XNCH_MCP_TOKEN=<your-mcp-token-here>
-X-Actor-Role=hermes
+XNCH_ACTOR=hermes
+XNCH_BASE_URL=http://192.168.50.1:8001
 EOF
 chown x-nch:x-nch /home/x-nch/.xnch/hermes.env
 chmod 600 /home/x-nch/.xnch/hermes.env
 ```
 
 - `XNCH_MCP_TOKEN` must match `XNCH_MCP_HTTP_TOKEN` on the xnch gateway (set in `xnch/config.py`).
-- `X-Actor-Role: hermes` signals the HTTP router to enforce T1-tier limits.
+- `XNCH_ACTOR=hermes` is sent as `X-Actor-Role: hermes` by the stdio bridge and
+  signals the HTTP router to enforce T1-tier limits (only T0+T1 tools visible: 6).
+- `XNCH_BASE_URL` is the gateway origin reachable from node-b (Tailscale).
+- `X-Actor-Role` as a *header name* is obsolete — the stdio bridge maps
+  `XNCH_ACTOR` → `X-Actor-Role` itself.
+
+### Hermes-side MCP wiring (0.19.0)
+
+1. Wrapper so the stdio server runs from the repo (module + `xnch.*` imports need
+   the repo on `sys.path`; hermes passes no `cwd`):
+
+```bash
+mkdir -p /home/x-nch/.bin
+cat > /home/x-nch/.bin/xnch-mcp.sh <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+cd /home/x-nch/xnchSystems
+exec ./.venv/bin/python -m xnch_mcp "$@"
+EOF
+chmod 755 /home/x-nch/.bin/xnch-mcp.sh
+```
+
+2. Register the server in `~/.hermes/config.yaml` (top-level key; hermes filters
+   stdio env to the `env:` block + a safe baseline, so creds must be explicit):
+
+```yaml
+mcp_servers:
+  xmcp:
+    command: "/home/x-nch/.bin/xnch-mcp.sh"
+    env:
+      XNCH_BASE_URL: "http://192.168.50.1:8001"
+      XNCH_ACTOR: "hermes"
+      XNCH_MCP_TOKEN: "${XNCH_MCP_TOKEN}"
+```
+
+   `${XNCH_MCP_TOKEN}` is interpolated from the daemon's environment (the unit's
+   `EnvironmentFile`) via hermes's `get_secret`. Validate with
+   `hermes mcp test xmcp` (expect: Connected, 6 tools).
+
+3. Model provider: no provider is configured upstream. Point hermes at node-b's
+   local vLLM (`provider: "vllm"` with `base_url`) — hermes hard-requires a 64K
+   context window, so set `context_length: 65536` (vLLM serves `max_model_len`
+   32768; long sessions may hit the ceiling — raise `--max-model-len` upstream
+   if VRAM allows).
 
 2. (Optional) Install Python deps if using the Python helper:
 
@@ -55,6 +105,12 @@ ls /home/x-nch/.xnch/hermes-skills/
 ```
 
 ## systemd install
+
+> **0.19.0 note**: `hermes agent --daemon` no longer exists. The resident process
+> is `hermes gateway run` (foreground), which is also what drives the cron
+> scheduler ("Gateway is not running — cron jobs will NOT fire"). The repo unit
+> already reflects this, plus an `Environment=PATH=` override so `env hermes`
+> resolves the binary outside the interactive shell's PATH.
 
 1. Copy the unit file and enable:
 
