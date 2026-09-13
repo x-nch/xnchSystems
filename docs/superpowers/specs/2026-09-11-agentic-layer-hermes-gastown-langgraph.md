@@ -1,8 +1,7 @@
 # Agentic Layer — Hermes + Gas Town + LangGraph Integration Design
 
 **Date:** 2026-09-11
-**Status:** Approved direction — **sequenced AFTER the micro-component split**
-**Depends on:** `2026-09-11-micro-component-split.md` Phase 1 + Phase 2 both complete and verified in prod (Phase 1 Task 6 ops gate, Phase 2 Task 9 ops gate). Do not start M1 before those are confirmed.
+**Status:** **Implemented** — M1–M5 complete; micro-component split (Phase 1 + Phase 2) verified in prod. All excluded subsystems deleted; governance spine intact. Open Questions 1–2 resolved per M2/M3 decisions.
 **Approach:** Federated by tempo — nexi+LangGraph (interactive), Hermes (long-horizon autonomy), Gas Town (burst workstreams), all governed through one MCP choke point.
 
 ---
@@ -252,7 +251,10 @@ TRAINING     governed trajectories → Hermes MLOps export (ShareGPT) → xnch-t
 | Trajectory quality for QLoRA | Unknown | governed-tool trajectories are clean by construction; validate with xnch-train Phase 0 gates |
 
 ## 11. Open Questions
-1. **Hermes→gateway auth mechanism** (static gateway token vs signed short-lived tokens) — decide at M2.2; must present actor context.
-2. **Gas Town reachability** — gateway→Mac direct POST over tailscale (recommended) vs Mac-side polling; decide at M3.1.
+
+**All resolved:**
+
+1. **Hermes→gateway auth mechanism** — Resolved at M2.2. Uses `XNCH_SERVICE_KEY` + `X-Gateway-Token` header flow. Hermes runs as `TRUSTED_AGENT` actor; every governed action flows through the gateway MCP bridge with actor context bound to the `hermes` identity. See `xnch/security/gateway_token.py`.
+2. **Gas Town reachability** — Resolved at M3.1. Gateway→Mac direct POST over tailscale is the primary path; `xnch_workstream_spawn` POSTs to Gas Town's HTTP API on the Mac. Mac-side polling is the documented fallback for when the Mac is asleep.
 3. External channel (Telegram) — deferred; platform-only default is reversible.
-4. Trajectory export cadence + filter criteria into `xnch-train` — decide after M2 soak produces real volumes.
+4. Trajectory export cadence + filter criteria into `xnch-train` — deferred; cadence TBD after M2 soak produces real volumes.
