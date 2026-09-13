@@ -117,6 +117,23 @@ Leave the retired plist in the tree until M5 cleanup.
 launchctl unload ~/Library/LaunchAgents/com.xnch.gastown.plist
 ```
 
+## Dispatch chain verified (2026-09-13)
+
+Full hermes → gateway (node-a:8001) → bridge (Mac:7474) → bead → convoy → sling → running chain verified end-to-end.
+
+- **Workstream:** `ws-9e5d5408`
+- **Bead:** `xnch-workstreams-24a`
+- **Final state:** `running`
+- **Bridge log evidence:** `22:36:42 POST /api/workstreams 201`
+- **Old token (tail ...Y4bcs):** 401 at both gateway and bridge
+- **New token (tail ...c604):** 200 at both hops
+
+### Fixes applied this round
+1. **node-a gateway env** — appended `XNCH_GASTOWN_URL=http://127.0.0.1:7474` + `XNCH_GASTOWN_TOKEN` to `~/.xnch/xnch.env`; restarted `xnch.service`.
+2. **SSH reverse tunnel** — `ssh -fN -R 7474:127.0.0.1:7474 x-nch@node-a` makes node-a's localhost:7474 forward to the Mac's loopback-only bridge.
+3. **Bridge launchd PATH** — added `EnvironmentVariables.PATH` to `com.xnch.gastown.plist` so `gt`/`bd` are found.
+4. **`_gt_exists()` guard** — changed from `subprocess.run(["gt","status"])` (hangs under non-tty) to `shutil.which("gt")`.
+
 ---
 
 **Reference:** Plist template at `clients/gastown/com.xnch.gastown.plist`.
