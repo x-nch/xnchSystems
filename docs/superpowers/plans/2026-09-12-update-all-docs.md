@@ -94,13 +94,13 @@ Update every documentation file in the repo to reflect Phase 1 consolidation (ca
 - [ ] `docs/superpowers/plans/2026-09-12-micro-split-and-agentic-layer-execution.md` — verify Phase 1+2 gates satisfied for M1 start
 
 ## Success Criteria
-- All `python -m cli` references replaced with `python -m clients.cli` (verified `cli --help` works)
-- No remaining references to `exec-agent/` or `fs_read_agent/` packages
-- All env var references use new Phase 1/Phase 2 vars
-- Architecture overview matches actual deployed state
-- All runbooks reflect Phase 1 cutover and Phase 2 remote mode
-- 875/875 tests pass (already verified)
-- Plan file created and all tasks either completed or deferred with rationale
+- [x] All `python -m cli` references replaced with `python -m clients.cli` (verified `cli --help` works)
+- [x] No remaining references to `exec-agent/` or `fs_read_agent/` packages (only historical/migration docs retained)
+- [x] All env var references use new Phase 1/Phase 2 vars
+- [x] Architecture overview matches actual deployed state
+- [x] All runbooks reflect Phase 1 cutover and Phase 2 remote mode
+- [x] 878/878 tests pass (already verified)
+- [x] Plan file created and all tasks either completed or deferred with rationale
 
 ## Notes
 - This plan touches ~70+ markdown files across 9 categories

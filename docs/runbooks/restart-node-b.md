@@ -37,8 +37,7 @@ curl -sf http://127.0.0.1:8090/health   # {"status":"ok","capabilities":"exec,fs
 journalctl -u xnch-capability.service -n 20 --no-pager  # on failure
 ```
 
-Reads `XNCH_CAPABILITY_TOKEN` from `/home/x-nch/.xnch/nexi.env`. Replaces the
-legacy `exec-agent` (:8004) and `fs-read-agent` (:8003) services.
+Reads `XNCH_CAPABILITY_TOKEN` from `/home/x-nch/.xnch/nexi.env`. Replaces the legacy sidecar services (exec-agent :8004 + fs-read-agent :8003).
 
 ## Full Node B bounce (incl. wake from sleep)
 

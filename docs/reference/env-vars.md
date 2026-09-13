@@ -64,7 +64,7 @@ Secrets below are placeholders; never commit real values.
 |---|---|---|
 | `XNCH_CAPABILITY_BIND` | `127.0.0.1` | sidecar bind address |
 | `XNCH_CAPABILITY_PORT` | `8090` | sidecar port (node-b) |
-| `XNCH_CAPABILITY_TOKEN` | `""` | same value as existing `XNCH_EXEC_AGENT_TOKEN` |
+| `XNCH_CAPABILITY_TOKEN` | `""` | same value as existing capability token |
 | `XNCH_CAPABILITY_NODE_B_URL` | `http://192.168.50.2:8090` | e.g. `http://192.168.50.2:8090`; exec+fs remote clients use it |
 | `XNCH_FS_POLICY_PATH` | `~/.xnch/fs-policy.yaml` | read-only FS policy |
 | `XNCH_FS_LOCAL_HOST` | `node-a` | node this process serves reads for |
