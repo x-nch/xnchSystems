@@ -780,7 +780,7 @@ git commit -m "feat(mcp): xnch_workstream_spawn (T2) + xnch_workstream_status (T
 
 - [ ] **Step 1: USER OPS — install Gas Town on the Mac** per gastownhall/gastown docs. Init a workspace root (e.g. `~/xnch-workstreams/`). Verify the HTTP API responds; **record the real spawn/status paths and fix `GastownClient` path constants if they differ** (add a regression test with the confirmed paths).
 
-- [ ] **Step 2: launchd plist template** (mirror the retired agent-runner plist: REPO placeholder, KeepAlive):
+- [x] **Step 2: launchd plist template** (mirror the retired agent-runner plist: REPO placeholder, KeepAlive):
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
@@ -802,11 +802,11 @@ git commit -m "feat(mcp): xnch_workstream_spawn (T2) + xnch_workstream_status (T
 ```
 (Adjust `ProgramArguments` to the installed binary's serve command.)
 
-- [ ] **Step 3: Runbook** — install, plist load, tailscale reachability check from node-a (`curl http://<mac>:<port>/api/workstreams`), token config, end-to-end: `python -m clients.cli` (or curl) → `xnch_workstream_spawn` as `operator` → workstream appears on Mac → `xnch_workstream_status` shows it → terminal outcome findable via `xnch_memory_recall`.
+- [x] **Step 3: Runbook** — install, plist load, tailscale reachability check from node-a (`curl http://<mac>:<port>/api/workstreams`), token config, end-to-end: `python -m clients.cli` (or curl) → `xnch_workstream_spawn` as `operator` → workstream appears on Mac → `xnch_workstream_status` shows it → terminal outcome findable via `xnch_memory_recall`.
 
 - [ ] **Step 4: USER OPS — retire agent-runner**: `launchctl unload ~/Library/LaunchAgents/com.xnch.agent-runner.plist`; leave code in tree until M5.
 
-- [ ] **Step 5: Commit** — `git add clients/gastown/ docs/runbooks/gastown-deploy.md && git commit -m "feat(gastown): launchd template + deploy runbook; agent-runner retired"`
+- [x] **Step 5: Commit** — `git add clients/gastown/ docs/runbooks/gastown-deploy.md && git commit -m "feat(gastown): launchd template + deploy runbook; agent-runner retired"`
 
 ---
 
@@ -818,7 +818,7 @@ git commit -m "feat(mcp): xnch_workstream_spawn (T2) + xnch_workstream_status (T
 - Modify: `xnch/main.py` (LangGraph guard from Phase 2 Task 8 Step 2)
 - Test: `xnch/tests/test_langgraph_remote_mode.py` (new)
 
-- [ ] **Step 1: Failing test**
+- [x] **Step 1: Failing test**
 
 ```python
 """LangGraph runtime may run with remote-memory backends (Phase 2 refs)."""
@@ -843,11 +843,11 @@ def test_no_embedded_only_guard() -> None:
 
 Additionally run the existing LangGraph tests in remote mode (they use injected checkpoints/stores — no change needed): `pytest xnch/tests/test_pipeline_hitl.py xnch/tests/test_hitl.py -q` green.
 
-- [ ] **Step 2: Implement** — in `xnch/main.py`, delete the `elif settings.langgraph_pipeline:` warning branch and the `and settings.memory_embedded` condition so the guard is simply `if settings.langgraph_pipeline:` (runtime gets `s.memory` backends: `working_memory`, `pg_episodic`, `graph_store`, `relationship_store`, `sensory_buffer` — update the `stores=` dict to use `s.memory.*` attributes).
+- [x] **Step 2: Implement** — in `xnch/main.py`, delete the `elif settings.langgraph_pipeline:` warning branch and the `and settings.memory_embedded` condition so the guard is simply `if settings.langgraph_pipeline:` (runtime gets `s.memory` backends: `working_memory`, `pg_episodic`, `graph_store`, `relationship_store`, `sensory_buffer` — update the `stores=` dict to use `s.memory.*` attributes).
 
-- [ ] **Step 3: Tests pass** → new test PASS; full `pytest xnch/tests -q` green.
+- [x] **Step 3: Tests pass** → new test PASS; full `pytest xnch/tests -q` green.
 
-- [ ] **Step 4: Commit (submodule)** — `git -C xnch add xnch/main.py xnch/tests/test_langgraph_remote_mode.py && git -C xnch commit -m "feat: langgraph runtime runs with remote memory backends"`
+- [x] **Step 4: Commit (submodule)** — `git -C xnch add xnch/main.py xnch/tests/test_langgraph_remote_mode.py && git -C xnch commit -m "feat: langgraph runtime runs with remote memory backends"`
 
 ### Task 4.2: `workstream_supervisor` graph
 
