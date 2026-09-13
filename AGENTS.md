@@ -5,8 +5,9 @@
 - `web/` — Next.js muse UI (chat, HITL approvals, drag-and-drop workflow canvas)
 - `xnch_mcp/` — MCP server + federated bridge (`xnch_*` native tools, `crg_`/`am_`/`doc_` passthroughs)
 - `xnch-train/` — training data pipeline + eval harness (Phase 0 gates; Phase 1 QLoRA cycle)
-- `clients/agent-runner/` — stdlib dispatch runner (Mac-side opencode runner pulling from xnch) + launchd template
 - `clients/cli/` — human CLI
+- `clients/gastown/` — Mac-side Gas Town host (launchd `com.xnch.gastown.plist`, git-backed workspaces)
+- `infra/no-k3s/node-b/` — Hermes daemon unit (`hermes.service`) on node-b; scheduling/autonomy lives in Hermes
 - `scraper/` — tiered web scraper service (Playwright; pgvector store)
 - `infra/` — no-k3s deployment: systemd units, docker-compose, observability stack, wake/start scripts
 - `docs/` — architecture docs, runbooks, guides, reference
@@ -23,7 +24,9 @@
 | Runtime episodic memory (L0–L3) | `xnch/memory/` | gateway routes + `xnch_memory_*` tools; routing decided by `~/.xnch/memory-routing.yaml` (`xnch/memory/routing_policy.py`) |
 | Curated cross-session knowledge | agentmemory (:3111) | `am_*` MCP tools ONLY; `xnch_memory_store_note` is deprecated for actors in `deprecate_store_note_for` (enforced in `xnch_mcp/handlers/memory.py`) |
 | Governed exec + read-only fs | `capability_agent/` (sidecar) + `xnch_mcp/exec|fs` (backends + dispatch) | MCP exec/fs tools → `ExecRunService`/`FsReadService` → sidecar on node-b :8090 |
-| Mac-side dispatch worker | `clients/agent-runner/` | launchd; claims from xnch dispatch queue |
+| Mac-side workstreams | `clients/gastown/` | launchd; git-backed workspaces; `xnch_workstream_*` tools |
+| Scheduling/autonomy | Hermes on `infra/no-k3s/node-b/` | native automations; every governed action flows through `xnch_*`/`am_*` MCP tools |
+| Decision/supervisor graphs | `xnch/agents/` LangGraph | `supervisor_graph.py`; HITL via native `interrupt()` |
 | Human CLI | `clients/cli/` | `python -m clients.cli` / `xnch-cli` |
 
 **Entrypoints:**
