@@ -52,13 +52,14 @@ async def _proactivity_enabled() -> bool:
 async def _memory_surface(app: Any, _actor: ActorContext, _args: dict[str, Any]) -> list[dict[str, Any]]:
     if not _proactivity_enabled():
         return []
-    if not hasattr(app, "_nexi_proactivity"):
-        from nexi.proactivity.engine import ProactivityEngine
-
-        redis = app.kv_cache.redis_client
-        app._nexi_proactivity = ProactivityEngine(redis)
-    events = await app._nexi_proactivity.get_pending()
-    return [e.to_dict() if hasattr(e, "to_dict") else e for e in events]
+    pg = getattr(app, "pg_episodic", None)
+    if pg is None:
+        return []
+    events: list[dict[str, Any]] = []
+    for type_ in ("workstream", "automation"):
+        rows = await pg.fetch_by_type(type_, limit=20)
+        events.extend(rows)
+    return events
 
 
 async def _memory_store_note(app: Any, actor: ActorContext, args: dict[str, Any]) -> dict[str, Any]:

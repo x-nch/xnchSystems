@@ -11,9 +11,18 @@ from xnch_mcp.handlers import memory as mem
 
 @pytest.fixture
 def app(monkeypatch: pytest.MonkeyPatch):
-    app = SimpleNamespace(kv_cache=SimpleNamespace(redis_client=None))
+    app = SimpleNamespace(pg_episodic=_Pg())
     monkeypatch.setattr(mem, "_proactivity_enabled", lambda: True)
     return app
+
+
+class _Pg:
+    def __init__(self) -> None:
+        self.calls: list[tuple[str, int]] = []
+
+    async def fetch_by_type(self, type_: str, limit: int = 20) -> list[dict]:
+        self.calls.append((type_, limit))
+        return [{"type": type_, "raw_text": f"{type_} event"}]
 
 
 async def test_surface_disabled_returns_empty(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -22,22 +31,23 @@ async def test_surface_disabled_returns_empty(monkeypatch: pytest.MonkeyPatch) -
     assert result == []
 
 
-async def test_surface_enabled_uses_engine(app, monkeypatch: pytest.MonkeyPatch) -> None:
-    class _Engine:
-        async def get_pending(self) -> list[dict]:
-            return [{"type": "test"}]
+async def test_surface_enabled_reads_agent_activity(app, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(mem, "_proactivity_enabled", lambda: True)
+    result = await mem._memory_surface(app, None, {})
+    assert result == [
+        {"type": "workstream", "raw_text": "workstream event"},
+        {"type": "automation", "raw_text": "automation event"},
+    ]
+
+
+async def test_surface_reads_recent_agent_activity(monkeypatch: pytest.MonkeyPatch) -> None:
+    class _Pg:
+        async def fetch_by_type(self, type_, limit=20):
+            if type_ == "workstream":
+                return [{"raw_text": "workstream ws-1 completed", "type": "workstream"}]
+            return []
 
     monkeypatch.setattr(mem, "_proactivity_enabled", lambda: True)
-
-    created: list = []
-
-    class _EngineFactory:
-        def __call__(self, redis) -> _Engine:
-            created.append(redis)
-            return _Engine()
-
-    import nexi.proactivity.engine as pe
-
-    monkeypatch.setattr(pe, "ProactivityEngine", _EngineFactory())
+    app = SimpleNamespace(pg_episodic=_Pg())
     result = await mem._memory_surface(app, None, {})
-    assert result == [{"type": "test"}]
+    assert result and result[0]["raw_text"] == "workstream ws-1 completed"
