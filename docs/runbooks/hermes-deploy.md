@@ -171,3 +171,34 @@ sudo systemctl daemon-reload
 ---
 
 **Reference:** Unit file at `infra/no-k3s/node-b/systemd/hermes.service`.
+
+---
+
+## Soak Follow-up
+
+### 2026-09-13 — DecisionLedger soak trace (Task 1, Gastown/Hermes integration)
+
+- **Cron job:** `a2d6c649463c` (`xnch_health_probe`, `*/15 * * * *`)
+- **Manual trigger:** `hermes cron run a2d6c649463c` → `Ran now: succeeded` (exit 0).
+  ⚠ Direct `hermes cron run` spawns its own MCP child that does **not** inherit the daemon env: the
+  direct-run sessions `cron_a2d6c649463c_20260913_145840` / `_150154` executed `xnch_health` against the
+  control plane but got `HTTP 401 invalid or missing MCP token`. Sourcing `~/.xnch/hermes.env` in the
+  invoking shell first resolves this (root cause is hermes `${XNCH_MCP_TOKEN}` interpolation, not the control plane).
+- **Natural builtin trace — marker (b) PASS:** execution `a6ab12ff26db4c49a9af3cb004a7ad51`
+  (builtin, 15:00:58Z), session `cron_a2d6c649463c_20260913_150059`:
+  `tool mcp__xmcp__xnch_health completed (0.04s, 2233 chars)` → health OK (status ok, redis ok,
+  mcp_bridge.enabled=true, tool_count=76).
+- **Marker (a) recall:** the `xnch_health_probe` prompt does not include a recall step, so no recall
+  call appears in its natural trace. A one-shot hermes automation driven through the same xmcp bridge
+  (15:06–15:07Z, env sourced) executed `xnch_memory_recall` (query "hermes health probe", top_k 2 → 0 results)
+  then `xnch_health` (ok) in one turn — recall → tool-exec cycle confirmed end-to-end.
+- **T2 403:** not observed in this window (optional; T1-tier denial for `xnch_memory_store_note` already
+  verified 2026-09-12).
+- **Status: PASS (with concerns)**
+- **Concerns:**
+  - Hermes daemon runs as a manual process (PID 1203, v0.21.2, `hermes gateway run --accept-hooks`), **not**
+    under a systemd unit on node-b — no `hermes.service` present in `systemctl --user`.
+  - 14:50:58 builtin run failed with `APIConnectionError` to vLLM `localhost:8082` (model mid-boot after the
+    ~14:50 restart); all later runs OK.
+  - Control-plane `decisions.jsonl` lives on the 192.168.50.1 host (unreachable from this Mac's 192.168.1.x
+    network); trace evidence collected hermes-side.
