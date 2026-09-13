@@ -72,16 +72,8 @@ def _token() -> str | None:
 
 
 def _gt_exists() -> bool:
-    try:
-        r = subprocess.run(
-            [_GT, "status"],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            timeout=5,
-        )
-        return r.returncode == 0
-    except Exception:
-        return False
+    import shutil
+    return shutil.which(_GT) is not None
 
 
 def _run(cmd: list[str], timeout: int = 30) -> tuple[int, str, str]:
