@@ -200,5 +200,24 @@ sudo systemctl daemon-reload
     under a systemd unit on node-b — no `hermes.service` present in `systemctl --user`.
   - 14:50:58 builtin run failed with `APIConnectionError` to vLLM `localhost:8082` (model mid-boot after the
     ~14:50 restart); all later runs OK.
-  - Control-plane `decisions.jsonl` lives on the 192.168.50.1 host (unreachable from this Mac's 192.168.1.x
-    network); trace evidence collected hermes-side.
+  - Direct `hermes cron run` from a fresh shell 401s unless `~/.xnch/hermes.env` is sourced (see above).
+
+**Control-plane ledger — verified directly (Fix round 1):**
+- The gateway host is **node-a** (hostname `gate7`), dual-homed: `192.168.1.10` from the Mac, `192.168.50.1`
+  from node-b. Route used: `ssh x-nch@node-a` (192.168.1.10) from this Mac — no jump needed.
+- The nexi-pipeline `~/.xnch/audit/decisions.jsonl` on node-a has **no hermes entries** (stale since
+  `2026-09-13T06:06:50`): it records only nexi decision-pipeline selections. The control-plane **automation
+  trace lives in `~/.xnch/audit/events.jsonl`** (`TOOL_CALL` events with `trace_id`), which recorded every
+  hermes run below.
+- **Builtin prober run** (execution `a6ab12ff26db4c49a9af3cb004a7ad51`, session
+  `cron_a2d6c649463c_20260913_150059`):
+  `2026-09-13T15:01:02 TOOL_CALL xnch_health actor=hermes tier=T0_READ trace=5a3a3152-2e06-4bd6-9363-a59ffadf58cb`
+- **One-shot recall→tool cycle** (15:07Z, env sourced):
+  `2026-09-13T15:07:24 TOOL_CALL xnch_memory_recall actor=hermes tier=T0_READ trace=1520e40a-7fc1-46b5-94b7-0b4d29d79a73`
+  `2026-09-13T15:07:25 TOOL_CALL xnch_health actor=hermes tier=T0_READ trace=5e111eb4-598f-43a8-8caa-7c5eea6387b1`
+- Corroboration — the natural `*/15` tick keeps recording: `2026-09-13T15:16:03 TOOL_CALL xnch_health
+  actor=hermes tier=T0_READ trace=d39b92a5-8ea1-4e5d-9516-077cf11733b9` (builtin run
+  `03d4e2a25f6b491a842ef25d8c7c5581`, 15:15:59Z). Run→span mapping is by timestamp: events.jsonl entries
+  carry trace_id but not session/run id; hermes-side `usage_audit.jsonl`/`agent.log` timestamps align exactly.
+- 401 direct-run sessions (14:58:44 / 15:01:57) produce **no** events.jsonl entry — auth rejects before the
+  TOOL_CALL event is emitted, consistent with round-1 root-cause (missing token interpolation).
