@@ -20,7 +20,7 @@ class GastownClient:
         self,
         base_url: str,
         token: str,
-        timeout: float = 15.0,
+        timeout: float = 30.0,
         transport: httpx.AsyncTransport | None = None,
     ) -> None:
         self.base_url = base_url.rstrip("/")
