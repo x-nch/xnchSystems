@@ -7,6 +7,7 @@ NODE_A="${NODE_A:-localhost}"
 NODE_B="${NODE_B:-192.168.50.2}"
 AUTH_SECRET="${XNCH_AUTH_SECRET:-$(grep '^XNCH_AUTH_SECRET=' ~/.xnch/xnch.env | cut -d= -f2)}"
 LITELLM_KEY="${LITELLM_MASTER_KEY:-$(grep '^LITELLM_MASTER_KEY=' ~/.xnch/xnch.env 2>/dev/null | cut -d= -f2 || grep '^LITELLM_MASTER_KEY=' ~/xnchSystems/infra/no-k3s/node-a/.env | cut -d= -f2)}"
+MCP_TOKEN="${XNCH_MCP_HTTP_TOKEN:-$(grep '^XNCH_MCP_HTTP_TOKEN=' ~/.xnch/xnch.env 2>/dev/null | cut -d= -f2)}"
 
 TOKEN=$(AUTH_SECRET="$AUTH_SECRET" python3 -c "
 import jwt, time, os
@@ -50,6 +51,7 @@ STORE_RESULT=$(curl -sf -X POST "http://${NODE_A}:8001/mcp/call" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer ${TOKEN}" \
   -H "X-Actor-Role: operator" \
+  -H "X-MCP-Token: ${MCP_TOKEN}" \
   -d '{"name":"xnch_scraper_store","arguments":{"urls":["https://example.com"],"tier":"static"}}' 2>&1) || true
 echo "$STORE_RESULT" | grep -q '"chunks_stored"' && pass "scraper store" || fail "scraper store: $STORE_RESULT"
 
@@ -57,6 +59,7 @@ QUERY_RESULT=$(curl -sf -X POST "http://${NODE_A}:8001/mcp/call" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer ${TOKEN}" \
   -H "X-Actor-Role: operator" \
+  -H "X-MCP-Token: ${MCP_TOKEN}" \
   -d '{"name":"xnch_scraper_query","arguments":{"query":"example domain","n_results":3}}' 2>&1) || true
 echo "$QUERY_RESULT" | grep -q '"results"' && pass "scraper query" || fail "scraper query: $QUERY_RESULT"
 
