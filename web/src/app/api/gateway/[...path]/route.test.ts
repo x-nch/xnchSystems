@@ -4,6 +4,7 @@ import { isGatedGatewayPath } from "@/lib/gateway/gate";
 describe("isGatedGatewayPath", () => {
   it("gates writes to protected prefixes", () => {
     expect(isGatedGatewayPath(["agents", "runs"], "POST")).toBe(true);
+    expect(isGatedGatewayPath(["agents", "dispatch"], "POST")).toBe(true);
     expect(isGatedGatewayPath(["approvals", "x", "decide"], "POST")).toBe(true);
     expect(isGatedGatewayPath(["workflows"], "DELETE")).toBe(true);
   });
