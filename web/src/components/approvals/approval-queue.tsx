@@ -27,6 +27,7 @@ export function ApprovalQueue() {
   const serverDecide = useApprovalDecision();
   const [filter, setFilter] = useState<Filter>("pending");
   const [showToast, setShowToast] = useState(false);
+  const [decideError, setDecideError] = useState<string | null>(null);
 
   // P4: gateway-first with local fallback while offline
   const items: HitlRequest[] = useMemo(() => {
@@ -40,7 +41,14 @@ export function ApprovalQueue() {
   /** Route decisions to the API when online; local store otherwise. */
   const decideRow = (id: string, action: "approve" | "reject", note?: string) => {
     if (online) {
-      void serverDecide.mutateAsync({ id, body: { decision: action, note } });
+      void serverDecide
+        .mutateAsync({ id, body: { decision: action, note } })
+        .catch((err: unknown) => {
+          const msg =
+            err instanceof Error && err.message ? err.message : "Decision failed — state rolled back";
+          setDecideError(msg);
+          setTimeout(() => setDecideError(null), 8000);
+        });
       return;
     }
     useApprovalStore.getState().decide(id, action, note);
@@ -181,6 +189,15 @@ export function ApprovalQueue() {
         <div className="flex items-center gap-2 border-b border-[var(--state-degraded)] bg-warning/10 px-4 py-2 text-xs text-warning">
           <span className="h-0 w-0 border-x-[5px] border-b-[8px] border-x-transparent border-b-[var(--state-degraded)]" aria-hidden />
           Gateway degraded — actions may be slow.
+        </div>
+      )}
+      {decideError && (
+        <div
+          role="alert"
+          className="flex items-center gap-2 border-b border-[var(--state-destructive)] bg-destructive/10 px-4 py-2 text-xs text-destructive"
+        >
+          <span className="h-2 w-2 rounded-sm bg-[var(--state-destructive)]" aria-hidden />
+          {decideError}
         </div>
       )}
 
