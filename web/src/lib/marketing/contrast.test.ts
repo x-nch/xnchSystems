@@ -21,6 +21,13 @@ const FG = "#F2F4F7";
 const MUTED = "#8B96AD";
 const ACCENT = "#C8FF00";
 
+// Operator semantic text colors (globals.css) surfaced inside the markdown
+// noise treatment (badges, status lines) — verified against the same
+// worst-case composite background.
+const SUCCESS = "#3DD598";
+const WARNING = "#FFC857";
+const DESTRUCTIVE = "#FF6B6B";
+
 describe("color math sanity", () => {
   it("pure black/white spans the full ratio", () => {
     expect(contrastRatio({ r: 0, g: 0, b: 0 }, { r: 1, g: 1, b: 1 })).toBeCloseTo(21, 1);
@@ -65,6 +72,12 @@ describe("noise-composited backgrounds stay darker than AA requires", () => {
     ["muted text on textured card", MUTED, worstCard, 4.5],
     ["accent headline on textured base", ACCENT, worstBase, 4.5],
     ["accent kicker on textured card", ACCENT, worstCard, 4.5],
+    ["success text on textured base", SUCCESS, worstBase, 4.5],
+    ["success text on textured card", SUCCESS, worstCard, 4.5],
+    ["warning text on textured base", WARNING, worstBase, 4.5],
+    ["warning text on textured card", WARNING, worstCard, 4.5],
+    ["destructive text on textured base", DESTRUCTIVE, worstBase, 4.5],
+    ["destructive text on textured card", DESTRUCTIVE, worstCard, 4.5],
   ])("%s meets WCAG AA", (_label, fgHex, bg, threshold) => {
     const ratio = contrastRatio(hexToRgb(fgHex), bg);
     expect(ratio).toBeGreaterThanOrEqual(threshold);

@@ -6,6 +6,7 @@ import {
   getStraightPath,
   type EdgeProps,
 } from "@xyflow/react";
+import { useReducedMotion } from "@/lib/hooks/use-reduced-motion";
 
 type GraphEdgeData = {
   active?: boolean;
@@ -34,6 +35,9 @@ export function GraphEdge({
   const dimmed = edgeData?.dimmed ?? false;
   const conf = edgeData?.confidence ?? 0.5;
   const relType = edgeData?.relType;
+  // SMIL <animateMotion> is not reachable from CSS reduced-motion rules,
+  // so the moving dots are dropped entirely when the OS prefers reduction.
+  const reduceMotion = useReducedMotion();
 
   if (dimmed) {
     return (
@@ -79,7 +83,7 @@ export function GraphEdge({
           strokeWidth: active ? 2 : 0.8,
         }}
       />
-      {active && (
+      {active && !reduceMotion && (
         <>
           <circle r="3" fill="#f5c518" opacity={0.95}>
             <animateMotion dur="2.2s" repeatCount="indefinite" path={path} />
@@ -93,6 +97,9 @@ export function GraphEdge({
             />
           </circle>
         </>
+      )}
+      {active && reduceMotion && (
+        <circle r="2.5" fill="#f5c518" opacity={0.6} cx={labelX} cy={labelY} />
       )}
       {active && relType && (
         <EdgeLabelRenderer>

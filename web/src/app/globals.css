@@ -392,6 +392,9 @@ h1, h2, h3, .font-display {
   .motion-hover-lift:hover {
     transform: none !important;
   }
+  .motion-press:active {
+    transform: none !important;
+  }
   .btn-accent:active {
     transform: none !important;
   }
