@@ -14,8 +14,13 @@ export function approvalDtoToHitl(dto: ApprovalDTO): HitlRequest {
         : dto.status === "REJECTED"
           ? "rejected"
           : "expired";
+  const hilt = p.type
+    ? p.type === "workstream_spawn"
+      ? { kind: "workstream_spawn" as const }
+      : { kind: "other" as const }
+    : { kind: "other" as const };
   return {
-    id: dto.id,
+    id: dto.approval_id,
     status,
     created_at: new Date(dto.created_at * 1000).toISOString(),
     expires_at:
@@ -24,15 +29,19 @@ export function approvalDtoToHitl(dto: ApprovalDTO): HitlRequest {
         : null,
     agent_id: p.workflow_id ? `workflow:${p.workflow_id}` : dto.producer_type,
     goal_id: p.run_id ?? null,
-    goal_label: p.workflow_name ?? null,
+    goal_label: p.workflow_name ?? p.goal_text ?? null,
     trigger: {
-      kind: "workflow",
-      id: p.workflow_id ?? dto.producer_id,
-      label: p.workflow_name ? `${p.workflow_name} · step ${(p.step_index ?? 0) + 1}` : undefined,
+      kind: p.type === "workstream_spawn" ? "policy" : "workflow",
+      id: p.workflow_id ?? p.actor ?? dto.producer_id,
+      label: p.workflow_name
+        ? `${p.workflow_name} · step ${(p.step_index ?? 0) + 1}`
+        : p.actor
+          ? `actor ${p.actor}`
+          : undefined,
     },
     action: {
-      kind: p.kind ?? "other",
-      summary: p.summary ?? "(no summary)",
+      kind: p.kind ?? hilt.kind,
+      summary: p.summary ?? p.goal_text ?? "(no summary)",
       target: p.target ?? null,
       args: p.args ?? null,
       preview: p.preview ?? null,

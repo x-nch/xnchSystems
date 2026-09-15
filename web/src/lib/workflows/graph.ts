@@ -17,6 +17,7 @@ export const KIND_LABELS: Record<HitlActionKind, string> = {
   send_email: "Send email",
   create_goal: "Create goal",
   update_memory: "Update memory",
+  workstream_spawn: "Spawn workstream",
   other: "Other",
 };
 

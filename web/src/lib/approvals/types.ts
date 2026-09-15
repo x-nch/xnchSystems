@@ -12,6 +12,7 @@ export type HitlActionKind =
   | "send_email"
   | "create_goal"
   | "update_memory"
+  | "workstream_spawn"
   | "other";
 
 export interface HitlRequest {

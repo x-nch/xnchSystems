@@ -75,23 +75,33 @@ export interface WorkflowRunDTO {
   created_at: number;
 }
 
+// Wire contract (xnch/routes/workflows.py, f991e5f). The backend approval
+// store serializes: approval_id, status, producer_type, producer_id,
+// risk_class, payload, created_at, decided_at, decided_by, note,
+// idempotency_key. "pending" on the wire == "AWAITING_APPROVAL".
+// producer_type is a free string (workflow_step, workstream_spawn, …);
+// payload tolerates the LangGraph HITL interrupt shape
+// ({type:"workstream_spawn", goal_text, actor}) plus legacy workflow fields.
 export interface ApprovalDTO {
-  id: string;
-  producer_type: "chat" | "tool_call" | "goal_step" | "workflow_step";
+  approval_id: string;
+  producer_type: "workflow_step" | "workstream_spawn" | (string & {});
   producer_id: string;
   status:
     | "AWAITING_APPROVAL"
     | "APPROVED"
     | "REJECTED"
     | "EXPIRED"
-    | "CANCELLED";
-  risk_class: "low" | "elevated";
-  decision_note: string | null;
+    | "CANCELLED"
+    | (string & {});
+  risk_class: "low" | "elevated" | (string & {});
+  note: string | null;
   decided_by: string | null;
   decided_at: number | null;
-  expires_at: number | null;
   created_at: number;
+  expires_at?: number | null;
+  idempotency_key?: string | null;
   payload: {
+    type?: string;
     run_id?: string;
     workflow_id?: string;
     workflow_name?: string;
@@ -101,6 +111,9 @@ export interface ApprovalDTO {
     target?: string | null;
     args?: unknown;
     preview?: string | null;
+    goal_text?: string;
+    actor?: string;
+    [key: string]: unknown;
   };
 }
 
@@ -110,7 +123,7 @@ export const workflowEndpoints = {
     producer_type?: string;
   }) =>
     apiRequest<ApprovalDTO[]>("/approvals", {
-      query: params ?? { status: "pending" },
+      query: params ?? { status: "AWAITING_APPROVAL" },
     }),
   decideApproval: (
     id: string,

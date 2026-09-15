@@ -7,12 +7,12 @@ import {
 import type { ApprovalDTO } from "../api/workflows";
 
 const dto: ApprovalDTO = {
-  id: "apr_1",
+  approval_id: "apr_1",
   producer_type: "workflow_step",
   producer_id: "step_uuid",
   status: "AWAITING_APPROVAL",
   risk_class: "elevated",
-  decision_note: null,
+  note: null,
   decided_by: null,
   decided_at: null,
   expires_at: Date.now() + 60_000,
@@ -30,6 +30,23 @@ const dto: ApprovalDTO = {
   },
 };
 
+const hitlDto: ApprovalDTO = {
+  approval_id: "apr_2",
+  producer_type: "workstream_spawn",
+  producer_id: "spawn_1",
+  status: "AWAITING_APPROVAL",
+  risk_class: "elevated",
+  note: null,
+  decided_by: null,
+  decided_at: null,
+  created_at: Date.now() - 60_000,
+  payload: {
+    type: "workstream_spawn",
+    goal_text: "Delegate research synthesis to nexi",
+    actor: "hermes",
+  },
+};
+
 describe("approvalDtoToHitl", () => {
   it("maps server DTO into the queue row shape", () => {
     const hitl = approvalDtoToHitl(dto);
@@ -41,6 +58,18 @@ describe("approvalDtoToHitl", () => {
     expect(hitl.goal_label).toBe("Weekly Digest");
     expect(hitl.trigger?.kind).toBe("workflow");
     expect(hitl.risk_notes?.[0]).toMatch(/elevated/i);
+  });
+
+  it("maps a LangGraph HITL interrupt (workstream_spawn) to the queue row", () => {
+    const hitl = approvalDtoToHitl(hitlDto);
+    expect(hitl.id).toBe("apr_2");
+    expect(hitl.status).toBe("pending");
+    expect(hitl.action.kind).toBe("workstream_spawn");
+    expect(hitl.action.summary).toBe("Delegate research synthesis to nexi");
+    expect(hitl.agent_id).toBe("workstream_spawn");
+    expect(hitl.goal_label).toBe("Delegate research synthesis to nexi");
+    expect(hitl.trigger?.kind).toBe("policy");
+    expect(hitl.trigger?.id).toBe("hermes");
   });
 
   it("preserves pending/expired status mapping", () => {
