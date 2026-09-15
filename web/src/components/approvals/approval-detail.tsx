@@ -32,6 +32,11 @@ export function ApprovalDetail({
   const [rejectNote, setRejectNote] = useState("");
   const [showNote, setShowNote] = useState(false);
 
+  const doDecide = (action: "approve" | "reject") => {
+    const note = showNote ? rejectNote.trim() || undefined : undefined;
+    decide(req!.id, action, note);
+  };
+
   if (!req) {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-2 p-8 text-center">
@@ -177,14 +182,14 @@ export function ApprovalDetail({
             <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Decision</h3>
             <div className="mt-3 flex flex-wrap gap-2">
               <button
-                onClick={() => decide(req.id, "approve")}
+                onClick={() => doDecide("approve")}
                 disabled={!isPending || offline}
                 className="btn-accent inline-flex h-9 items-center justify-center rounded-md bg-accent px-4 text-sm font-semibold text-accent-foreground hover:bg-accent/90 disabled:opacity-40"
               >
                 Approve and execute
               </button>
               <button
-                onClick={() => decide(req.id, "reject", showNote ? rejectNote : undefined)}
+                onClick={() => doDecide("reject")}
                 disabled={!isPending || offline}
                 className="motion-press inline-flex h-9 items-center justify-center rounded-md border border-border px-4 text-sm font-medium text-foreground hover:bg-muted disabled:opacity-40"
               >
@@ -201,8 +206,9 @@ export function ApprovalDetail({
             {showNote && (
               <textarea
                 value={rejectNote}
-                onChange={(e) => setRejectNote(e.target.value)}
+                onChange={(e) => setRejectNote(e.target.value.slice(0, 500))}
                 placeholder="Optional note for audit log…"
+                maxLength={500}
                 rows={3}
                 className="mt-3 w-full rounded-md border border-border bg-background p-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
               />

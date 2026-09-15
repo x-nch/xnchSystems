@@ -42,9 +42,10 @@ export function ApprovalQueue() {
 
   /** Route decisions to the API when online; local store otherwise. */
   const decideRow = (id: string, action: "approve" | "reject", note?: string) => {
+    const trimmed = note?.trim() || undefined;
     if (online) {
       void serverDecide
-        .mutateAsync({ id, body: { decision: action, note } })
+        .mutateAsync({ id, body: { decision: action, note: trimmed } })
         .catch((err: unknown) => {
           const msg =
             err instanceof Error && err.message ? err.message : "Decision failed — state rolled back";
@@ -53,7 +54,7 @@ export function ApprovalQueue() {
         });
       return;
     }
-    useApprovalStore.getState().decide(id, action, note);
+    useApprovalStore.getState().decide(id, action, trimmed);
   };
 
   const selectedId = searchParams.get("selected");
