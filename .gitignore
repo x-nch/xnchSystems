@@ -19,6 +19,9 @@ memory/
 # Code review graph
 .code-review-graph/
 
+# Local worktrees
+.worktrees/
+
 # Agent logs
 scripts/logs/
 
