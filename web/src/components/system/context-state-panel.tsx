@@ -73,7 +73,7 @@ export function ContextStatePanel() {
     data.system_state_version === state.data.system_state_version;
 
   return (
-    <div className="grid gap-4 overflow-y-auto p-4 lg:grid-cols-[1.6fr_1fr]">
+    <div className="view-scroll grid gap-4 p-4 lg:grid-cols-[1.6fr_1fr]">
       {/* Zone 1 — live state header */}
       <Card className="lg:col-span-2">
         <CardHeader>

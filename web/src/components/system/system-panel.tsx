@@ -13,7 +13,7 @@ export function SystemPanel() {
   const gatewayOk = useGatewayOnline();
 
   return (
-    <div className="grid gap-4 overflow-y-auto p-4 lg:grid-cols-2">
+    <div className="view-scroll grid gap-4 p-4 lg:grid-cols-2">
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">

@@ -1,29 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createHmac } from "crypto";
+import { isGatedGatewayPath } from "@/lib/gateway/gate";
 
 const DEFAULT_GATEWAY = "http://192.168.1.10:8001";
 
 /** Vercel Pro — long enough for SSE chat/graph through the tunnel proxy. */
 export const maxDuration = 300;
-
-/**
- * Hybrid-B gateway gate (docs/superpowers/specs/2026-08-22-workflows-backend-design.md §4):
- * writes to /workflows/* and /approvals/* carry a short-lived HMAC token so a
- * client-forged role header alone cannot decide approvals.
- */
-const GATED_PREFIXES = ["workflows", "approvals", "agents"];
-
-/**
- * Which proxied paths require a minted X-Gateway-Token. Since the
- * 2026-08-24 audit, reads on gated prefixes are gated too: agent-run
- * detail carries raw model output. Chat/SSE/system traffic stays open.
- */
-export function isGatedGatewayPath(path: string[], method: string): boolean {
-  return (
-    GATED_PREFIXES.includes(path[0] ?? "") &&
-    !["HEAD", "OPTIONS"].includes(method.toUpperCase())
-  );
-}
 
 function mintGatewayToken(secret: string, ttlS = 300): string {
   const expiry = String(Math.floor(Date.now() / 1000) + ttlS);
@@ -49,7 +31,7 @@ const HOP_BY_HOP_HEADERS = new Set([
  * and SSE streams pass through untouched. Point it at another host with the
  * XNCH_GATEWAY_URL env var.
  */
-export async function proxyGateway(
+async function proxyGateway(
   request: NextRequest,
   context: { params: Promise<{ path: string[] }> }
 ) {

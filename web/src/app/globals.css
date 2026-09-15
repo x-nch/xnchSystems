@@ -142,6 +142,18 @@ h1, h2, h3, .font-display {
   background: rgba(20, 26, 31, 0.90);
 }
 
+/* Operator view scroll contract — every operator route mounts inside
+   `main` (overflow-hidden) and MUST own exactly one scroll container.
+   `h-full` fills the `page-enter h-full` wrapper (not a flex parent);
+   `flex-1 min-h-0` keeps it a correct flex child everywhere else. */
+@utility view-scroll {
+  height: 100%;
+  min-height: 0;
+  flex: 1 1 0%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
 /* Presence crossfade entry */
 @keyframes x-crossfade-in {
   from {

@@ -19,7 +19,7 @@ export function HitlActivityPanel() {
     data?.queue_depth_series[0]?.points.map(([t, v]) => [t, v]) ?? [];
 
   return (
-    <div className="space-y-4">
+    <div className="view-scroll space-y-4">
       {bypassRecent && (
         <HudCard glow="attention" role="alert" data-testid="obs-bypass-banner">
           <HudCardHeader>

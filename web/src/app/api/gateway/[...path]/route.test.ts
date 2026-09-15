@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isGatedGatewayPath } from "./route";
+import { isGatedGatewayPath } from "@/lib/gateway/gate";
 
 describe("isGatedGatewayPath", () => {
   it("gates writes to protected prefixes", () => {

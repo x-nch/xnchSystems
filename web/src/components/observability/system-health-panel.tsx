@@ -33,7 +33,7 @@ export function SystemHealthPanel() {
   const data = summary.data;
 
   return (
-    <div className="space-y-4">
+    <div className="view-scroll space-y-4">
       {(data?.alerts_firing.length ?? 0) > 0 && (
         <HudCard glow="attention" role="alert">
           <HudCardHeader>
