@@ -44,7 +44,7 @@ export function NetworkHud({
           className={cn(
             "rounded-md border px-2 py-1",
             gatewayOk
-              ? "border-[var(--state-healthy)] bg-emerald-500/10 text-emerald-300"
+              ? "border-[var(--state-healthy)] bg-success/10 text-success"
               : "border-[var(--state-offline)] bg-muted text-muted-foreground"
           )}
         >

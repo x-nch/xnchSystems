@@ -14,7 +14,7 @@ function StatusDot({ ok }: { ok: boolean | null }) {
   if (ok == null) return <span className="inline-block h-2 w-2 rounded-full bg-muted-foreground/40" aria-label="unknown" />;
   return (
     <span
-      className={`inline-block h-2 w-2 rounded-full ${ok ? "bg-emerald-400" : "bg-red-400"}`}
+      className={`inline-block h-2 w-2 rounded-full ${ok ? "bg-success" : "bg-destructive"}`}
       aria-label={ok ? "up" : "down"}
     />
   );

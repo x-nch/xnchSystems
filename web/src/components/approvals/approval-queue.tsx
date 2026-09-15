@@ -178,7 +178,7 @@ export function ApprovalQueue() {
         </div>
       )}
       {isDegraded && (
-        <div className="flex items-center gap-2 border-b border-[var(--state-degraded)] bg-amber-500/10 px-4 py-2 text-xs text-amber-200">
+        <div className="flex items-center gap-2 border-b border-[var(--state-degraded)] bg-warning/10 px-4 py-2 text-xs text-warning">
           <span className="h-0 w-0 border-x-[5px] border-b-[8px] border-x-transparent border-b-[var(--state-degraded)]" aria-hidden />
           Gateway degraded — actions may be slow.
         </div>

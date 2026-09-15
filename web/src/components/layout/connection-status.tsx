@@ -21,8 +21,8 @@ const dotClass: Record<ConnectionState, string> = {
 };
 
 const labelClass: Record<ConnectionState, string> = {
-  online: "text-emerald-300",
-  degraded: "text-amber-300",
+  online: "text-success",
+  degraded: "text-warning",
   offline: "text-muted-foreground",
   checking: "text-muted-foreground",
 };

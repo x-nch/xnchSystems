@@ -92,8 +92,8 @@ export function SettingsModal({
               <div
                 className={
                   testResult === "ok"
-                    ? "mt-2 flex items-start gap-1.5 text-emerald-400"
-                    : "mt-2 flex items-start gap-1.5 text-red-400"
+                    ? "mt-2 flex items-start gap-1.5 text-success"
+                    : "mt-2 flex items-start gap-1.5 text-destructive"
                 }
               >
                 {testResult === "ok" ? (

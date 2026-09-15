@@ -63,7 +63,7 @@ function ToolTrace({ message }: { message: ChatMessage }) {
               "rounded-lg border bg-card/90 px-3 py-2 backdrop-blur-sm",
               running
                 ? " border-border"
-                : "-gold border-amber-400/20"
+                : "border-warning/20"
             )}
             title={call.result !== undefined ? JSON.stringify(call.result) : "running…"}
           >
@@ -71,7 +71,7 @@ function ToolTrace({ message }: { message: ChatMessage }) {
               {running ? (
                 <Spinner className="h-3.5 w-3.5 text-accent" />
               ) : (
-                <Wrench className="h-3.5 w-3.5 text-amber-300" />
+                <Wrench className="h-3.5 w-3.5 text-warning" />
               )}
               <span className="font-mono text-[11px] font-semibold text-foreground">
                 {call.tool}
@@ -157,7 +157,7 @@ export function Message({
           <ToolTrace message={message} />
 
           {message.status === "error" && !message.content ? (
-            <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-[13px] text-red-300">
+            <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-[13px] text-destructive">
               {message.error || "Generation failed"}
             </div>
           ) : (
@@ -166,7 +166,7 @@ export function Message({
                 <MarkdownContent content={revealed} />
                 {showCursor && <span className="streaming-cursor" />}
                 {message.status === "error" && message.content && (
-                  <div className="mt-2 text-[12px] text-red-400">
+                  <div className="mt-2 text-[12px] text-destructive">
                     {message.error}
                   </div>
                 )}

@@ -62,9 +62,9 @@ export function ApprovalDetail({
             req.status === "pending"
               ? "border-[var(--state-attention)] bg-[var(--accent-subtle)] text-[var(--accent)]"
               : req.status === "approved"
-                ? "border-[var(--state-healthy)] bg-emerald-500/10 text-emerald-300"
+                ? "border-[var(--state-healthy)] bg-success/10 text-success"
                 : req.status === "rejected"
-                  ? "border-[var(--state-destructive)] bg-red-500/10 text-red-300"
+                  ? "border-[var(--state-destructive)] bg-destructive/10 text-destructive"
                   : "border-[var(--state-offline)] bg-muted text-muted-foreground"
           )}
         >
@@ -164,7 +164,7 @@ export function ApprovalDetail({
           {req.risk_notes && req.risk_notes.length > 0 && (
             <div>
               <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Risks / policy notes</h3>
-              <ul className="mt-2 list-disc space-y-1 rounded-xl border border-[var(--state-degraded)] bg-amber-500/5 p-3 pl-6 text-xs leading-5 text-amber-200/90">
+              <ul className="mt-2 list-disc space-y-1 rounded-xl border border-[var(--state-degraded)] bg-warning/5 p-3 pl-6 text-xs leading-5 text-warning/90">
                 {req.risk_notes.map((n, i) => (
                   <li key={i}>{n}</li>
                 ))}

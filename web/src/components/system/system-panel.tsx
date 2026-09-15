@@ -17,7 +17,7 @@ export function SystemPanel() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Activity className="h-4 w-4 text-emerald-400" />
+            <Activity className="h-4 w-4 text-success" />
             Gateway health
           </CardTitle>
           <CardDescription>
@@ -30,7 +30,7 @@ export function SystemPanel() {
           ) : health.isPending ? (
             <Spinner className="h-4 w-4 text-muted-foreground" />
           ) : health.isError || !health.data ? (
-            <div className="flex items-center gap-2 text-[13px] text-red-400">
+            <div className="flex items-center gap-2 text-[13px] text-destructive">
               <ServerCrash className="h-4 w-4" />
               {health.error instanceof Error ? health.error.message : "Gateway unreachable"}
             </div>
@@ -67,7 +67,7 @@ export function SystemPanel() {
           ) : state.isPending ? (
             <Spinner className="h-4 w-4 text-muted-foreground" />
           ) : state.isError || !state.data ? (
-            <div className="flex items-center gap-2 text-[13px] text-red-400">
+            <div className="flex items-center gap-2 text-[13px] text-destructive">
               <ServerCrash className="h-4 w-4" />
               {state.error instanceof Error ? state.error.message : "System state unavailable"}
             </div>
@@ -96,7 +96,7 @@ export function SystemPanel() {
           ) : capabilities.isPending ? (
             <Spinner className="h-4 w-4 text-muted-foreground" />
           ) : capabilities.isError || !capabilities.data ? (
-            <div className="flex items-center gap-2 text-[13px] text-red-400">
+            <div className="flex items-center gap-2 text-[13px] text-destructive">
               <ServerCrash className="h-4 w-4" />
               {capabilities.error instanceof Error
                 ? capabilities.error.message

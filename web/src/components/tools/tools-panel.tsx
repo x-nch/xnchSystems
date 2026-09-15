@@ -93,7 +93,7 @@ export function ToolsPanel() {
 
         {tools.isError && (
           <Card>
-            <CardContent className="py-10 text-center text-[13px] text-red-400">
+            <CardContent className="py-10 text-center text-[13px] text-destructive">
               Failed to load tools —{" "}
               {tools.error instanceof Error ? tools.error.message : "unknown error"}
             </CardContent>

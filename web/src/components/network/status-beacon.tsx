@@ -69,9 +69,9 @@ export function StatusBeacon({
           className={cn(
             "text-xs font-semibold tracking-tight",
             state === "online"
-              ? "text-emerald-300"
+              ? "text-success"
               : state === "degraded"
-                ? "text-amber-300"
+                ? "text-warning"
                 : state === "offline"
                   ? "text-muted-foreground"
                   : "text-muted-foreground"

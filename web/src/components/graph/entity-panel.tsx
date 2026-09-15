@@ -85,7 +85,7 @@ export function EntityPanel({
                       className="w-full rounded-lg border border-border/60 bg-card/50 px-2.5 py-2 text-left transition-colors hover:border-[var(--state-attention)]/20 hover:bg-[var(--accent-subtle)]"
                     >
                       <div className="flex items-center gap-2">
-                        <span className="font-mono text-[10px] text-amber-200">{rel.rel_type}</span>
+                        <span className="font-mono text-[10px] text-warning">{rel.rel_type}</span>
                         <span className="text-[9px] text-muted-foreground">
                           {outbound ? "→" : "←"}
                         </span>

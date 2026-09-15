@@ -22,8 +22,8 @@ const dotClass: Record<LlmState, string> = {
 };
 
 const labelClass: Record<LlmState, string> = {
-  available: "text-emerald-400",
-  unavailable: "text-red-400",
+  available: "text-success",
+  unavailable: "text-destructive",
   checking: "text-muted-foreground",
   hidden: "",
 };

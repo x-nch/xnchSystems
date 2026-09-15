@@ -9,8 +9,8 @@ import { useConnectionState } from "@/components/layout/connection-status";
 const STATUS_TONE: Record<AgentRunDTO["status"], string> = {
   QUEUED: "text-muted-foreground",
   RUNNING: "text-[var(--accent)] animate-pulse",
-  DONE: "text-emerald-400",
-  FAILED: "text-red-400",
+  DONE: "text-success",
+  FAILED: "text-destructive",
 };
 
 export default function AgentsPage() {
@@ -98,7 +98,7 @@ export default function AgentsPage() {
         </div>
         {toast && (
           <p
-            className={`mt-3 text-xs ${toast.startsWith("Dispatch failed") ? "text-red-400" : "text-emerald-400"}`}
+            className={`mt-3 text-xs ${toast.startsWith("Dispatch failed") ? "text-destructive" : "text-success"}`}
           >
             {toast}
           </p>
@@ -135,7 +135,7 @@ export default function AgentsPage() {
                 {r.exit_code !== null && ` · exit ${r.exit_code}`}
               </p>
               {r.error && (
-                <p className="mt-1 line-clamp-2 rounded bg-red-950/40 p-1.5 font-mono text-[10px] text-red-300">
+                <p className="mt-1 line-clamp-2 rounded bg-destructive/10 p-1.5 font-mono text-[10px] text-destructive">
                   {r.error}
                 </p>
               )}
