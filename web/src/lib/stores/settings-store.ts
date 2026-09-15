@@ -12,6 +12,8 @@ export interface SettingsState {
   authMode: AuthMode;
   authSecret: string;
   pastedToken: string;
+  /** Shared token sent as `X-MCP-Token` for /mcp/* tool calls. */
+  mcpToken: string;
   /** Sidebar collapsed state. */
   sidebarCollapsed: boolean;
 
@@ -20,6 +22,7 @@ export interface SettingsState {
   setAuthMode: (mode: AuthMode) => void;
   setAuthSecret: (secret: string) => void;
   setPastedToken: (token: string) => void;
+  setMcpToken: (token: string) => void;
   setSidebarCollapsed: (collapsed: boolean) => void;
 }
 
@@ -31,6 +34,7 @@ export const useSettingsStore = create<SettingsState>()(
       authMode: "actor",
       authSecret: "",
       pastedToken: "",
+      mcpToken: "",
       sidebarCollapsed: false,
 
       setActorId: (actorId) => set({ actorId }),
@@ -38,6 +42,7 @@ export const useSettingsStore = create<SettingsState>()(
       setAuthMode: (authMode) => set({ authMode }),
       setAuthSecret: (authSecret) => set({ authSecret }),
       setPastedToken: (pastedToken) => set({ pastedToken }),
+      setMcpToken: (mcpToken) => set({ mcpToken }),
       setSidebarCollapsed: (sidebarCollapsed) => set({ sidebarCollapsed }),
     }),
     { name: "xnch-ui-settings" }

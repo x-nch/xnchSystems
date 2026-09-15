@@ -177,6 +177,24 @@ export function SettingsModal({
               </div>
             )}
           </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="mcp-token">MCP token</Label>
+            <Input
+              id="mcp-token"
+              type="password"
+              value={settings.mcpToken}
+              onChange={(e) => settings.setMcpToken(e.target.value)}
+              placeholder="XNCH_MCP_HTTP_TOKEN"
+              className="font-mono"
+            />
+            <p className="text-[11px] leading-relaxed text-muted-foreground">
+              Sent as{" "}
+              <code className="mx-1 rounded bg-muted px-1 py-px font-mono">X-MCP-Token</code>
+              on /mcp/tools and /mcp/call. Required since the gateway tightened
+              its tool surface.
+            </p>
+          </div>
         </div>
 
         <DialogFooter>
