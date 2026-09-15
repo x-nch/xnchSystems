@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils/cn";
 import { useApprovalStore } from "@/lib/stores/approval-store";
-import { useServerApprovals, useWorkflowMutations } from "@/lib/hooks/use-workflows-api";
+import { useServerApprovals, useApprovalDecision } from "@/lib/hooks/use-workflows-api";
 import { approvalDtoToHitl } from "@/lib/approvals/adapters";
 import { useConnectionState } from "@/components/layout/connection-status";
 import { ApprovalRow } from "./approval-row";
@@ -24,7 +24,7 @@ export function ApprovalQueue() {
   const connection = useConnectionState();
   const online = connection === "online";
   const serverQueue = useServerApprovals(online);
-  const { decide: serverDecide } = useWorkflowMutations();
+  const serverDecide = useApprovalDecision();
   const [filter, setFilter] = useState<Filter>("pending");
   const [showToast, setShowToast] = useState(false);
 

@@ -1,4 +1,7 @@
-// Workflow + approval endpoints (P2/P4 contract, mirrors xnch/routes/workflows.py).
+// Approval endpoints (P2/P4 contract, mirrors xnch/routes/approvals.py).
+// Workflow CRUD endpoints were removed — the backend retired the workflow
+// store (f991e5f); the canvas editor is local-only. Types below document the
+// legacy P4 DTO shape for adapters+tests until a real workflow endpoint returns.
 import { apiRequest } from "@/lib/api/client";
 
 export interface WorkflowTrigger {
@@ -102,36 +105,6 @@ export interface ApprovalDTO {
 }
 
 export const workflowEndpoints = {
-  listWorkflows: () => apiRequest<WorkflowDTO[]>("/workflows"),
-  getWorkflow: (id: string) => apiRequest<WorkflowDTO>(`/workflows/${id}`),
-  createWorkflow: (body: {
-    name: string;
-    description?: string | null;
-    trigger: WorkflowTrigger;
-    steps: WorkflowStepDef[];
-    owner_actor_id?: string;
-  }) => apiRequest<WorkflowDTO>("/workflows", { method: "POST", body }),
-  updateWorkflow: (
-    id: string,
-    body: Partial<{
-      name: string;
-      description: string | null;
-      trigger: WorkflowTrigger;
-      steps: WorkflowStepDef[];
-    }>
-  ) =>
-    apiRequest<WorkflowDTO>(`/workflows/${id}`, { method: "PATCH", body }),
-  deleteWorkflow: (id: string) =>
-    apiRequest<void>(`/workflows/${id}`, { method: "DELETE" }),
-
-  runWorkflow: (id: string) =>
-    apiRequest<WorkflowRunDTO & { created: boolean }>(
-      `/workflows/${id}/run`,
-      { method: "POST", body: {} }
-    ),
-  listRuns: (params?: { status?: string; workflow_id?: string }) =>
-    apiRequest<WorkflowRunDTO[]>("/workflows/runs", { query: params }),
-
   listApprovals: (params?: {
     status?: string;
     producer_type?: string;
