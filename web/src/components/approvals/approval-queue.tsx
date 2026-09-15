@@ -1,8 +1,9 @@
 "use client";
-/* eslint-disable react-hooks/purity, react-hooks/set-state-in-effect, react-hooks/exhaustive-deps */
+/* eslint-disable react-hooks/exhaustive-deps */
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { cn } from "@/lib/utils/cn";
 import { useApprovalStore } from "@/lib/stores/approval-store";
 import { useServerApprovals, useApprovalDecision } from "@/lib/hooks/use-workflows-api";
@@ -28,6 +29,7 @@ export function ApprovalQueue() {
   const [filter, setFilter] = useState<Filter>("pending");
   const [showToast, setShowToast] = useState(false);
   const [decideError, setDecideError] = useState<string | null>(null);
+  const listScrollRef = useRef<HTMLDivElement>(null);
 
   // P4: gateway-first with local fallback while offline
   const items: HitlRequest[] = useMemo(() => {
@@ -94,6 +96,14 @@ export function ApprovalQueue() {
     () => items.find((i) => i.id === selectedId) ?? null,
     [items, selectedId]
   );
+
+  // eslint-disable-next-line react-hooks/incompatible-library -- TanStack Virtual's functions are non-memoizable but correct here
+  const listVirtualizer = useVirtualizer({
+    count: filtered.length,
+    getScrollElement: () => listScrollRef.current,
+    estimateSize: () => 140,
+    overscan: 5,
+  });
 
   const setSelected = (id: string | null) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -205,7 +215,7 @@ export function ApprovalQueue() {
       <div className="flex min-h-0 flex-1 flex-col md:flex-row">
         {/* List */}
         <div className="flex min-h-0 flex-1 flex-col border-border md:max-w-[640px] md:border-r">
-          <div className="min-h-0 flex-1 overflow-y-auto p-3">
+          <div ref={listScrollRef} className="min-h-0 flex-1 overflow-y-auto p-3">
             {isChecking ? (
               <div className="space-y-3">
                 {[0, 1, 2].map((i) => (
@@ -223,17 +233,30 @@ export function ApprovalQueue() {
                 <p className="font-mono text-xs text-muted-foreground/70">Press j/k to navigate · a approve · r reject · Enter detail</p>
               </div>
             ) : (
-              <div className="space-y-3">
-                {filtered.map((req, i) => (
-                  <ApprovalRow
-                    key={req.id}
-                    req={req}
-                    index={i}
-                    selected={req.id === selectedId}
-                    onSelect={() => setSelected(req.id)}
-                    onDecide={(id, action) => decideRow(id, action)}
-                  />
-                ))}
+              <div
+                className="relative w-full"
+                style={{ height: `${listVirtualizer.getTotalSize()}px` }}
+              >
+                {listVirtualizer.getVirtualItems().map((vRow) => {
+                  const req = filtered[vRow.index];
+                  return (
+                    <div
+                      key={vRow.key}
+                      data-index={vRow.index}
+                      ref={listVirtualizer.measureElement}
+                      className="absolute left-0 right-0 pb-3"
+                      style={{ top: `${vRow.start}px` }}
+                    >
+                      <ApprovalRow
+                        req={req}
+                        index={vRow.index}
+                        selected={req.id === selectedId}
+                        onSelect={() => setSelected(req.id)}
+                        onDecide={(id, action) => decideRow(id, action)}
+                      />
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>

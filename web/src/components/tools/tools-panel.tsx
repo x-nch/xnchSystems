@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { Wrench, Server, Search, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -17,12 +18,20 @@ const TIER_TONE: Record<string, "accent" | "success" | "warning" | "muted" | "de
   T3_SAFE: "muted",
 };
 
+/** Compute grid columns from container width for virtualizer. */
+function columnsForWidth(width: number): number {
+  if (width >= 1280) return 3;
+  if (width >= 768) return 2;
+  return 1;
+}
+
 export function ToolsPanel() {
   const actorRole = useSettingsStore((s) => s.actorRole);
   const tools = useMcpTools(actorRole);
   const servers = useMcpServers();
   const [filter, setFilter] = useState("");
   const [selected, setSelected] = useState<McpTool | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   const filtered = tools.data?.tools.filter(
     (t) =>
@@ -30,6 +39,17 @@ export function ToolsPanel() {
       t.name.toLowerCase().includes(filter.toLowerCase()) ||
       t.description.toLowerCase().includes(filter.toLowerCase())
   );
+
+  const cols = scrollRef.current ? columnsForWidth(scrollRef.current.clientWidth) : 3;
+  const rows = filtered ? Math.ceil(filtered.length / cols) : 0;
+
+  // eslint-disable-next-line react-hooks/incompatible-library -- TanStack Virtual's functions are non-memoizable but correct here
+  const virtualizer = useVirtualizer({
+    count: rows,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: () => 120,
+    overscan: 3,
+  });
 
   return (
     <div className="flex h-full flex-col">
@@ -82,7 +102,7 @@ export function ToolsPanel() {
         </Card>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4">
+      <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto px-4 pb-4">
         {tools.isPending && (
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             {[0, 1, 2, 3, 4, 5].map((i) => (
@@ -103,35 +123,55 @@ export function ToolsPanel() {
         {filtered && filtered.length === 0 && (
           <Card>
             <CardContent className="py-10 text-center text-[13px] text-muted-foreground">
-              No tools match “{filter}”.
+              No tools match &quot;{filter}&quot;.
             </CardContent>
           </Card>
         )}
 
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {filtered?.map((tool) => (
-            <button
-              key={tool.name}
-              onClick={() => setSelected(tool)}
-              className="group flex flex-col rounded-xl border border-border bg-card text-left transition-colors hover:border-accent/40 hover:bg-accent-subtle/30"
-            >
-              <CardHeader className="pb-1">
-                <div className="flex items-center gap-2">
-                  <span className="font-mono text-[12px] font-semibold text-foreground group-hover:text-accent">
-                    {tool.name}
-                  </span>
-                  <span className="flex-1" />
-                  <Badge tone={TIER_TONE[tool.tier] ?? "muted"}>{tool.tier}</Badge>
+        {filtered && filtered.length > 0 && (
+          <div
+            className="relative w-full"
+            style={{ height: `${virtualizer.getTotalSize()}px` }}
+          >
+            {virtualizer.getVirtualItems().map((vRow) => {
+              const rowStart = vRow.index * cols;
+              const rowItems = filtered.slice(rowStart, rowStart + cols);
+              return (
+                <div
+                  key={vRow.key}
+                  className="absolute left-0 right-0 grid gap-3 md:grid-cols-2 xl:grid-cols-3"
+                  style={{
+                    top: `${vRow.start}px`,
+                    height: `${vRow.size}px`,
+                  }}
+                >
+                  {rowItems.map((tool) => (
+                    <button
+                      key={tool.name}
+                      onClick={() => setSelected(tool)}
+                      className="group flex flex-col rounded-xl border border-border bg-card text-left transition-colors hover:border-accent/40 hover:bg-accent-subtle/30"
+                    >
+                      <CardHeader className="pb-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-[12px] font-semibold text-foreground group-hover:text-accent">
+                            {tool.name}
+                          </span>
+                          <span className="flex-1" />
+                          <Badge tone={TIER_TONE[tool.tier] ?? "muted"}>{tool.tier}</Badge>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="pt-0">
+                        <p className="line-clamp-2 text-[11px] leading-relaxed text-muted-foreground">
+                          {tool.description || "No description"}
+                        </p>
+                      </CardContent>
+                    </button>
+                  ))}
                 </div>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <p className="line-clamp-2 text-[11px] leading-relaxed text-muted-foreground">
-                  {tool.description || "No description"}
-                </p>
-              </CardContent>
-            </button>
-          ))}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       <ToolCallModal tool={selected} onOpenChange={(open) => !open && setSelected(null)} />
