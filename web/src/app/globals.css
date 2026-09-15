@@ -238,38 +238,10 @@ h1, h2, h3, .font-display {
   cursor: grabbing;
 }
 
-/* ── Deprecated Apex utilities — kept as no-ops to avoid breaking existing views
-      until migrated. Do not use in new code. ── */
-@utility hud-grid {
-  background-image: radial-gradient(circle, rgba(242,244,247,0.06) 1px, transparent 1px);
-  background-size: 24px 24px;
-}
-@utility glow-border {
-  box-shadow: 0 0 0 1px rgba(200,255,0,0.18);
-}
-@utility glow-border-gold {
-  box-shadow: 0 0 0 1px rgba(255,200,87,0.18);
-}
-@utility glow-text {
-  text-shadow: none;
-}
-@utility glow-text-gold {
-  text-shadow: none;
-}
-.orb-halo { animation: none; opacity: 0.0; }
-.node-drift { animation: none; }
-.scanline-overlay::after { display: none; }
-.vignette { background: none; }
-.node-active { animation: none; border-color: var(--state-attention) !important; }
-
 /* ── Reduced motion — every infinite animation has a static fallback ── */
 @media (prefers-reduced-motion: reduce) {
-  .orb-halo,
-  .node-drift,
-  .scanline-overlay::after,
   .streaming-dot,
   .streaming-cursor,
-  .node-active,
   .presence-enter,
   .crossfade-in {
     animation: none !important;
