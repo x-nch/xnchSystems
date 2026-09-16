@@ -92,7 +92,7 @@ function ToolCallModalBody({
             spellCheck={false}
             className="h-32 w-full resize-none rounded-lg border border-border bg-input p-3 font-mono text-[12px] text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
           />
-          {parseError && <p className="mt-1 text-[11px] text-red-400">{parseError}</p>}
+          {parseError && <p className="mt-1 text-[11px] text-destructive">{parseError}</p>}
         </div>
 
         {call.isPending && (
@@ -107,14 +107,14 @@ function ToolCallModalBody({
             <label className="mb-1 block text-xs font-medium text-muted-foreground">
               Result
             </label>
-            <pre className="max-h-64 overflow-auto rounded-lg border border-border bg-code-bg p-3 font-mono text-[12px] leading-relaxed text-emerald-300">
+            <pre className="max-h-64 overflow-auto rounded-lg border border-border bg-code-bg p-3 font-mono text-[12px] leading-relaxed text-success">
               {JSON.stringify(call.data.result, null, 2)}
             </pre>
           </div>
         )}
 
         {call.isError && (
-          <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-[12px] text-red-300">
+          <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-[12px] text-destructive">
             {call.error instanceof Error ? call.error.message : "Call failed"}
           </div>
         )}

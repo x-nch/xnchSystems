@@ -48,7 +48,7 @@ export function EntityNode({ data }: NodeProps<Node<EntityNodeData>>) {
       {/* Outer glow ring — selected */}
       {selected && (
         <div
-          className="node-active pointer-events-none absolute left-1/2 top-3 h-10 w-10 -translate-x-1/2 rounded-full"
+          className="pointer-events-none absolute left-1/2 top-3 h-10 w-10 -translate-x-1/2 rounded-full"
           style={{
             boxShadow: `0 0 28px 8px ${color}66, 0 0 0 2px rgba(200,255,0,0.5)`,
           }}

@@ -1,68 +1,55 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { Bot, Play, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { agentsApi, type AgentRunDTO } from "@/lib/api/agents";
+import { useAgentRuns, useAgentDispatch, type AgentRunDTO } from "@/lib/hooks/use-agents-api";
 import { useConnectionState } from "@/components/layout/connection-status";
 
 const STATUS_TONE: Record<AgentRunDTO["status"], string> = {
   QUEUED: "text-muted-foreground",
   RUNNING: "text-[var(--accent)] animate-pulse",
-  DONE: "text-emerald-400",
-  FAILED: "text-red-400",
+  DONE: "text-success",
+  FAILED: "text-destructive",
 };
 
 export default function AgentsPage() {
   const connection = useConnectionState();
-  const [runs, setRuns] = useState<AgentRunDTO[]>([]);
+  const online = connection === "online";
+  const { data: runs, refetch } = useAgentRuns(online);
+  const dispatchMutation = useAgentDispatch();
   const [prompt, setPrompt] = useState("");
   const [workspace, setWorkspace] = useState("");
-  const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  const refresh = useCallback(async () => {
-    try {
-      setRuns(await agentsApi.listRuns());
-    } catch {
-      /* transient — next poll retries */
-    }
-  }, []);
-
-  useEffect(() => {
-    const t = setInterval(() => void refresh(), 5000);
-    const initial = setTimeout(() => void refresh(), 0);
-    return () => {
-      clearInterval(t);
-      clearTimeout(initial);
-    };
-  }, [refresh]);
-
-  const dispatch = async () => {
+  const dispatch = () => {
     if (!prompt.trim()) return;
-    setBusy(true);
-    try {
-      await agentsApi.dispatch(prompt.trim(), workspace);
-      setPrompt("");
-      setToast("Task dispatched — runner will claim it shortly");
-      await refresh();
-    } catch (e) {
-      setToast(`Dispatch failed: ${e instanceof Error ? e.message : String(e)}`);
-    } finally {
-      setBusy(false);
-      setTimeout(() => setToast(null), 4000);
-    }
+    dispatchMutation.mutate(
+      { prompt: prompt.trim(), workspace },
+      {
+        onSuccess: () => {
+          setPrompt("");
+          setToast("Task dispatched — runner will claim it shortly");
+        },
+        onError: (e) => {
+          setToast(`Dispatch failed: ${e instanceof Error ? e.message : String(e)}`);
+        },
+        onSettled: () => {
+          setTimeout(() => setToast(null), 4000);
+        },
+      },
+    );
   };
 
   return (
-    <div className="mx-auto w-full max-w-3xl space-y-6 p-4 md:p-6">
+    <div className="view-scroll mx-auto w-full max-w-3xl space-y-6 p-4 md:p-6">
       <header className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Bot className="h-5 w-5 text-[var(--accent)]" />
           <h1 className="text-lg font-semibold">Agents</h1>
         </div>
-        <Button variant="outline" size="sm" onClick={() => void refresh()}>
+        <Button variant="outline" size="sm" onClick={() => void refetch()}>
           <RefreshCw className="h-3.5 w-3.5" /> Refresh
         </Button>
       </header>
@@ -89,16 +76,16 @@ export default function AgentsPage() {
             {connection === "online" ? "gateway online" : `gateway ${connection}`}
           </span>
           <Button
-            onClick={() => void dispatch()}
-            disabled={busy || !prompt.trim()}
+            onClick={() => dispatch()}
+            disabled={dispatchMutation.isPending || !prompt.trim()}
             className="btn-accent gap-1.5"
           >
-            <Play className="h-3.5 w-3.5" /> {busy ? "Dispatching…" : "Dispatch"}
+            <Play className="h-3.5 w-3.5" /> {dispatchMutation.isPending ? "Dispatching…" : "Dispatch"}
           </Button>
         </div>
         {toast && (
           <p
-            className={`mt-3 text-xs ${toast.startsWith("Dispatch failed") ? "text-red-400" : "text-emerald-400"}`}
+            className={`mt-3 text-xs ${toast.startsWith("Dispatch failed") ? "text-destructive" : "text-success"}`}
           >
             {toast}
           </p>
@@ -109,12 +96,12 @@ export default function AgentsPage() {
         <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           Runs
         </h2>
-        {runs.length === 0 ? (
+        {(runs ?? []).length === 0 ? (
           <p className="rounded-xl border border-dashed border-border p-6 text-center text-xs text-muted-foreground">
             No runs yet — dispatch a task above.
           </p>
         ) : (
-          runs.map((r) => (
+          (runs ?? []).map((r) => (
             <article
               key={r.id}
               onClick={() => setSelectedId(selectedId === r.id ? null : r.id)}
@@ -135,7 +122,7 @@ export default function AgentsPage() {
                 {r.exit_code !== null && ` · exit ${r.exit_code}`}
               </p>
               {r.error && (
-                <p className="mt-1 line-clamp-2 rounded bg-red-950/40 p-1.5 font-mono text-[10px] text-red-300">
+                <p className="mt-1 line-clamp-2 rounded bg-destructive/10 p-1.5 font-mono text-[10px] text-destructive">
                   {r.error}
                 </p>
               )}

@@ -13,13 +13,13 @@ const statusMeta = {
     label: "gateway ok",
     border: "border-[var(--state-healthy)]",
     dot: "bg-[var(--state-healthy)]",
-    text: "text-emerald-300",
+    text: "text-success",
   },
   degraded: {
     label: "gateway degraded",
     border: "border-[var(--state-degraded)]",
     dot: "bg-[var(--state-degraded)]",
-    text: "text-amber-300",
+    text: "text-warning",
   },
   offline: {
     label: "gateway offline",

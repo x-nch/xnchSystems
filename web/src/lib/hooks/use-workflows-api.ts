@@ -2,83 +2,44 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { workflowEndpoints } from "@/lib/api/workflows";
-import type { ApprovalDTO, WorkflowDTO } from "@/lib/api/workflows";
+import type { ApprovalDTO } from "@/lib/api/workflows";
 
-const WF = "workflows";
 const APPROVALS = "approvals";
-const RUNS = "workflow-runs";
-
-/** Server workflows — only mounted when gateway is online (caller gates `enabled`). */
-export function useServerWorkflows(enabled: boolean) {
-  return useQuery({
-    queryKey: [WF],
-    queryFn: () => workflowEndpoints.listWorkflows(),
-    enabled,
-    refetchInterval: enabled ? 30_000 : false,
-    retry: 1,
-  });
-}
-
-export function useServerRuns(
-  enabled: boolean,
-  params?: { workflow_id?: string }
-) {
-  return useQuery({
-    queryKey: [RUNS, params?.workflow_id ?? null],
-    queryFn: () => workflowEndpoints.listRuns(params),
-    enabled,
-    refetchInterval: enabled ? 30_000 : false,
-    retry: 1,
-  });
-}
+const DEFAULT_STATUS = "AWAITING_APPROVAL";
 
 export function useServerApprovals(
   enabled: boolean,
   params?: { status?: string; producer_type?: string }
 ) {
   return useQuery({
-    queryKey: [APPROVALS, params?.status ?? "pending", params?.producer_type ?? null],
-    queryFn: () => workflowEndpoints.listApprovals(params ?? { status: "pending" }),
+    queryKey: [APPROVALS, params?.status ?? DEFAULT_STATUS, params?.producer_type ?? null],
+    queryFn: () => workflowEndpoints.listApprovals(params ?? { status: DEFAULT_STATUS }),
     enabled,
     refetchInterval: enabled ? 10_000 : false,
     retry: 1,
   });
 }
 
-export function useWorkflowMutations() {
-  const qc = useQueryClient();
-  const invalidateAll = async () => {
-    await Promise.all([
-      qc.invalidateQueries({ queryKey: [WF] }),
-      qc.invalidateQueries({ queryKey: [APPROVALS] }),
-      qc.invalidateQueries({ queryKey: [RUNS] }),
-    ]);
-  };
+/**
+ * Optimistically stamp the decided status on a cached approval list.
+ * Pure and exported for contract tests (no DOM dependency).
+ */
+export function optimisticDecision(
+  list: ApprovalDTO[],
+  id: string,
+  decision: "approve" | "reject"
+): ApprovalDTO[] {
+  const next = decision === "approve" ? "APPROVED" : "REJECTED";
+  return list.map((a) =>
+    a.approval_id === id && a.status === "AWAITING_APPROVAL"
+      ? { ...a, status: next }
+      : a
+  );
+}
 
-  const create = useMutation({
-    mutationFn: (body: Parameters<typeof workflowEndpoints.createWorkflow>[0]) =>
-      workflowEndpoints.createWorkflow(body),
-    onSuccess: invalidateAll,
-  });
-  const update = useMutation({
-    mutationFn: ({
-      id,
-      body,
-    }: {
-      id: string;
-      body: Parameters<typeof workflowEndpoints.updateWorkflow>[1];
-    }) => workflowEndpoints.updateWorkflow(id, body),
-    onSuccess: invalidateAll,
-  });
-  const remove = useMutation({
-    mutationFn: (id: string) => workflowEndpoints.deleteWorkflow(id),
-    onSuccess: invalidateAll,
-  });
-  const run = useMutation({
-    mutationFn: (id: string) => workflowEndpoints.runWorkflow(id),
-    onSuccess: invalidateAll,
-  });
-  const decide = useMutation({
+export function useApprovalDecision() {
+  const qc = useQueryClient();
+  return useMutation({
     mutationFn: ({
       id,
       body,
@@ -86,10 +47,30 @@ export function useWorkflowMutations() {
       id: string;
       body: { decision: "approve" | "reject"; note?: string };
     }) => workflowEndpoints.decideApproval(id, body),
-    onSuccess: invalidateAll,
+    onMutate: async ({ id, body: { decision } }) => {
+      await qc.cancelQueries({ queryKey: [APPROVALS] });
+      const snapshots = qc
+        .getQueriesData<ApprovalDTO[]>({ queryKey: [APPROVALS] })
+        .filter(([, data]) => data != null);
+      for (const [key, data] of snapshots) {
+        qc.setQueryData<ApprovalDTO[]>(key, optimisticDecision(data ?? [], id, decision));
+      }
+      return { snapshots };
+    },
+    onError: (_err, _vars, ctx) => {
+      for (const [key, data] of ctx?.snapshots ?? []) {
+        qc.setQueryData<ApprovalDTO[]>(key, data);
+      }
+    },
+    onSuccess: (updated) => {
+      qc.setQueriesData<ApprovalDTO[]>({ queryKey: [APPROVALS] }, (old) =>
+        old
+          ? old.map((a) => (a.approval_id === updated.approval_id ? updated : a))
+          : old
+      );
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: [APPROVALS] }),
   });
-
-  return { create, update, remove, run, decide };
 }
 
-export type { ApprovalDTO, WorkflowDTO };
+export type { ApprovalDTO };

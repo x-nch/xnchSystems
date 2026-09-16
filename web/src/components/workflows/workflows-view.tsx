@@ -9,9 +9,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { useWorkflowStore } from "@/lib/stores/workflow-store";
-import { useServerWorkflows, useServerRuns, useWorkflowMutations } from "@/lib/hooks/use-workflows-api";
-import { workflowDtoToLocal } from "@/lib/approvals/adapters";
-import { useConnectionState } from "@/components/layout/connection-status";
 import { WorkflowCanvasEditor } from "@/components/workflows/canvas/workflow-canvas-editor";
 import type { GraphCompileResult } from "@/lib/workflows/graph";
 import type { Workflow, WorkflowStep, WorkflowTrigger } from "@/lib/workflows/types";
@@ -46,14 +43,11 @@ const IMPORT_VALID_KINDS = new Set([
 interface ImportedWorkflow {
   name: string;
   description: string | null;
-  trigger: { kind: "manual" | "schedule"; cron?: string | null };
+  trigger: { kind: "manual" | "schedule"; cron?: string };
   steps: WorkflowStepDef[];
   owner_actor_id?: string;
 }
 
-// Validate + normalize a raw WorkflowCreateRequest JSON (the shape produced by
-// scripts/workflows/*.json and GET /workflows) into what api.create expects.
-// Throws a human-readable Error on the first problem so the UI can surface it.
 function normalizeWorkflowImport(raw: unknown): ImportedWorkflow {
   if (!raw || typeof raw !== "object") throw new Error("Root must be a JSON object");
   const r = raw as Record<string, unknown>;
@@ -84,7 +78,7 @@ function normalizeWorkflowImport(raw: unknown): ImportedWorkflow {
   const trig = (r.trigger ?? { kind: "manual" }) as Record<string, unknown>;
   const trigger =
     trig.kind === "schedule"
-      ? { kind: "schedule" as const, cron: typeof trig.cron === "string" ? trig.cron : null }
+      ? { kind: "schedule" as const, cron: typeof trig.cron === "string" ? trig.cron : undefined }
       : { kind: "manual" as const };
   return {
     name: name.trim(),
@@ -126,36 +120,13 @@ export function WorkflowsView() {
   const searchParams = useSearchParams();
   const localWorkflows = useWorkflowStore((s) => s.workflows);
   const runs = useWorkflowStore((s) => s.runs);
-
-  // P4: gateway-first with local fallback while offline
-  const connection = useConnectionState();
-  const online = connection === "online";
-  const serverWfs = useServerWorkflows(online);
-  const serverRuns = useServerRuns(online);
-  const api = useWorkflowMutations();
-
-  const serverMapped = (serverWfs.data ?? []).map(workflowDtoToLocal);
-  const workflows = online && serverWfs.data ? serverMapped : localWorkflows;
-  const runsView =
-    online && serverRuns.data
-      ? serverRuns.data.map((r) => ({
-          id: r.id,
-          workflowId: r.workflow_id,
-          workflowName:
-            (r.steps?.[0] as unknown as { summary?: string } | undefined)?.summary ??
-            r.id,
-          status: r.status.toLowerCase() as "running" | "completed" | "failed" | "cancelled",
-          created_at: new Date(r.created_at * 1000).toISOString(),
-          stepCount: r.steps?.length ?? 0,
-          approvalsCreated:
-            r.steps?.filter((s) => s.status === "AWAITING_APPROVAL").length ?? 0,
-        }))
-      : runs;
   const createWorkflow = useWorkflowStore((s) => s.createWorkflow);
   const updateWorkflow = useWorkflowStore((s) => s.updateWorkflow);
   const deleteWorkflow = useWorkflowStore((s) => s.deleteWorkflow);
   const duplicateWorkflow = useWorkflowStore((s) => s.duplicateWorkflow);
   const runWorkflow = useWorkflowStore((s) => s.runWorkflow);
+
+  const workflows = localWorkflows;
 
   const selectedId = searchParams.get("selected");
   const selected = useMemo(() => workflows.find((w) => w.id === selectedId) ?? null, [workflows, selectedId]);
@@ -180,23 +151,28 @@ export function WorkflowsView() {
     const file = e.target.files?.[0];
     e.target.value = ""; // allow re-selecting the same file
     if (!file) return;
-    if (!online) {
-      setToast("Upload requires a gateway connection");
-      setTimeout(() => setToast(null), 4000);
-      return;
-    }
     try {
       const raw = JSON.parse(await file.text());
       const body = normalizeWorkflowImport(raw);
-      const created = await api.create.mutateAsync({
+      const id = createWorkflow({
         name: body.name,
         description: body.description,
         trigger: body.trigger,
-        steps: body.steps,
-        owner_actor_id: body.owner_actor_id ?? "operator",
+        steps: body.steps.map((s) => ({
+          id: s.id,
+          kind: s.kind,
+          summary: s.summary,
+          target: s.target ?? null,
+          args: s.args ?? null,
+          preview: s.preview ?? null,
+          requiresApproval: s.requires_approval ?? true,
+          description: s.description ?? null,
+          modelProvider: s.model_provider ?? null,
+          modelId: s.model_id ?? null,
+        })),
       });
-      setSelected(created.id);
-      setToast(`Imported "${created.name}" — saved to control plane`);
+      setSelected(id);
+      setToast(`Imported "${body.name}" — saved locally`);
       setTimeout(() => setToast(null), 4000);
     } catch (err) {
       setToast(`Import failed: ${err instanceof Error ? err.message : "invalid JSON"}`);
@@ -215,83 +191,38 @@ export function WorkflowsView() {
     router.replace(qs ? `?${qs}` : "?", { scroll: false });
   };
 
-  const handleSaveOnline = async () => {
-    if (!saveSteps) return;
-    const trigger =
+  const handleSave = () => {
+    const nameTrim = draft.name.trim();
+    if (!nameTrim || !saveSteps || saveSteps.length === 0) return;
+    const trigger: WorkflowTrigger =
       draft.triggerKind === "schedule"
-        ? { kind: "schedule" as const, cron: draft.cron.trim() || "0 9 * * 1" }
-        : { kind: "manual" as const };
-    const steps = saveSteps.map((s) => ({
+        ? { kind: "schedule", cron: draft.cron.trim() || "0 9 * * 1" }
+        : { kind: "manual" };
+    const steps: WorkflowStep[] = saveSteps.map((s) => ({
       id: s.id,
       kind: s.kind,
       summary: s.summary,
       target: s.target ?? null,
       args: s.args ?? null,
       preview: s.preview ?? null,
-      requires_approval: s.requiresApproval,
+      requiresApproval: s.requiresApproval,
       description: s.description ?? null,
-      model_provider: s.modelProvider ?? null,
-      model_id: s.modelId ?? null,
+      modelProvider: s.modelProvider ?? null,
+      modelId: s.modelId ?? null,
     }));
-    try {
-      if (editingId) {
-        await api.update.mutateAsync({
-          id: editingId,
-          body: {
-            name: draft.name.trim(),
-            description: draft.description.trim() || null,
-            trigger,
-            steps,
-          },
-        });
-      } else {
-        const createdWf = await api.create.mutateAsync({
-          name: draft.name.trim(),
-          description: draft.description.trim() || null,
-          trigger,
-          steps,
-          owner_actor_id: "operator",
-        });
-        setSelected(createdWf.id);
-      }
-      setBuilderOpen(false);
-    } catch {
-      setToast("Gateway rejected workflow change — staying in builder");
-      setTimeout(() => setToast(null), 4000);
-    }
-  };
-
-  const handleRunOnline = async (id: string) => {
-    try {
-      const res = await api.run.mutateAsync(id);
-      const n = res.steps?.filter((s) => s.status === "AWAITING_APPROVAL").length ?? 0;
-      setToast(`Workflow ran — ${n} approval${n === 1 ? "" : "s"} created · check Approvals`);
-      setTimeout(() => setToast(null), 4000);
-    } catch {
-      setToast("Run failed — gateway error");
-      setTimeout(() => setToast(null), 4000);
-    }
-  };
-
-  const handleSave = () => {
-    if (online) return void handleSaveOnline();
-    const nameTrim = draft.name.trim();
-    if (!nameTrim || !saveSteps || saveSteps.length === 0) return;
-    const trigger: WorkflowTrigger = draft.triggerKind === "schedule" ? { kind: "schedule", cron: draft.cron.trim() || "0 9 * * 1" } : { kind: "manual" };
     if (editingId) {
-      updateWorkflow(editingId, { name: nameTrim, description: draft.description.trim() || null, trigger, steps: saveSteps });
+      updateWorkflow(editingId, { name: nameTrim, description: draft.description.trim() || null, trigger, steps });
     } else {
-      const id = createWorkflow({ name: nameTrim, description: draft.description.trim() || null, trigger, steps: saveSteps });
+      const id = createWorkflow({ name: nameTrim, description: draft.description.trim() || null, trigger, steps });
       setSelected(id);
     }
     setBuilderOpen(false);
   };
 
   const handleRun = (id: string) => {
-    if (online) return void handleRunOnline(id);
     const res = runWorkflow(id);
     if (res) {
-      setToast(`Workflow ran — ${res.approvalsCreated} approval${res.approvalsCreated===1?"":"s"} created · check Approvals`);
+      setToast(`Workflow ran — ${res.approvalsCreated} approval${res.approvalsCreated === 1 ? "" : "s"} created · check Approvals`);
       setTimeout(() => setToast(null), 4000);
     }
   };
@@ -319,9 +250,8 @@ export function WorkflowsView() {
 
       <div className="border-b border-[var(--state-attention)] bg-[var(--accent-subtle)] px-4 py-2 text-xs leading-5">
         <span className="font-medium text-[var(--accent)]">Builder</span>
-        <span className="text-muted-foreground"> — canvas editing saves locally this phase; runs create approvals in </span>
+        <span className="text-muted-foreground"> — canvas editing saves locally; runs create approvals in </span>
         <button onClick={() => router.push("/")} className="underline decoration-[var(--state-attention)] underline-offset-4 text-foreground hover:text-[var(--accent)]">Approvals</button>
-        <span className="text-muted-foreground">. Server-side validation re-checks every step on save.</span>
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col md:flex-row">
@@ -333,7 +263,7 @@ export function WorkflowsView() {
                 <CardContent className="flex flex-col items-center gap-3 py-10 text-center">
                   <WorkflowIcon className="h-8 w-8 text-muted-foreground/40" />
                   <p className="text-sm font-medium text-foreground">No workflows yet</p>
-                  <p className="max-w-sm text-xs leading-5 text-muted-foreground">Create a playbook — e.g. “Research → Draft → Send”. Each step with “requires approval” will become a pending item in Approvals when you Run.</p>
+                  <p className="max-w-sm text-xs leading-5 text-muted-foreground">Create a playbook — e.g. &quot;Research → Draft → Send&quot;. Each step with &quot;requires approval&quot; will become a pending item in Approvals when you Run.</p>
                   <Button onClick={openCreate} size="sm" variant="outline">Create first workflow</Button>
                   <Button onClick={openImport} size="sm" variant="outline" className="gap-1.5">
                     <Upload className="h-3.5 w-3.5" /> Upload JSON
@@ -387,25 +317,16 @@ export function WorkflowsView() {
                           <Pencil className="h-3 w-3" /> Edit
                         </Button>
                         <Button size="sm" variant="ghost" onClick={(e)=>{
-                  e.stopPropagation();
-                  if(online){
-                    void api.create.mutateAsync({
-                      name:`${wf.name} (copy)`,
-                      description: wf.description ?? null,
-                      trigger:{kind:wf.trigger.kind, cron:"cron" in wf.trigger ? String((wf.trigger as {cron?:string}).cron ?? "") : undefined},
-                      steps: wf.steps.map(s=>({id:s.id, kind:s.kind, summary:s.summary, target:s.target??null, args:s.args??null, preview:s.preview??null, requires_approval:s.requiresApproval, description:s.description??null, model_provider:s.modelProvider??null, model_id:s.modelId??null})),
-                      owner_actor_id:"operator",
-                    }).then(()=>undefined).catch(()=>undefined);
-                  } else duplicateWorkflow(wf.id);
-                }} className="h-7 gap-1 text-xs">
+                          e.stopPropagation();
+                          duplicateWorkflow(wf.id);
+                        }} className="h-7 gap-1 text-xs">
                           <Copy className="h-3 w-3" /> Duplicate
                         </Button>
                         <Button size="sm" variant="ghost" onClick={(e)=>{
-                  e.stopPropagation();
-                  if(!confirm(`Delete "${wf.name}"?`)) return;
-                  if(online) void api.remove.mutateAsync(wf.id);
-                  else deleteWorkflow(wf.id);
-                }} className="h-7 gap-1 text-xs text-muted-foreground hover:text-destructive">
+                          e.stopPropagation();
+                          if(!confirm(`Delete "${wf.name}"?`)) return;
+                          deleteWorkflow(wf.id);
+                        }} className="h-7 gap-1 text-xs text-muted-foreground hover:text-destructive">
                           <Trash2 className="h-3 w-3" /> Delete
                         </Button>
                       </div>
@@ -414,11 +335,11 @@ export function WorkflowsView() {
                 })}
               </div>
             )}
-            {runsView.length>0 && (
+            {runs.length > 0 && (
               <div className="mt-6">
                 <h3 className="px-1 pb-2 font-mono text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Recent runs</h3>
                 <div className="space-y-1">
-                  {runsView.slice(0,6).map((r)=> (
+                  {runs.slice(0,6).map((r)=> (
                     <div key={r.id} className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-xs">
                       <span className="h-1.5 w-1.5 rounded-full bg-[var(--state-healthy)]" />
                       <span className="truncate font-medium text-foreground">{r.workflowName}</span>
@@ -437,7 +358,7 @@ export function WorkflowsView() {
             <div className="flex flex-1 flex-col items-center justify-center gap-2 p-8 text-center">
               <ShieldCheck className="h-8 w-8 text-muted-foreground/30" />
               <p className="text-sm font-medium text-foreground">Select a workflow</p>
-              <p className="max-w-sm text-xs leading-5 text-muted-foreground">Workflows are HITL playbooks. “Run” creates one approval per gated step — approve/reject them in Approvals.</p>
+              <p className="max-w-sm text-xs leading-5 text-muted-foreground">Workflows are HITL playbooks. &quot;Run&quot; creates one approval per gated step — approve/reject them in Approvals.</p>
             </div>
           ) : (
             <div key={selected.id} className="motion-pane-enter flex min-h-0 flex-1 flex-col overflow-hidden">

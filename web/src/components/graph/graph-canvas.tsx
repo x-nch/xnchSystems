@@ -204,7 +204,7 @@ export function GraphCanvas({
 
       {edgeActiveId && (
         <div className="pointer-events-none absolute left-1/2 top-3 z-20 -translate-x-1/2">
-          <span className="hud-panel rounded-full px-3 py-1 font-mono text-[9px] text-amber-200/90">
+          <span className="hud-panel rounded-full px-3 py-1 font-mono text-[9px] text-warning/90">
             {activeConnections} connection{activeConnections !== 1 ? "s" : ""}{" "}
             highlighted
           </span>

@@ -1,11 +1,12 @@
 "use client";
-/* eslint-disable react-hooks/purity, react-hooks/set-state-in-effect, react-hooks/exhaustive-deps */
+/* eslint-disable react-hooks/exhaustive-deps */
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { cn } from "@/lib/utils/cn";
 import { useApprovalStore } from "@/lib/stores/approval-store";
-import { useServerApprovals, useWorkflowMutations } from "@/lib/hooks/use-workflows-api";
+import { useServerApprovals, useApprovalDecision } from "@/lib/hooks/use-workflows-api";
 import { approvalDtoToHitl } from "@/lib/approvals/adapters";
 import { useConnectionState } from "@/components/layout/connection-status";
 import { ApprovalRow } from "./approval-row";
@@ -24,9 +25,11 @@ export function ApprovalQueue() {
   const connection = useConnectionState();
   const online = connection === "online";
   const serverQueue = useServerApprovals(online);
-  const { decide: serverDecide } = useWorkflowMutations();
+  const serverDecide = useApprovalDecision();
   const [filter, setFilter] = useState<Filter>("pending");
   const [showToast, setShowToast] = useState(false);
+  const [decideError, setDecideError] = useState<string | null>(null);
+  const listScrollRef = useRef<HTMLDivElement>(null);
 
   // P4: gateway-first with local fallback while offline
   const items: HitlRequest[] = useMemo(() => {
@@ -39,11 +42,19 @@ export function ApprovalQueue() {
 
   /** Route decisions to the API when online; local store otherwise. */
   const decideRow = (id: string, action: "approve" | "reject", note?: string) => {
+    const trimmed = note?.trim() || undefined;
     if (online) {
-      void serverDecide.mutateAsync({ id, body: { decision: action, note } });
+      void serverDecide
+        .mutateAsync({ id, body: { decision: action, note: trimmed } })
+        .catch((err: unknown) => {
+          const msg =
+            err instanceof Error && err.message ? err.message : "Decision failed — state rolled back";
+          setDecideError(msg);
+          setTimeout(() => setDecideError(null), 8000);
+        });
       return;
     }
-    useApprovalStore.getState().decide(id, action, note);
+    useApprovalStore.getState().decide(id, action, trimmed);
   };
 
   const selectedId = searchParams.get("selected");
@@ -86,6 +97,14 @@ export function ApprovalQueue() {
     () => items.find((i) => i.id === selectedId) ?? null,
     [items, selectedId]
   );
+
+  // eslint-disable-next-line react-hooks/incompatible-library -- TanStack Virtual's functions are non-memoizable but correct here
+  const listVirtualizer = useVirtualizer({
+    count: filtered.length,
+    getScrollElement: () => listScrollRef.current,
+    estimateSize: () => 140,
+    overscan: 5,
+  });
 
   const setSelected = (id: string | null) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -178,9 +197,18 @@ export function ApprovalQueue() {
         </div>
       )}
       {isDegraded && (
-        <div className="flex items-center gap-2 border-b border-[var(--state-degraded)] bg-amber-500/10 px-4 py-2 text-xs text-amber-200">
+        <div className="flex items-center gap-2 border-b border-[var(--state-degraded)] bg-warning/10 px-4 py-2 text-xs text-warning">
           <span className="h-0 w-0 border-x-[5px] border-b-[8px] border-x-transparent border-b-[var(--state-degraded)]" aria-hidden />
           Gateway degraded — actions may be slow.
+        </div>
+      )}
+      {decideError && (
+        <div
+          role="alert"
+          className="flex items-center gap-2 border-b border-[var(--state-destructive)] bg-destructive/10 px-4 py-2 text-xs text-destructive"
+        >
+          <span className="h-2 w-2 rounded-sm bg-[var(--state-destructive)]" aria-hidden />
+          {decideError}
         </div>
       )}
 
@@ -188,7 +216,7 @@ export function ApprovalQueue() {
       <div className="flex min-h-0 flex-1 flex-col md:flex-row">
         {/* List */}
         <div className="flex min-h-0 flex-1 flex-col border-border md:max-w-[640px] md:border-r">
-          <div className="min-h-0 flex-1 overflow-y-auto p-3">
+          <div ref={listScrollRef} className="min-h-0 flex-1 overflow-y-auto p-3">
             {isChecking ? (
               <div className="space-y-3">
                 {[0, 1, 2].map((i) => (
@@ -206,17 +234,30 @@ export function ApprovalQueue() {
                 <p className="font-mono text-xs text-muted-foreground/70">Press j/k to navigate · a approve · r reject · Enter detail</p>
               </div>
             ) : (
-              <div className="space-y-3">
-                {filtered.map((req, i) => (
-                  <ApprovalRow
-                    key={req.id}
-                    req={req}
-                    index={i}
-                    selected={req.id === selectedId}
-                    onSelect={() => setSelected(req.id)}
-                    onDecide={(id, action) => decideRow(id, action)}
-                  />
-                ))}
+              <div
+                className="relative w-full"
+                style={{ height: `${listVirtualizer.getTotalSize()}px` }}
+              >
+                {listVirtualizer.getVirtualItems().map((vRow) => {
+                  const req = filtered[vRow.index];
+                  return (
+                    <div
+                      key={vRow.key}
+                      data-index={vRow.index}
+                      ref={listVirtualizer.measureElement}
+                      className="absolute left-0 right-0 pb-3"
+                      style={{ top: `${vRow.start}px` }}
+                    >
+                      <ApprovalRow
+                        req={req}
+                        index={vRow.index}
+                        selected={req.id === selectedId}
+                        onSelect={() => setSelected(req.id)}
+                        onDecide={(id, action) => decideRow(id, action)}
+                      />
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>

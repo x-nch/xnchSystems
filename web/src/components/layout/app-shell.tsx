@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Topbar } from "@/components/layout/topbar";
@@ -8,9 +7,11 @@ import { SettingsModal } from "@/components/settings/settings-modal";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { GatewayQuerySync } from "@/components/layout/gateway-query-sync";
 import { useHydrated } from "@/lib/hooks/use-hydrated";
+import { useUiStore } from "@/lib/stores/ui-store";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  const settingsOpen = useUiStore((s) => s.settingsOpen);
+  const setSettingsOpen = useUiStore((s) => s.setSettingsOpen);
   const hydrated = useHydrated();
   const pathname = usePathname();
 

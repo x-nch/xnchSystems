@@ -112,7 +112,7 @@ export function ApprovalRow({
               "inline-flex items-center gap-1.5 rounded-md border px-1.5 py-1 font-medium",
               isPending
                 ? degraded
-                  ? "border-[var(--state-degraded)] bg-amber-500/10 text-amber-300"
+                  ? "border-[var(--state-degraded)] bg-warning/10 text-warning"
                   : "border-[var(--state-attention)] bg-[var(--accent-subtle)] text-[var(--accent)]"
                 : "border-border bg-muted text-muted-foreground"
             )}

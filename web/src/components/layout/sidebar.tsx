@@ -244,7 +244,7 @@ export function Sidebar() {
                         e.stopPropagation();
                         deleteConversation(conv.id);
                       }}
-                      className="hidden h-6 w-6 shrink-0 items-center justify-center rounded-md text-muted-foreground/60 hover:bg-destructive/10 hover:text-red-400 group-hover:inline-flex"
+                      className="hidden h-6 w-6 shrink-0 items-center justify-center rounded-md text-muted-foreground/60 hover:bg-destructive/10 hover:text-destructive group-hover:inline-flex"
                       aria-label={`Delete ${conv.title}`}
                     >
                       <Trash2 className="h-3.5 w-3.5" />

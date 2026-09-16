@@ -67,9 +67,9 @@ export function AgentNode({ data }: NodeProps<Node<AgentNodeData>>) {
           data.active
             ? "bg-[var(--accent-subtle)] text-[var(--accent)]"
             : data.alert
-              ? "bg-amber-500/10 text-amber-300"
+              ? "bg-warning/10 text-warning"
               : online
-                ? "bg-emerald-500/10 text-emerald-300"
+                ? "bg-success/10 text-success"
                 : "bg-muted text-muted-foreground"
         )}
       >
@@ -83,7 +83,7 @@ export function AgentNode({ data }: NodeProps<Node<AgentNodeData>>) {
             data.active
               ? "text-[var(--accent)]"
               : data.alert
-                ? "text-amber-200"
+                ? "text-warning"
                 : online
                   ? "text-foreground"
                   : "text-muted-foreground"
@@ -103,9 +103,9 @@ export function AgentNode({ data }: NodeProps<Node<AgentNodeData>>) {
             data.active
               ? "border-[var(--state-attention)] bg-[var(--accent-subtle)] text-[var(--accent)]"
               : data.alert
-                ? "border-[var(--state-degraded)] bg-amber-500/10 text-amber-200"
+                ? "border-[var(--state-degraded)] bg-warning/10 text-warning"
                 : online
-                  ? "border-[var(--state-healthy)] bg-emerald-500/10 text-emerald-300"
+                  ? "border-[var(--state-healthy)] bg-success/10 text-success"
                   : "border-[var(--state-offline)] bg-muted text-muted-foreground"
           )}
         >

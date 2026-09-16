@@ -32,6 +32,11 @@ export function ApprovalDetail({
   const [rejectNote, setRejectNote] = useState("");
   const [showNote, setShowNote] = useState(false);
 
+  const doDecide = (action: "approve" | "reject") => {
+    const note = showNote ? rejectNote.trim() || undefined : undefined;
+    decide(req!.id, action, note);
+  };
+
   if (!req) {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-2 p-8 text-center">
@@ -62,9 +67,9 @@ export function ApprovalDetail({
             req.status === "pending"
               ? "border-[var(--state-attention)] bg-[var(--accent-subtle)] text-[var(--accent)]"
               : req.status === "approved"
-                ? "border-[var(--state-healthy)] bg-emerald-500/10 text-emerald-300"
+                ? "border-[var(--state-healthy)] bg-success/10 text-success"
                 : req.status === "rejected"
-                  ? "border-[var(--state-destructive)] bg-red-500/10 text-red-300"
+                  ? "border-[var(--state-destructive)] bg-destructive/10 text-destructive"
                   : "border-[var(--state-offline)] bg-muted text-muted-foreground"
           )}
         >
@@ -164,7 +169,7 @@ export function ApprovalDetail({
           {req.risk_notes && req.risk_notes.length > 0 && (
             <div>
               <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Risks / policy notes</h3>
-              <ul className="mt-2 list-disc space-y-1 rounded-xl border border-[var(--state-degraded)] bg-amber-500/5 p-3 pl-6 text-xs leading-5 text-amber-200/90">
+              <ul className="mt-2 list-disc space-y-1 rounded-xl border border-[var(--state-degraded)] bg-warning/5 p-3 pl-6 text-xs leading-5 text-warning/90">
                 {req.risk_notes.map((n, i) => (
                   <li key={i}>{n}</li>
                 ))}
@@ -177,14 +182,14 @@ export function ApprovalDetail({
             <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Decision</h3>
             <div className="mt-3 flex flex-wrap gap-2">
               <button
-                onClick={() => decide(req.id, "approve")}
+                onClick={() => doDecide("approve")}
                 disabled={!isPending || offline}
                 className="btn-accent inline-flex h-9 items-center justify-center rounded-md bg-accent px-4 text-sm font-semibold text-accent-foreground hover:bg-accent/90 disabled:opacity-40"
               >
                 Approve and execute
               </button>
               <button
-                onClick={() => decide(req.id, "reject", showNote ? rejectNote : undefined)}
+                onClick={() => doDecide("reject")}
                 disabled={!isPending || offline}
                 className="motion-press inline-flex h-9 items-center justify-center rounded-md border border-border px-4 text-sm font-medium text-foreground hover:bg-muted disabled:opacity-40"
               >
@@ -201,8 +206,9 @@ export function ApprovalDetail({
             {showNote && (
               <textarea
                 value={rejectNote}
-                onChange={(e) => setRejectNote(e.target.value)}
+                onChange={(e) => setRejectNote(e.target.value.slice(0, 500))}
                 placeholder="Optional note for audit log…"
+                maxLength={500}
                 rows={3}
                 className="mt-3 w-full rounded-md border border-border bg-background p-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
               />

@@ -12,6 +12,8 @@ export type SubsystemId =
 type UiState = {
   activeSubsystems: Set<SubsystemId>;
   setSubsystemActive: (id: SubsystemId, active: boolean) => void;
+  settingsOpen: boolean;
+  setSettingsOpen: (open: boolean) => void;
 };
 
 export const useUiStore = create<UiState>((set) => ({
@@ -23,4 +25,6 @@ export const useUiStore = create<UiState>((set) => ({
       else next.delete(id);
       return { activeSubsystems: next };
     }),
+  settingsOpen: false,
+  setSettingsOpen: (open) => set({ settingsOpen: open }),
 }));

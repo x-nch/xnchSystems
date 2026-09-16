@@ -16,7 +16,7 @@ export function InferencePanel() {
   const data = inference.data;
 
   return (
-    <div className="grid gap-4 lg:grid-cols-2">
+    <div className="view-scroll grid gap-4 lg:grid-cols-2">
       <Card data-testid="obs-inf-tps">
         <CardHeader>
           <CardTitle>Throughput</CardTitle>

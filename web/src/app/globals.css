@@ -142,6 +142,18 @@ h1, h2, h3, .font-display {
   background: rgba(20, 26, 31, 0.90);
 }
 
+/* Operator view scroll contract — every operator route mounts inside
+   `main` (overflow-hidden) and MUST own exactly one scroll container.
+   `h-full` fills the `page-enter h-full` wrapper (not a flex parent);
+   `flex-1 min-h-0` keeps it a correct flex child everywhere else. */
+@utility view-scroll {
+  height: 100%;
+  min-height: 0;
+  flex: 1 1 0%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
 /* Presence crossfade entry */
 @keyframes x-crossfade-in {
   from {
@@ -226,38 +238,10 @@ h1, h2, h3, .font-display {
   cursor: grabbing;
 }
 
-/* ── Deprecated Apex utilities — kept as no-ops to avoid breaking existing views
-      until migrated. Do not use in new code. ── */
-@utility hud-grid {
-  background-image: radial-gradient(circle, rgba(242,244,247,0.06) 1px, transparent 1px);
-  background-size: 24px 24px;
-}
-@utility glow-border {
-  box-shadow: 0 0 0 1px rgba(200,255,0,0.18);
-}
-@utility glow-border-gold {
-  box-shadow: 0 0 0 1px rgba(255,200,87,0.18);
-}
-@utility glow-text {
-  text-shadow: none;
-}
-@utility glow-text-gold {
-  text-shadow: none;
-}
-.orb-halo { animation: none; opacity: 0.0; }
-.node-drift { animation: none; }
-.scanline-overlay::after { display: none; }
-.vignette { background: none; }
-.node-active { animation: none; border-color: var(--state-attention) !important; }
-
 /* ── Reduced motion — every infinite animation has a static fallback ── */
 @media (prefers-reduced-motion: reduce) {
-  .orb-halo,
-  .node-drift,
-  .scanline-overlay::after,
   .streaming-dot,
   .streaming-cursor,
-  .node-active,
   .presence-enter,
   .crossfade-in {
     animation: none !important;
@@ -406,6 +390,9 @@ h1, h2, h3, .font-display {
   }
   .motion-hover-lift,
   .motion-hover-lift:hover {
+    transform: none !important;
+  }
+  .motion-press:active {
     transform: none !important;
   }
   .btn-accent:active {

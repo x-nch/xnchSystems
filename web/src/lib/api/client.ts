@@ -30,8 +30,11 @@ async function buildHeaders(): Promise<Record<string, string>> {
     pastedToken: settings.pastedToken,
   });
   if (auth) headers["Authorization"] = auth;
+  if (settings.mcpToken) headers["X-MCP-Token"] = settings.mcpToken;
   return headers;
 }
+
+export { buildHeaders };
 
 export interface RequestOptions {
   method?: string;

@@ -73,7 +73,7 @@ export function ContextStatePanel() {
     data.system_state_version === state.data.system_state_version;
 
   return (
-    <div className="grid gap-4 overflow-y-auto p-4 lg:grid-cols-[1.6fr_1fr]">
+    <div className="view-scroll grid gap-4 p-4 lg:grid-cols-[1.6fr_1fr]">
       {/* Zone 1 — live state header */}
       <Card className="lg:col-span-2">
         <CardHeader>
@@ -90,7 +90,7 @@ export function ContextStatePanel() {
           {state.isPending ? (
             <Spinner className="h-4 w-4 text-muted-foreground" />
           ) : state.isError || !state.data ? (
-            <p className="text-[13px] text-red-400">System state unavailable</p>
+            <p className="text-[13px] text-destructive">System state unavailable</p>
           ) : (
             <div className="flex flex-wrap items-center gap-x-10 gap-y-3">
               <StatusRow
@@ -206,7 +206,7 @@ export function ContextStatePanel() {
               {manifest.isPending ? "Assembling manifest…" : "Assemble context"}
             </Button>
             {manifest.isError && (
-              <p className="text-[12px] leading-relaxed text-red-400">
+              <p className="text-[12px] leading-relaxed text-destructive">
                 {manifest.error instanceof Error
                   ? manifest.error.message
                   : "Failed to assemble manifest"}
@@ -237,7 +237,7 @@ export function ContextStatePanel() {
             {tierHealth.isPending ? (
               <Spinner className="h-4 w-4 text-muted-foreground" />
             ) : tierHealth.isError || !tierHealth.data ? (
-              <p className="text-[13px] text-red-400">Memory tier health unavailable</p>
+              <p className="text-[13px] text-destructive">Memory tier health unavailable</p>
             ) : !tierHealth.data.enabled ? (
               <p className="text-[13px] text-muted-foreground">Deep health runner not enabled</p>
             ) : (
@@ -281,7 +281,7 @@ export function ContextStatePanel() {
             {graphStats.isPending ? (
               <Spinner className="h-4 w-4 text-muted-foreground" />
             ) : graphStats.isError || !graphStats.data ? (
-              <p className="text-[13px] text-red-400">Graph stats unavailable</p>
+              <p className="text-[13px] text-destructive">Graph stats unavailable</p>
             ) : (
               <div className="space-y-3">
                 <div className="flex gap-6">
