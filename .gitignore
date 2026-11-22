@@ -37,3 +37,4 @@ SESSIONS
 !web/src/lib/
 !web/src/lib/**
 deepseek-harness/
+.terraform/
